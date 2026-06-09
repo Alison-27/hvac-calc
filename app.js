@@ -262,6 +262,8 @@ function calcMAU1() {
   setResult('mau1-qs',  Qs);
   setResult('mau1-ql',  Ql);
   setResult('mau1-shr', Qt > 0 ? Qs / Qt : 0);
+  updatePsychroPoints(T1, RH1, T2, RH2);
+  updateMAUDiagram(T1, RH1, T2, RH2);
 }
 
 // ── MAU-02 除濕量 ─────────────────────────────────────────────
@@ -276,6 +278,8 @@ function calcMAU2() {
   setResult('mau2-w1', w1 * 1000, 2); // g/kg
   setResult('mau2-w2', w2 * 1000, 2);
   setResult('mau2-wd', m * (w1 - w2) * 3600);
+  updatePsychroPoints(T1, RH1, T2, RH2);
+  updateMAUDiagram(T1, RH1, T2, RH2);
 }
 
 // ── MAU-03 CHW 需求 ───────────────────────────────────────────
@@ -288,9 +292,110 @@ function calcMAU3() {
   setResult('mau3-lmin', m3h * 1000 / 60);
 }
 
+// ── Psychrometric Chart ──────────────────────────────────────
+const PC = {
+  ml: 64, mr: 25, mt: 22, mb: 48,
+  vw: 700, vh: 420,
+  Tmin: 0, Tmax: 46, wmin: 0, wmax: 31,
+  get cw() { return this.vw - this.ml - this.mr; },
+  get ch() { return this.vh - this.mt - this.mb; },
+  tx(T) { return this.ml + (T - this.Tmin) / (this.Tmax - this.Tmin) * this.cw; },
+  ty(w) { return this.mt + this.ch * (1 - (w - this.wmin) / (this.wmax - this.wmin)); }
+};
+
+function initPsychroChart() {
+  const svg = document.getElementById('psychro-svg');
+  if (!svg) return;
+  const { ml, mr, mt, mb, vw, vh, cw, ch } = PC;
+  let h = '';
+
+  h += `<rect x="0" y="0" width="${vw}" height="${vh}" fill="#080d18"/>`;
+  h += `<rect x="${ml}" y="${mt}" width="${cw}" height="${ch}" fill="#0b1120"/>`;
+  h += `<defs><clipPath id="cc"><rect x="${ml}" y="${mt}" width="${cw}" height="${ch}"/></clipPath></defs>`;
+
+  for (let T = 0; T <= 45; T += 5) {
+    const x = PC.tx(T); const major = T % 10 === 0;
+    h += `<line x1="${x}" y1="${mt}" x2="${x}" y2="${mt+ch}" stroke="${major?'#1e3050':'#141e30'}" stroke-width="${major?.8:.4}"/>`;
+    h += `<text x="${x}" y="${mt+ch+17}" text-anchor="middle" fill="${major?'#4a6a88':'#30485e'}" font-size="11" font-family="Share Tech Mono,monospace">${T}</text>`;
+  }
+  for (let w = 0; w <= 30; w += 5) {
+    const y = PC.ty(w); const major = w % 10 === 0;
+    h += `<line x1="${ml}" y1="${y}" x2="${ml+cw}" y2="${y}" stroke="${major?'#1e3050':'#141e30'}" stroke-width="${major?.8:.4}"/>`;
+    h += `<text x="${ml-8}" y="${y+4}" text-anchor="end" fill="#4a6a88" font-size="11" font-family="Share Tech Mono,monospace">${w}</text>`;
+  }
+
+  const RH_LINES = [10,20,30,40,50,60,70,80,90];
+  for (const rh of RH_LINES) {
+    let path = '', lx, ly;
+    for (let T = 0; T <= 45.5; T += 0.4) {
+      const w = omegaFromTRH(T, rh) * 1000;
+      if (w > 30) break;
+      lx = PC.tx(T); ly = PC.ty(w);
+      path += (path==='' ? `M${lx},${ly}` : ` L${lx},${ly}`);
+    }
+    if (path) {
+      h += `<path d="${path}" stroke="#1e3555" stroke-width="0.7" fill="none" clip-path="url(#cc)"/>`;
+      if (lx != null) h += `<text x="${lx+3}" y="${ly+4}" fill="#2a4560" font-size="9" font-family="Share Tech Mono,monospace">${rh}%</text>`;
+    }
+  }
+
+  let sat = '';
+  for (let T = 0; T <= 45.2; T += 0.3) {
+    const w = omegaFromTRH(T, 100) * 1000;
+    if (w > 30) break;
+    const x = PC.tx(T), y = PC.ty(w);
+    sat += (T===0 ? `M${x},${y}` : ` L${x},${y}`);
+  }
+  h += `<path d="${sat}" stroke="#00a882" stroke-width="2" fill="none" clip-path="url(#cc)"/>`;
+  h += `<rect x="${ml}" y="${mt}" width="${cw}" height="${ch}" fill="none" stroke="#243d5c" stroke-width="1"/>`;
+  h += `<text x="${ml+cw/2}" y="${vh-5}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600">乾球溫度 (°C)</text>`;
+  h += `<text x="${ml-48}" y="${mt+ch/2}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600" transform="rotate(-90,${ml-48},${mt+ch/2})">含濕量 ω (g/kg)</text>`;
+  h += `<g id="psychro-pts"></g>`;
+  svg.innerHTML = h;
+}
+
+function updatePsychroPoints(T1, RH1, T2, RH2) {
+  const grp = document.getElementById('psychro-pts');
+  if (!grp) return;
+  const w1 = Math.min(omegaFromTRH(T1, RH1) * 1000, 30);
+  const w2 = Math.min(omegaFromTRH(T2, RH2) * 1000, 30);
+  const x1 = PC.tx(T1), y1 = PC.ty(w1);
+  const x2 = PC.tx(T2), y2 = PC.ty(w2);
+  const h1 = enthalpyAir(T1, w1/1000).toFixed(1);
+  const h2 = enthalpyAir(T2, w2/1000).toFixed(1);
+  const lbl = (x, y, color, line1, line2) => {
+    const lx = x > PC.ml + PC.cw - 110 ? x - 96 : x + 8;
+    const ly = y > PC.mt + 50 ? y - 8 : y + 18;
+    return `<rect x="${lx-2}" y="${ly-12}" width="94" height="29" rx="2" fill="rgba(8,13,24,.9)"/>` +
+           `<text x="${lx}" y="${ly}" fill="${color}" font-size="10" font-family="Share Tech Mono,monospace">${line1}</text>` +
+           `<text x="${lx}" y="${ly+13}" fill="${color}88" font-size="9" font-family="Share Tech Mono,monospace">${line2}</text>`;
+  };
+  grp.innerHTML =
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f0a430" stroke-width="1.8" stroke-dasharray="7,4" opacity=".9"/>` +
+    `<circle cx="${x1}" cy="${y1}" r="6" fill="#f0a430" stroke="#080d18" stroke-width="1.5"/>` +
+    lbl(x1, y1, '#f0a430', `OA ${T1}°C/${RH1}%`, `h=${h1} kJ/kg`) +
+    `<circle cx="${x2}" cy="${y2}" r="6" fill="#00d4aa" stroke="#080d18" stroke-width="1.5"/>` +
+    lbl(x2, y2, '#00d4aa', `SA ${T2}°C/${RH2}%`, `h=${h2} kJ/kg`);
+}
+
+function updateMAUDiagram(T1, RH1, T2, RH2) {
+  const map = {
+    'diag-oa-t': `${T1}°C`, 'diag-oa-r': `${RH1}%RH`,
+    'diag-ac-t': `${T2}°C`, 'diag-ac-r': `${RH2}%RH`,
+    'diag-sa-t': `${T2}°C`, 'diag-sa-r': `${RH2}%RH`,
+  };
+  for (const [id, txt] of Object.entries(map)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  }
+}
+
 // ── Enter key triggers calc ──────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const card = e.target.closest('.calc-card');
   if (card) card.querySelector('.calc-btn')?.click();
 });
+
+// ── Init ─────────────────────────────────────────────────────
+initPsychroChart();

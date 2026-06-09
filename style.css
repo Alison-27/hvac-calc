@@ -518,6 +518,32 @@ footer {
   color: var(--text-muted);
 }
 
+/* ── Chart Cards ── */
+.chart-card { grid-column: 1 / -1; }
+
+.chart-info {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 0.75rem;
+}
+
+.chart-wrap {
+  background: #080d18;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }

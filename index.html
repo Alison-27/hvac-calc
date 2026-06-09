@@ -963,6 +963,107 @@
           </div>
         </div>
 
+        <!-- MAU-04 Psychrometric Chart -->
+        <div class="calc-card chart-card">
+          <div class="card-header">
+            <span class="card-num">MAU-04</span>
+            <h3>空氣線圖（焓濕圖）</h3>
+            <span class="formula-badge">Psychrometric Chart</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-info">執行 MAU-01 後圖表自動標示室外 / 送風狀態點</div>
+            <div class="chart-wrap">
+              <svg id="psychro-svg" viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block"></svg>
+            </div>
+            <div class="chart-legend">
+              <span style="color:var(--amber)">● OA 室外</span>
+              <span style="color:var(--teal)">● SA 送風</span>
+              <span style="color:#00a882">── 飽和線 100%RH</span>
+              <span style="color:#2a4060">── 等RH線</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAU-05 Structure Diagram -->
+        <div class="calc-card chart-card">
+          <div class="card-header">
+            <span class="card-num">MAU-05</span>
+            <h3>MAU 構造示意圖</h3>
+            <span class="formula-badge">Unit Schematic</span>
+          </div>
+          <div class="card-body" style="padding:1rem 1.25rem">
+            <svg id="mau-diagram" viewBox="0 0 880 275" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
+              <defs>
+                <marker id="mau-arr" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
+                  <path d="M0,0 L7,3.5 L0,7 Z" fill="#3d5570"/>
+                </marker>
+              </defs>
+              <rect x="0" y="0" width="880" height="275" fill="#080d18"/>
+              <!-- Unit casing -->
+              <rect x="50" y="50" width="778" height="170" rx="4" fill="#0d1525" stroke="#243d5c" stroke-width="1.5"/>
+              <!-- OA arrow + label -->
+              <text x="8" y="140" fill="#6a8aa8" font-family="Rajdhani,sans-serif" font-size="13" font-weight="700">OA</text>
+              <line x1="8" y1="136" x2="48" y2="136" stroke="#6a8aa8" stroke-width="1.8" marker-end="url(#mau-arr)"/>
+              <text id="diag-oa-t" x="52" y="40" fill="#f0a430" font-size="10" font-family="Share Tech Mono,monospace">35°C</text>
+              <text id="diag-oa-r" x="52" y="52" fill="#f0a430" font-size="10" font-family="Share Tech Mono,monospace">70%RH</text>
+              <!-- Pre-filter G4 -->
+              <rect x="78" y="60" width="28" height="150" rx="2" fill="#111c2e" stroke="#2a3f58" stroke-width="1"/>
+              <line x1="84"  y1="60" x2="84"  y2="210" stroke="#243d5c" stroke-width="1.2"/>
+              <line x1="90"  y1="60" x2="90"  y2="210" stroke="#243d5c" stroke-width="1.2"/>
+              <line x1="96"  y1="60" x2="96"  y2="210" stroke="#243d5c" stroke-width="1.2"/>
+              <line x1="102" y1="60" x2="102" y2="210" stroke="#243d5c" stroke-width="1.2"/>
+              <text x="92" y="233" text-anchor="middle" fill="#6a8aa8" font-size="10" font-family="Rajdhani,sans-serif">初效濾 G4</text>
+              <line x1="112" y1="136" x2="160" y2="136" stroke="#2a4060" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#mau-arr)"/>
+              <!-- Cooling Coil -->
+              <rect x="163" y="60" width="130" height="150" rx="2" fill="#08111e" stroke="#00a882" stroke-width="1.2"/>
+              <line x1="163" y1="78"  x2="293" y2="78"  stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="90"  x2="293" y2="90"  stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="102" x2="293" y2="102" stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="114" x2="293" y2="114" stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="126" x2="293" y2="126" stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="138" x2="293" y2="138" stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="150" x2="293" y2="150" stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="162" x2="293" y2="162" stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="174" x2="293" y2="174" stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="186" x2="293" y2="186" stroke="#004a5e" stroke-width="1.2"/>
+              <line x1="163" y1="198" x2="293" y2="198" stroke="#004a5e" stroke-width="1.2"/>
+              <text x="228" y="130" text-anchor="middle" fill="#00a882" font-size="12" font-family="Rajdhani,sans-serif" font-weight="700">CHW</text>
+              <text x="228" y="146" text-anchor="middle" fill="#5a8888" font-size="10" font-family="Share Tech Mono,monospace">7 / 12°C</text>
+              <text x="228" y="233" text-anchor="middle" fill="#6a8aa8" font-size="10" font-family="Rajdhani,sans-serif">冷卻盤管</text>
+              <!-- Drain pan -->
+              <rect x="163" y="210" width="130" height="10" rx="1" fill="#0d1a2a" stroke="#1a3050"/>
+              <text x="228" y="253" text-anchor="middle" fill="#3d5570" font-size="9" font-family="Rajdhani,sans-serif">排水盤</text>
+              <!-- Post-coil state -->
+              <text id="diag-ac-t" x="297" y="40" fill="#00d4aa" font-size="10" font-family="Share Tech Mono,monospace">—°C</text>
+              <text id="diag-ac-r" x="297" y="52" fill="#00d4aa" font-size="10" font-family="Share Tech Mono,monospace">—%RH</text>
+              <line x1="296" y1="136" x2="368" y2="136" stroke="#2a4060" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#mau-arr)"/>
+              <!-- Fan -->
+              <circle cx="428" cy="136" r="54" fill="#0d1525" stroke="#243d5c" stroke-width="1.5"/>
+              <circle cx="428" cy="136" r="15" fill="#111c2e" stroke="#1a2d47" stroke-width="1"/>
+              <line x1="428" y1="136" x2="428" y2="86"  stroke="#1e3050" stroke-width="7" stroke-linecap="round"/>
+              <line x1="428" y1="136" x2="472" y2="113" stroke="#1e3050" stroke-width="7" stroke-linecap="round"/>
+              <line x1="428" y1="136" x2="472" y2="159" stroke="#1e3050" stroke-width="7" stroke-linecap="round"/>
+              <line x1="428" y1="136" x2="428" y2="186" stroke="#1e3050" stroke-width="7" stroke-linecap="round"/>
+              <line x1="428" y1="136" x2="384" y2="159" stroke="#1e3050" stroke-width="7" stroke-linecap="round"/>
+              <line x1="428" y1="136" x2="384" y2="113" stroke="#1e3050" stroke-width="7" stroke-linecap="round"/>
+              <text x="428" y="243" text-anchor="middle" fill="#6a8aa8" font-size="10" font-family="Rajdhani,sans-serif">送風機 FAN</text>
+              <line x1="486" y1="136" x2="550" y2="136" stroke="#2a4060" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#mau-arr)"/>
+              <!-- Medium filter F7 -->
+              <rect x="553" y="60" width="28" height="150" rx="2" fill="#111c2e" stroke="#2a3f58" stroke-width="1"/>
+              <line x1="559" y1="60" x2="559" y2="210" stroke="#243d5c" stroke-width="1.2"/>
+              <line x1="565" y1="60" x2="565" y2="210" stroke="#243d5c" stroke-width="1.2"/>
+              <line x1="571" y1="60" x2="571" y2="210" stroke="#243d5c" stroke-width="1.2"/>
+              <line x1="577" y1="60" x2="577" y2="210" stroke="#243d5c" stroke-width="1.2"/>
+              <text x="567" y="233" text-anchor="middle" fill="#6a8aa8" font-size="10" font-family="Rajdhani,sans-serif">中效濾 F7</text>
+              <line x1="586" y1="136" x2="826" y2="136" stroke="#2a4060" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#mau-arr)"/>
+              <!-- SA outlet -->
+              <text x="836" y="133" fill="#6a8aa8" font-family="Rajdhani,sans-serif" font-size="13" font-weight="700">SA</text>
+              <text id="diag-sa-t" x="876" y="40" text-anchor="end" fill="#00d4aa" font-size="10" font-family="Share Tech Mono,monospace">—°C</text>
+              <text id="diag-sa-r" x="876" y="52" text-anchor="end" fill="#00d4aa" font-size="10" font-family="Share Tech Mono,monospace">—%RH</text>
+            </svg>
+          </div>
+        </div>
+
       </div>
     </section>
   </main>
@@ -970,7 +1071,7 @@
   <footer>
     <div class="footer-inner">
       <span>HVAC Calculation Database © 2026</span>
-      <span class="footer-build">Build 1.0.0 · 風量 / 水量模組</span>
+      <span class="footer-build">Build 2.0.0 · 風量 / 水量 / 潔淨室 / DCC / MAU</span>
     </div>
   </footer>
 
