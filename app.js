@@ -378,16 +378,262 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
     lbl(x2, y2, '#00d4aa', `SA ${T2}°C/${RH2}%`, `h=${h2} kJ/kg`);
 }
 
+// ── MAU-05 3D Interactive Model ──────────────────────────────
+
+const COMP_CATALOG = [
+  { key:'g4',   label:'初效濾 G4',   cat:'filter', w:0.5,  rgb:[36,62,96]  },
+  { key:'f7',   label:'中效濾 F7',   cat:'filter', w:0.5,  rgb:[46,74,112] },
+  { key:'hepa', label:'高效濾 HEPA', cat:'filter', w:0.5,  rgb:[58,88,132] },
+  { key:'chw',  label:'冰水盤管', cat:'chw',  w:1.8,  rgb:[0,104,145] },
+  { key:'hhw',  label:'熱水盤管', cat:'hhw',  w:1.8,  rgb:[145,68,0]  },
+  { key:'wash', label:'水洗段',        cat:'wash', w:2.0,  rgb:[18,58,96]  },
+  { key:'fan',  label:'送風機',         cat:'fan',  w:1.6,  rgb:[24,38,60]  },
+];
+
+let mauComps = [
+  { id:1, key:'g4' },
+  { id:2, key:'chw' },
+  { id:3, key:'fan' },
+  { id:4, key:'f7' },
+];
+let _nid = 5;
+let _mauOA = null;
+let _mauSA = null;
+
 function updateMAUDiagram(T1, RH1, T2, RH2) {
-  const map = {
-    'diag-oa-t': `${T1}°C`, 'diag-oa-r': `${RH1}%RH`,
-    'diag-ac-t': `${T2}°C`, 'diag-ac-r': `${RH2}%RH`,
-    'diag-sa-t': `${T2}°C`, 'diag-sa-r': `${RH2}%RH`,
+  _mauOA = { T: T1, RH: RH1 };
+  _mauSA = { T: T2, RH: RH2 };
+  drawMAU3D();
+}
+
+function drawMAU3D() {
+  const cv = document.getElementById('mau3d');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#080d18';
+  ctx.fillRect(0, 0, W, H);
+
+  const DH = 3.0, DD = 3.5;
+  const GAP = 0.12, INLET = 0.7, OUTLET = 0.7;
+
+  const nComps = mauComps.length;
+  const compLen = nComps
+    ? mauComps.reduce((s, c) => {
+        const d = COMP_CATALOG.find(x => x.key === c.key);
+        return s + (d ? d.w : 1) + GAP;
+      }, -GAP)
+    : 0;
+  const outStart = INLET + (nComps ? compLen + GAP * 2 : 0);
+  const totalLen = outStart + OUTLET;
+
+  const xspan = (totalLen + DD) * 0.866;
+  const yspan = DH + (totalLen + DD) * 0.5;
+  const U = Math.min((W * 0.64) / xspan, (H * 0.74) / yspan, 60);
+
+  const ox = W / 2 - (totalLen - DD) / 2 * U * 0.866;
+  const oy = H / 2 + DH * U / 2 - (totalLen + DD) * U / 4;
+
+  const p3 = (x, y, z) => ({
+    x: ox + (x - z) * U * 0.866,
+    y: oy - y * U + (x + z) * U * 0.5
+  });
+
+  const clamp = v => Math.max(0, Math.min(255, Math.round(v)));
+  const col = ([r, g, b], f, a) => {
+    f = f === undefined ? 1 : f;
+    a = a === undefined ? 1 : a;
+    return 'rgba(' + clamp(r*f) + ',' + clamp(g*f) + ',' + clamp(b*f) + ',' + a + ')';
   };
-  for (const [id, txt] of Object.entries(map)) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = txt;
+  const poly = (verts, fill, stroke) => {
+    ctx.beginPath();
+    ctx.moveTo(verts[0].x, verts[0].y);
+    for (let i = 1; i < verts.length; i++) ctx.lineTo(verts[i].x, verts[i].y);
+    ctx.closePath();
+    ctx.fillStyle = fill; ctx.fill();
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 0.7; ctx.stroke(); }
+  };
+
+  const drawBox = (x0, dx, rgb, caps) => {
+    caps = caps || {};
+    const e = 'rgba(0,0,0,0.2)';
+    if (caps.left)
+      poly([p3(x0,0,0),p3(x0,0,DD),p3(x0,DH,DD),p3(x0,DH,0)], col(rgb,0.78), e);
+    poly([p3(x0,DH,0),p3(x0+dx,DH,0),p3(x0+dx,DH,DD),p3(x0,DH,DD)], col(rgb,1.40), e);
+    poly([p3(x0,0,DD),p3(x0+dx,0,DD),p3(x0+dx,DH,DD),p3(x0,DH,DD)], col(rgb,1.00), e);
+    if (caps.right !== false)
+      poly([p3(x0+dx,0,0),p3(x0+dx,0,DD),p3(x0+dx,DH,DD),p3(x0+dx,DH,0)], col(rgb,0.65), e);
+  };
+
+  const ductRGB = [18, 34, 56];
+  drawBox(0, INLET, ductRGB, { left: true, right: false });
+
+  const fnt = sz => Math.round(U * sz) + 'px Rajdhani,sans-serif';
+  const mfnt = sz => Math.round(U * sz) + 'px Share Tech Mono,monospace';
+
+  const oaMid = p3(INLET / 2, DH / 2, DD);
+  ctx.fillStyle = '#4a6a88'; ctx.font = 'bold ' + fnt(0.42);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('OA', oaMid.x, oaMid.y);
+  if (_mauOA) {
+    const lp = p3(INLET / 2, DH + 0.55, DD * 0.55);
+    ctx.fillStyle = '#f0a430'; ctx.font = mfnt(0.25);
+    ctx.fillText(_mauOA.T + '°C  ' + _mauOA.RH + '%RH', lp.x, lp.y);
   }
+
+  let xPos = INLET + (nComps ? GAP : 0);
+  mauComps.forEach(comp => {
+    const def = COMP_CATALOG.find(d => d.key === comp.key);
+    if (!def) return;
+    drawBox(xPos, def.w, def.rgb, { right: true });
+    mau3dFaceDetail(ctx, p3, xPos, def.w, DH, DD, def, U);
+    const lbp = p3(xPos + def.w / 2, -0.65, DD * 0.7);
+    ctx.fillStyle = '#4a6a88'; ctx.font = fnt(0.26);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(def.label, lbp.x, lbp.y);
+    xPos += def.w + GAP;
+  });
+
+  drawBox(outStart, OUTLET, ductRGB, { right: true });
+
+  const saMid = p3(outStart + OUTLET / 2, DH / 2, DD);
+  ctx.fillStyle = '#4a6a88'; ctx.font = 'bold ' + fnt(0.42);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('SA', saMid.x, saMid.y);
+  if (_mauSA) {
+    const lp = p3(outStart + OUTLET / 2, DH + 0.55, DD * 0.55);
+    ctx.fillStyle = '#00d4aa'; ctx.font = mfnt(0.25);
+    ctx.fillText(_mauSA.T + '°C  ' + _mauSA.RH + '%RH', lp.x, lp.y);
+  }
+
+  if (nComps > 0) {
+    const ay = DH * 0.5;
+    const as = p3(INLET, ay, DD), ae = p3(outStart, ay, DD);
+    ctx.strokeStyle = 'rgba(100,200,220,0.12)'; ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(as.x, as.y); ctx.lineTo(ae.x, ae.y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  ctx.textBaseline = 'alphabetic';
+}
+
+function mau3dFaceDetail(ctx, p3, x0, dx, DH, DD, def, U) {
+  const fp = (fx, fy) => p3(x0 + fx * dx, fy * DH, DD);
+
+  if (def.cat === 'filter') {
+    const cols = Math.max(3, Math.ceil(dx / 0.18));
+    ctx.strokeStyle = 'rgba(100,170,230,0.2)'; ctx.lineWidth = 0.6;
+    for (let r = 1; r < 7; r++) {
+      const a = fp(0, r/7), b = fp(1, r/7);
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    }
+    for (let c = 1; c < cols; c++) {
+      const a = fp(c/cols, 0), b = fp(c/cols, 1);
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    }
+
+  } else if (def.cat === 'chw' || def.cat === 'hhw') {
+    const hot = def.cat === 'hhw';
+    const tc = hot ? 'rgba(255,130,50,0.75)' : 'rgba(40,200,255,0.75)';
+    const dc = hot ? 'rgba(255,160,70,0.9)' : 'rgba(50,220,255,0.9)';
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    for (let r = 0; r < 8; r++) {
+      const fy = (r + 0.5) / 8;
+      const a = fp(0.05,fy), b = fp(0.95,fy);
+      ctx.strokeStyle = tc; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+      ctx.fillStyle = dc; ctx.beginPath(); ctx.arc(b.x,b.y,2.5,0,Math.PI*2); ctx.fill();
+    }
+    ctx.lineWidth = 4;
+    const lt=fp(0.05,0),lb=fp(0.05,1),rt=fp(0.95,0),rb=fp(0.95,1);
+    ctx.strokeStyle = tc;
+    ctx.beginPath(); ctx.moveTo(lt.x,lt.y); ctx.lineTo(lb.x,lb.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(rt.x,rt.y); ctx.lineTo(rb.x,rb.y); ctx.stroke();
+    ctx.lineCap = 'butt';
+
+  } else if (def.cat === 'wash') {
+    const nz = Math.max(2, Math.floor(dx / 0.75));
+    ctx.lineWidth = 1;
+    for (let n = 0; n < nz; n++) {
+      const fx = (n + 0.5) / nz, top = fp(fx, 0.1);
+      for (let d = 0; d < 5; d++) {
+        const fy = 0.1 + d * 0.17, sp = d * 0.045;
+        ctx.strokeStyle = 'rgba(50,180,255,0.35)';
+        const la = fp(fx-sp, fy), ra = fp(fx+sp, fy);
+        ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(la.x,la.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(ra.x,ra.y); ctx.stroke();
+        const dp = fp(fx, fy);
+        ctx.fillStyle = 'rgba(50,190,255,0.5)';
+        ctx.beginPath(); ctx.arc(dp.x,dp.y,1.8,0,Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(80,190,230,0.8)';
+      ctx.beginPath(); ctx.arc(top.x,top.y,3.5,0,Math.PI*2); ctx.fill();
+    }
+
+  } else if (def.cat === 'fan') {
+    const ctr = fp(0.5, 0.5), r = U * DH * 0.34;
+    ctx.strokeStyle = 'rgba(80,150,200,0.22)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(ctr.x,ctr.y,r,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle = 'rgba(60,110,170,0.35)';
+    ctx.beginPath(); ctx.arc(ctr.x,ctr.y,r*0.17,0,Math.PI*2); ctx.fill();
+    ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+    for (let b = 0; b < 6; b++) {
+      const ang = (b / 6) * Math.PI * 2 + Math.PI / 12;
+      const i2 = { x: ctr.x + Math.cos(ang)*r*0.2,  y: ctr.y + Math.sin(ang)*r*0.2  };
+      const o2 = { x: ctr.x + Math.cos(ang)*r*0.88, y: ctr.y + Math.sin(ang)*r*0.88 };
+      ctx.strokeStyle = 'rgba(80,160,220,0.52)';
+      ctx.beginPath(); ctx.moveTo(i2.x,i2.y); ctx.lineTo(o2.x,o2.y); ctx.stroke();
+    }
+    ctx.lineCap = 'butt';
+  }
+}
+
+function renderCompPanel() {
+  const listEl = document.getElementById('mau3d-list');
+  const addEl  = document.getElementById('mau3d-add');
+  if (!listEl || !addEl) return;
+  listEl.innerHTML = mauComps.length
+    ? mauComps.map((c, i) => {
+        const d = COMP_CATALOG.find(x => x.key === c.key);
+        const n = mauComps.length - 1;
+        return '<div class="comp-item">' +
+          '<span class="comp-num">' + (i+1) + '</span>' +
+          '<span class="comp-label">' + (d ? d.label : c.key) + '</span>' +
+          '<div class="comp-acts">' +
+            '<button onclick="moveComp(' + c.id + ',-1)"' + (i===0?' disabled':'') + '>↑</button>' +
+            '<button onclick="moveComp(' + c.id + ',1)"'  + (i===n ?' disabled':'') + '>↓</button>' +
+            '<button class="comp-del" onclick="removeComp(' + c.id + ')">✕</button>' +
+          '</div></div>';
+      }).join('')
+    : '<div class="comp-empty">尚未加入零件</div>';
+  addEl.innerHTML = COMP_CATALOG
+    .map(d => '<button class="comp-add-btn" onclick="addComp(\'' + d.key + '\')">' + d.label + '</button>')
+    .join('');
+}
+
+function addComp(key) {
+  mauComps.push({ id: _nid++, key: key });
+  refreshMAU3D();
+}
+
+function removeComp(id) {
+  mauComps = mauComps.filter(c => c.id !== id);
+  refreshMAU3D();
+}
+
+function moveComp(id, dir) {
+  const i = mauComps.findIndex(c => c.id === id);
+  const j = i + dir;
+  if (j < 0 || j >= mauComps.length) return;
+  const tmp = mauComps[i]; mauComps[i] = mauComps[j]; mauComps[j] = tmp;
+  refreshMAU3D();
+}
+
+function refreshMAU3D() {
+  renderCompPanel();
+  drawMAU3D();
 }
 
 // ── Enter key triggers calc ──────────────────────────────────
@@ -399,3 +645,4 @@ document.addEventListener('keydown', e => {
 
 // ── Init ─────────────────────────────────────────────────────
 initPsychroChart();
+refreshMAU3D();
