@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HVAC 空調計算資料庫</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">⟨ HVAC ⟩</span>
+        <span class="logo-text">空調計算資料庫</span>
+      </div>
+      <nav>
+        <button class="nav-btn active" data-tab="airflow">風量計算</button>
+        <button class="nav-btn" data-tab="waterflow">水量計算</button>
+        <button class="nav-btn" data-tab="reference">公式參考</button>
+      </nav>
+      <div class="status-bar">
+        <span class="status-dot"></span>
+        <span class="status-text">系統就緒</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ── 風量計算 ── -->
+    <section id="tab-airflow" class="tab-section active">
+      <div class="section-header">
+        <h2><span class="tag">01</span> 風量計算</h2>
+        <p class="section-desc">Air Flow Rate Calculation · m³/h · CMH</p>
+      </div>
+
+      <div class="calc-grid">
+
+        <!-- 換氣次數法 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">AF-01</span>
+            <h3>換氣次數法</h3>
+            <span class="formula-badge">Q = V × n</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>房間體積 V</label>
+              <div class="input-row">
+                <input type="number" id="af1-volume" placeholder="0.00" step="0.1" min="0" />
+                <span class="unit">m³</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>換氣次數 n</label>
+              <div class="input-row">
+                <input type="number" id="af1-ach" placeholder="0.00" step="0.5" min="0" />
+                <span class="unit">次/h</span>
+              </div>
+              <div class="hint">一般辦公室：6–10 次/h｜潔淨室：20–100 次/h</div>
+            </div>
+            <button class="calc-btn" onclick="calcAF1()">計算</button>
+            <div class="result-box" id="af1-result">
+              <span class="result-label">所需風量 Q</span>
+              <span class="result-value" id="af1-val">—</span>
+              <span class="result-unit">m³/h</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 顯熱負荷法 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">AF-02</span>
+            <h3>顯熱負荷法</h3>
+            <span class="formula-badge">Q = Qs / (ρ·Cp·ΔT)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>顯熱負荷 Qs</label>
+              <div class="input-row">
+                <input type="number" id="af2-qs" placeholder="0.00" step="100" min="0" />
+                <span class="unit">W</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>送回風溫差 ΔT</label>
+              <div class="input-row">
+                <input type="number" id="af2-dt" placeholder="8" step="0.5" min="0" value="8" />
+                <span class="unit">°C</span>
+              </div>
+              <div class="hint">一般 AHU：8–12°C｜FCU：5–8°C</div>
+            </div>
+            <div class="input-group">
+              <label>空氣密度 ρ</label>
+              <div class="input-row">
+                <input type="number" id="af2-rho" placeholder="1.2" step="0.01" min="0" value="1.2" />
+                <span class="unit">kg/m³</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcAF2()">計算</button>
+            <div class="result-box" id="af2-result">
+              <span class="result-label">所需風量 Q</span>
+              <span class="result-value" id="af2-val">—</span>
+              <span class="result-unit">m³/h</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 新鮮空氣量 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">AF-03</span>
+            <h3>新鮮空氣量</h3>
+            <span class="formula-badge">Q = N × q</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>人數 N</label>
+              <div class="input-row">
+                <input type="number" id="af3-people" placeholder="0" step="1" min="0" />
+                <span class="unit">人</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>每人新鮮空氣量 q</label>
+              <div class="input-row">
+                <input type="number" id="af3-q" placeholder="30" step="5" min="0" value="30" />
+                <span class="unit">m³/h·人</span>
+              </div>
+              <div class="hint">辦公室：25–30｜會議室：30–50｜餐廳：30–40</div>
+            </div>
+            <button class="calc-btn" onclick="calcAF3()">計算</button>
+            <div class="result-box" id="af3-result">
+              <span class="result-label">新鮮空氣量 Q</span>
+              <span class="result-value" id="af3-val">—</span>
+              <span class="result-unit">m³/h</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 風管風速法 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">AF-04</span>
+            <h3>風管截面積 / 風速</h3>
+            <span class="formula-badge">A = Q / v</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>風量 Q</label>
+              <div class="input-row">
+                <input type="number" id="af4-q" placeholder="0.00" step="100" min="0" />
+                <span class="unit">m³/h</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>設計風速 v</label>
+              <div class="input-row">
+                <input type="number" id="af4-v" placeholder="5" step="0.5" min="0" value="5" />
+                <span class="unit">m/s</span>
+              </div>
+              <div class="hint">主幹管：4–8 m/s｜支管：2–4 m/s｜出風口：2–4 m/s</div>
+            </div>
+            <button class="calc-btn" onclick="calcAF4()">計算</button>
+            <div class="result-box multi" id="af4-result">
+              <div class="result-item">
+                <span class="result-label">截面積 A</span>
+                <span class="result-value" id="af4-area">—</span>
+                <span class="result-unit">m²</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">等效直徑 D</span>
+                <span class="result-value" id="af4-diam">—</span>
+                <span class="result-unit">mm</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── 水量計算 ── -->
+    <section id="tab-waterflow" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">02</span> 水量計算</h2>
+        <p class="section-desc">Water Flow Rate Calculation · L/min · m³/h</p>
+      </div>
+
+      <div class="calc-grid">
+
+        <!-- 冷凍水流量 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">WF-01</span>
+            <h3>冷凍水流量</h3>
+            <span class="formula-badge">L = Q / (Cp·ρ·ΔT)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>冷卻負荷 Q</label>
+              <div class="input-row">
+                <input type="number" id="wf1-load" placeholder="0.00" step="10" min="0" />
+                <span class="unit">kW</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>供回水溫差 ΔT</label>
+              <div class="input-row">
+                <input type="number" id="wf1-dt" placeholder="5" step="0.5" min="0" value="5" />
+                <span class="unit">°C</span>
+              </div>
+              <div class="hint">一般系統：5–7°C｜大溫差系統：8–12°C</div>
+            </div>
+            <button class="calc-btn" onclick="calcWF1()">計算</button>
+            <div class="result-box multi" id="wf1-result">
+              <div class="result-item">
+                <span class="result-label">流量</span>
+                <span class="result-value" id="wf1-lmin">—</span>
+                <span class="result-unit">L/min</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">流量</span>
+                <span class="result-value" id="wf1-m3h">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">流量</span>
+                <span class="result-value" id="wf1-gpm">—</span>
+                <span class="result-unit">GPM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 冷卻水流量 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">WF-02</span>
+            <h3>冷卻水流量</h3>
+            <span class="formula-badge">Qcond = Q × (1 + 1/COP)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>蒸發器負荷 Qevap</label>
+              <div class="input-row">
+                <input type="number" id="wf2-qevap" placeholder="0.00" step="10" min="0" />
+                <span class="unit">kW</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>冰水機 COP</label>
+              <div class="input-row">
+                <input type="number" id="wf2-cop" placeholder="5.5" step="0.1" min="0" value="5.5" />
+                <span class="unit">—</span>
+              </div>
+              <div class="hint">離心式：5.0–6.5｜螺旋式：4.0–5.5｜氣冷式：2.8–3.5</div>
+            </div>
+            <div class="input-group">
+              <label>冷卻水溫差 ΔT</label>
+              <div class="input-row">
+                <input type="number" id="wf2-dt" placeholder="5" step="0.5" min="0" value="5" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcWF2()">計算</button>
+            <div class="result-box multi" id="wf2-result">
+              <div class="result-item">
+                <span class="result-label">冷凝負荷</span>
+                <span class="result-value" id="wf2-qcond">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">冷卻水流量</span>
+                <span class="result-value" id="wf2-flow">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 管道管徑 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">WF-03</span>
+            <h3>管道管徑選定</h3>
+            <span class="formula-badge">D = √(4Q / π·v)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>水流量 Q</label>
+              <div class="input-row">
+                <input type="number" id="wf3-q" placeholder="0.00" step="1" min="0" />
+                <span class="unit">m³/h</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>設計流速 v</label>
+              <div class="input-row">
+                <input type="number" id="wf3-v" placeholder="1.5" step="0.1" min="0" value="1.5" />
+                <span class="unit">m/s</span>
+              </div>
+              <div class="hint">主管：1.5–3.0 m/s｜支管：0.9–1.5 m/s</div>
+            </div>
+            <button class="calc-btn" onclick="calcWF3()">計算</button>
+            <div class="result-box multi" id="wf3-result">
+              <div class="result-item">
+                <span class="result-label">計算管徑 D</span>
+                <span class="result-value" id="wf3-diam">—</span>
+                <span class="result-unit">mm</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">建議 DN</span>
+                <span class="result-value" id="wf3-dn">—</span>
+                <span class="result-unit">mm</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 制冷噸換算 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">WF-04</span>
+            <h3>制冷量單位換算</h3>
+            <span class="formula-badge">1 RT = 3.517 kW</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>輸入數值</label>
+              <div class="input-row">
+                <input type="number" id="wf4-val" placeholder="0.00" step="1" min="0" />
+                <select id="wf4-unit" class="unit-select">
+                  <option value="kw">kW</option>
+                  <option value="rt">RT (制冷噸)</option>
+                  <option value="kcal">kcal/h</option>
+                  <option value="btu">BTU/h</option>
+                </select>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcWF4()">換算</button>
+            <div class="result-box multi" id="wf4-result">
+              <div class="result-item">
+                <span class="result-label">kW</span>
+                <span class="result-value" id="wf4-kw">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">RT</span>
+                <span class="result-value" id="wf4-rt">—</span>
+                <span class="result-unit">RT</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">kcal/h</span>
+                <span class="result-value" id="wf4-kcal">—</span>
+                <span class="result-unit">kcal/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">BTU/h</span>
+                <span class="result-value" id="wf4-btu">—</span>
+                <span class="result-unit">BTU/h</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── 公式參考 ── -->
+    <section id="tab-reference" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">03</span> 公式參考</h2>
+        <p class="section-desc">Engineering Reference · Formulas & Constants</p>
+      </div>
+
+      <div class="ref-grid">
+        <div class="ref-card">
+          <h3>風量計算公式</h3>
+          <table class="ref-table">
+            <thead><tr><th>方法</th><th>公式</th><th>適用場合</th></tr></thead>
+            <tbody>
+              <tr><td>換氣次數法</td><td class="mono">Q = V × n</td><td>一般空調</td></tr>
+              <tr><td>顯熱法</td><td class="mono">Q = Qs / (ρ·Cp·ΔT) × 3600</td><td>負荷計算</td></tr>
+              <tr><td>新鮮空氣</td><td class="mono">Q = N × q</td><td>通風設計</td></tr>
+              <tr><td>風管截面</td><td class="mono">A = Q / (v × 3600)</td><td>風管選型</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ref-card">
+          <h3>水量計算公式</h3>
+          <table class="ref-table">
+            <thead><tr><th>項目</th><th>公式</th><th>單位</th></tr></thead>
+            <tbody>
+              <tr><td>冷凍水流量</td><td class="mono">L = Q × 3600 / (4.186 × ΔT)</td><td>m³/h</td></tr>
+              <tr><td>冷卻水熱量</td><td class="mono">Qcond = Qevap × (1+1/COP)</td><td>kW</td></tr>
+              <tr><td>管道管徑</td><td class="mono">D = √(4Q / 3600 / π / v)</td><td>m</td></tr>
+              <tr><td>GPM 換算</td><td class="mono">1 m³/h = 4.403 GPM</td><td>GPM</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ref-card">
+          <h3>空氣物理常數</h3>
+          <table class="ref-table">
+            <thead><tr><th>參數</th><th>數值</th><th>單位</th></tr></thead>
+            <tbody>
+              <tr><td>密度 ρ (20°C)</td><td class="mono">1.205</td><td>kg/m³</td></tr>
+              <tr><td>比熱 Cp</td><td class="mono">1005</td><td>J/(kg·K)</td></tr>
+              <tr><td>比熱 Cp</td><td class="mono">0.24</td><td>kcal/(kg·K)</td></tr>
+              <tr><td>動黏度 ν</td><td class="mono">1.51×10⁻⁵</td><td>m²/s</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ref-card">
+          <h3>水物理常數</h3>
+          <table class="ref-table">
+            <thead><tr><th>參數</th><th>數值</th><th>單位</th></tr></thead>
+            <tbody>
+              <tr><td>密度 ρ (20°C)</td><td class="mono">998.2</td><td>kg/m³</td></tr>
+              <tr><td>比熱 Cp</td><td class="mono">4186</td><td>J/(kg·K)</td></tr>
+              <tr><td>比熱 Cp</td><td class="mono">1.0</td><td>kcal/(kg·K)</td></tr>
+              <tr><td>動黏度 ν</td><td class="mono">1.0×10⁻⁶</td><td>m²/s</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ref-card wide">
+          <h3>換氣次數建議值 (ACH)</h3>
+          <table class="ref-table">
+            <thead><tr><th>場所</th><th>換氣次數 (次/h)</th><th>新鮮空氣量 (m³/h·人)</th></tr></thead>
+            <tbody>
+              <tr><td>一般辦公室</td><td class="mono">6 – 10</td><td class="mono">25 – 30</td></tr>
+              <tr><td>會議室</td><td class="mono">8 – 12</td><td class="mono">30 – 50</td></tr>
+              <tr><td>餐廳</td><td class="mono">10 – 15</td><td class="mono">30 – 40</td></tr>
+              <tr><td>廚房</td><td class="mono">20 – 60</td><td class="mono">—</td></tr>
+              <tr><td>廁所</td><td class="mono">10 – 15</td><td class="mono">—</td></tr>
+              <tr><td>倉庫</td><td class="mono">4 – 6</td><td class="mono">—</td></tr>
+              <tr><td>Class 10000 潔淨室</td><td class="mono">60 – 100</td><td class="mono">—</td></tr>
+              <tr><td>Class 1000 潔淨室</td><td class="mono">100 – 200</td><td class="mono">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="ref-card wide">
+          <h3>單位換算</h3>
+          <table class="ref-table">
+            <thead><tr><th>項目</th><th>換算關係</th></tr></thead>
+            <tbody>
+              <tr><td>制冷量</td><td class="mono">1 RT = 3.517 kW = 3024 kcal/h = 12,000 BTU/h</td></tr>
+              <tr><td>流量</td><td class="mono">1 m³/h = 16.667 L/min = 4.403 GPM</td></tr>
+              <tr><td>流量</td><td class="mono">1 L/s = 3.6 m³/h = 15.85 GPM</td></tr>
+              <tr><td>壓力</td><td class="mono">1 bar = 100 kPa = 10.2 mH₂O = 14.5 psi</td></tr>
+              <tr><td>溫度</td><td class="mono">°C = (°F − 32) × 5/9</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <span>HVAC Calculation Database © 2026</span>
+      <span class="footer-build">Build 1.0.0 · 風量 / 水量模組</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
