@@ -21,6 +21,9 @@
         <button class="nav-btn active" data-tab="airflow">風量計算</button>
         <button class="nav-btn" data-tab="waterflow">水量計算</button>
         <button class="nav-btn" data-tab="reference">公式參考</button>
+        <button class="nav-btn" data-tab="cleanroom">潔淨室</button>
+        <button class="nav-btn" data-tab="dcc">乾式盤管</button>
+        <button class="nav-btn" data-tab="mau">MAU</button>
       </nav>
       <div class="status-bar">
         <span class="status-dot"></span>
@@ -461,6 +464,505 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <!-- ── 潔淨室 ── -->
+    <section id="tab-cleanroom" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">04</span> 潔淨室空調計算</h2>
+        <p class="section-desc">Clean Room HVAC · ISO 14644 · ACH / Cooling Load</p>
+      </div>
+      <div class="calc-grid">
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">CR-01</span>
+            <h3>ISO 等級換氣需求</h3>
+            <span class="formula-badge">Q = V × ACH</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>ISO 潔淨等級</label>
+              <div class="input-row">
+                <select id="cr1-iso" style="flex:1;background:transparent;border:none;outline:none;font-family:var(--mono);font-size:0.9rem;color:var(--text);padding:0.55rem 0.75rem;cursor:pointer;-webkit-appearance:none;">
+                  <option value="5">ISO 5 (Class 100)</option>
+                  <option value="6">ISO 6 (Class 1,000)</option>
+                  <option value="7">ISO 7 (Class 10,000)</option>
+                  <option value="8">ISO 8 (Class 100,000)</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>房間長度 L</label>
+              <div class="input-row">
+                <input type="number" id="cr1-l" placeholder="0.00" step="0.1" min="0" />
+                <span class="unit">m</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>房間寬度 W</label>
+              <div class="input-row">
+                <input type="number" id="cr1-w" placeholder="0.00" step="0.1" min="0" />
+                <span class="unit">m</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>房間高度 H</label>
+              <div class="input-row">
+                <input type="number" id="cr1-h" placeholder="3.0" step="0.1" min="0" value="3.0" />
+                <span class="unit">m</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcCR1()">計算</button>
+            <div class="result-box multi" id="cr1-result">
+              <div class="result-item">
+                <span class="result-label">最低 ACH</span>
+                <span class="result-value" id="cr1-ach-min">—</span>
+                <span class="result-unit">次/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">建議 ACH</span>
+                <span class="result-value" id="cr1-ach-mid">—</span>
+                <span class="result-unit">次/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">最低風量</span>
+                <span class="result-value" id="cr1-q-min">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">CR-02</span>
+            <h3>循環 / 新鮮風量分配</h3>
+            <span class="formula-badge">Qrc = Qt × (1 − r%)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>總供風量 Qt</label>
+              <div class="input-row">
+                <input type="number" id="cr2-qt" placeholder="0.00" step="100" min="0" />
+                <span class="unit">m³/h</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>新鮮空氣比例</label>
+              <div class="input-row">
+                <input type="number" id="cr2-fa" placeholder="5" step="1" min="0" max="100" value="5" />
+                <span class="unit">%</span>
+              </div>
+              <div class="hint">潔淨室一般新鮮空氣比例 2–10%</div>
+            </div>
+            <button class="calc-btn" onclick="calcCR2()">計算</button>
+            <div class="result-box multi" id="cr2-result">
+              <div class="result-item">
+                <span class="result-label">新鮮空氣量</span>
+                <span class="result-value" id="cr2-fresh">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">循環風量</span>
+                <span class="result-value" id="cr2-recirc">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">CR-03</span>
+            <h3>潔淨室冷卻負荷估算</h3>
+            <span class="formula-badge">Q = Qeqp + Qlight + Qppl</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>房間面積</label>
+              <div class="input-row">
+                <input type="number" id="cr3-area" placeholder="0.00" step="1" min="0" />
+                <span class="unit">m²</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>設備熱負荷密度</label>
+              <div class="input-row">
+                <input type="number" id="cr3-equip" placeholder="500" step="50" min="0" value="500" />
+                <span class="unit">W/m²</span>
+              </div>
+              <div class="hint">一般 FAB 製程區：500–2000 W/m²</div>
+            </div>
+            <div class="input-group">
+              <label>照明負荷密度</label>
+              <div class="input-row">
+                <input type="number" id="cr3-light" placeholder="30" step="5" min="0" value="30" />
+                <span class="unit">W/m²</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>人員數量</label>
+              <div class="input-row">
+                <input type="number" id="cr3-people" placeholder="0" step="1" min="0" />
+                <span class="unit">人</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcCR3()">計算</button>
+            <div class="result-box multi" id="cr3-result">
+              <div class="result-item">
+                <span class="result-label">設備</span>
+                <span class="result-value" id="cr3-qeqp">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">照明</span>
+                <span class="result-value" id="cr3-qlight">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">人員</span>
+                <span class="result-value" id="cr3-qpeople">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">合計</span>
+                <span class="result-value" id="cr3-qtotal">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── DCC ── -->
+    <section id="tab-dcc" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">05</span> 乾式冷卻盤管 (DCC)</h2>
+        <p class="section-desc">Dry Cooling Coil · Sensible Only · No Dehumidification</p>
+      </div>
+      <div class="calc-grid">
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">DCC-01</span>
+            <h3>顯熱冷卻量</h3>
+            <span class="formula-badge">Q = ṁ·Cp·ΔT</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>通過風量</label>
+              <div class="input-row">
+                <input type="number" id="dcc1-q" placeholder="0.00" step="1000" min="0" />
+                <span class="unit">m³/h</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>入口空氣溫度 T₁</label>
+              <div class="input-row">
+                <input type="number" id="dcc1-t1" placeholder="22" step="0.5" value="22" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>出口空氣溫度 T₂</label>
+              <div class="input-row">
+                <input type="number" id="dcc1-t2" placeholder="14" step="0.5" value="14" />
+                <span class="unit">°C</span>
+              </div>
+              <div class="hint">DCC 出口通常 14–18°C（須高於室內露點）</div>
+            </div>
+            <div class="input-group">
+              <label>空氣密度 ρ</label>
+              <div class="input-row">
+                <input type="number" id="dcc1-rho" placeholder="1.2" step="0.01" value="1.2" />
+                <span class="unit">kg/m³</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcDCC1()">計算</button>
+            <div class="result-box multi" id="dcc1-result">
+              <div class="result-item">
+                <span class="result-label">顯熱冷卻量</span>
+                <span class="result-value" id="dcc1-cap">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">冷卻量</span>
+                <span class="result-value" id="dcc1-rt">—</span>
+                <span class="result-unit">RT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">DCC-02</span>
+            <h3>盤管面積 / 面速度</h3>
+            <span class="formula-badge">A = Q / (v × 3600)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>通過風量</label>
+              <div class="input-row">
+                <input type="number" id="dcc2-q" placeholder="0.00" step="1000" min="0" />
+                <span class="unit">m³/h</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>設計面速度</label>
+              <div class="input-row">
+                <input type="number" id="dcc2-fv" placeholder="2.5" step="0.1" min="0" value="2.5" />
+                <span class="unit">m/s</span>
+              </div>
+              <div class="hint">DCC 盤管面速度：2.0–3.0 m/s</div>
+            </div>
+            <button class="calc-btn" onclick="calcDCC2()">計算</button>
+            <div class="result-box multi" id="dcc2-result">
+              <div class="result-item">
+                <span class="result-label">所需面積</span>
+                <span class="result-value" id="dcc2-area">—</span>
+                <span class="result-unit">m²</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">等效邊長</span>
+                <span class="result-value" id="dcc2-side">—</span>
+                <span class="result-unit">mm × mm</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">DCC-03</span>
+            <h3>CHW 需求 + 露點確認</h3>
+            <span class="formula-badge">Ts,chw &gt; Tdp,room</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>DCC 顯熱冷卻量</label>
+              <div class="input-row">
+                <input type="number" id="dcc3-cap" placeholder="0.00" step="10" min="0" />
+                <span class="unit">kW</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>CHW 供水溫度 Ts</label>
+              <div class="input-row">
+                <input type="number" id="dcc3-ts" placeholder="14" step="0.5" value="14" />
+                <span class="unit">°C</span>
+              </div>
+              <div class="hint">DCC 建議 14–16°C（須高於室內露點）</div>
+            </div>
+            <div class="input-group">
+              <label>CHW 回水溫度 Tr</label>
+              <div class="input-row">
+                <input type="number" id="dcc3-tr" placeholder="19" step="0.5" value="19" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>室內溫度 / 相對濕度</label>
+              <div class="input-row">
+                <input type="number" id="dcc3-rmt" placeholder="22" step="0.5" value="22" style="flex:1;min-width:0" />
+                <span class="unit" style="border-right:1px solid var(--border)">°C</span>
+                <input type="number" id="dcc3-rmrh" placeholder="45" step="1" value="45" style="flex:1;min-width:0" />
+                <span class="unit">% RH</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcDCC3()">計算</button>
+            <div class="result-box multi" id="dcc3-result">
+              <div class="result-item">
+                <span class="result-label">CHW 流量</span>
+                <span class="result-value" id="dcc3-flow">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">室內露點</span>
+                <span class="result-value" id="dcc3-dp">—</span>
+                <span class="result-unit">°C</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">結露風險</span>
+                <span class="result-value" id="dcc3-risk">—</span>
+                <span class="result-unit"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── MAU ── -->
+    <section id="tab-mau" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">06</span> 新風空調箱 (MAU)</h2>
+        <p class="section-desc">Make-up Air Unit · Psychrometrics · Total / Sensible / Latent Load</p>
+      </div>
+      <div class="calc-grid">
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">MAU-01</span>
+            <h3>全熱冷卻負荷（焓差法）</h3>
+            <span class="formula-badge">Q = ṁ·(h₁ − h₂)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>新鮮空氣量</label>
+              <div class="input-row">
+                <input type="number" id="mau1-q" placeholder="0.00" step="500" min="0" />
+                <span class="unit">m³/h</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>入口（室外）溫度 / RH</label>
+              <div class="input-row">
+                <input type="number" id="mau1-t1" placeholder="35" step="0.5" value="35" style="flex:1;min-width:0" />
+                <span class="unit" style="border-right:1px solid var(--border)">°C DB</span>
+                <input type="number" id="mau1-rh1" placeholder="70" step="1" value="70" style="flex:1;min-width:0" />
+                <span class="unit">% RH</span>
+              </div>
+              <div class="hint">台灣夏季設計：35°C / 70–80% RH</div>
+            </div>
+            <div class="input-group">
+              <label>出口（送風）溫度 / RH</label>
+              <div class="input-row">
+                <input type="number" id="mau1-t2" placeholder="13" step="0.5" value="13" style="flex:1;min-width:0" />
+                <span class="unit" style="border-right:1px solid var(--border)">°C DB</span>
+                <input type="number" id="mau1-rh2" placeholder="95" step="1" value="95" style="flex:1;min-width:0" />
+                <span class="unit">% RH</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcMAU1()">計算</button>
+            <div class="result-box multi" id="mau1-result">
+              <div class="result-item">
+                <span class="result-label">全熱負荷</span>
+                <span class="result-value" id="mau1-qt">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">顯熱</span>
+                <span class="result-value" id="mau1-qs">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">潛熱</span>
+                <span class="result-value" id="mau1-ql">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">SHR</span>
+                <span class="result-value" id="mau1-shr">—</span>
+                <span class="result-unit">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">MAU-02</span>
+            <h3>除濕量計算</h3>
+            <span class="formula-badge">Wd = ṁ·(ω₁ − ω₂)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>新鮮空氣量</label>
+              <div class="input-row">
+                <input type="number" id="mau2-q" placeholder="0.00" step="500" min="0" />
+                <span class="unit">m³/h</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>入口 溫度 / RH</label>
+              <div class="input-row">
+                <input type="number" id="mau2-t1" placeholder="35" step="0.5" value="35" style="flex:1;min-width:0" />
+                <span class="unit" style="border-right:1px solid var(--border)">°C</span>
+                <input type="number" id="mau2-rh1" placeholder="70" step="1" value="70" style="flex:1;min-width:0" />
+                <span class="unit">% RH</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>出口 溫度 / RH</label>
+              <div class="input-row">
+                <input type="number" id="mau2-t2" placeholder="13" step="0.5" value="13" style="flex:1;min-width:0" />
+                <span class="unit" style="border-right:1px solid var(--border)">°C</span>
+                <input type="number" id="mau2-rh2" placeholder="95" step="1" value="95" style="flex:1;min-width:0" />
+                <span class="unit">% RH</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcMAU2()">計算</button>
+            <div class="result-box multi" id="mau2-result">
+              <div class="result-item">
+                <span class="result-label">入口含濕量 ω₁</span>
+                <span class="result-value" id="mau2-w1">—</span>
+                <span class="result-unit">g/kg</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">出口含濕量 ω₂</span>
+                <span class="result-value" id="mau2-w2">—</span>
+                <span class="result-unit">g/kg</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">除濕量</span>
+                <span class="result-value" id="mau2-wd">—</span>
+                <span class="result-unit">kg/h</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">MAU-03</span>
+            <h3>冷凍水需求</h3>
+            <span class="formula-badge">L = Q / (Cp·ρ·ΔT)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>MAU 全熱冷卻量</label>
+              <div class="input-row">
+                <input type="number" id="mau3-cap" placeholder="0.00" step="10" min="0" />
+                <span class="unit">kW</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>CHW 供水溫度</label>
+              <div class="input-row">
+                <input type="number" id="mau3-ts" placeholder="7" step="0.5" value="7" />
+                <span class="unit">°C</span>
+              </div>
+              <div class="hint">MAU 標準 CHW：7/12°C</div>
+            </div>
+            <div class="input-group">
+              <label>CHW 回水溫度</label>
+              <div class="input-row">
+                <input type="number" id="mau3-tr" placeholder="12" step="0.5" value="12" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcMAU3()">計算</button>
+            <div class="result-box multi" id="mau3-result">
+              <div class="result-item">
+                <span class="result-label">CHW 流量</span>
+                <span class="result-value" id="mau3-m3h">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">CHW 流量</span>
+                <span class="result-value" id="mau3-lmin">—</span>
+                <span class="result-unit">L/min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   </main>
