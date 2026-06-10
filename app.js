@@ -1,13 +1,34 @@
+// ── Dashboard Navigation ─────────────────────────────────────
+function showDashboard() {
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+  const dash = document.getElementById('tab-dashboard');
+  if (dash) dash.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const navBack = document.getElementById('nav-back');
+  if (navBack) navBack.style.display = 'none';
+}
+
+function showTab(tabId) {
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+  const section = document.getElementById('tab-' + tabId);
+  if (section) section.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+  const navBack = document.getElementById('nav-back');
+  if (navBack) navBack.style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // ── Tab Navigation ──────────────────────────────────────────
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const tab = btn.dataset.tab;
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + tab).classList.add('active');
+    showTab(btn.dataset.tab);
   });
 });
+
+// Show dashboard on load
+showDashboard();
 
 // ── Helpers ─────────────────────────────────────────────────
 function fmt(n, dec = 2) {

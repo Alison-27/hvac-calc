@@ -21,12 +21,13 @@
 
   <header>
     <div class="header-inner">
-      <div class="logo">
+      <div class="logo" onclick="showDashboard()" style="cursor:pointer">
         <span class="logo-icon">⟨ HVAC ⟩</span>
         <span class="logo-text">空調計算資料庫</span>
       </div>
-      <nav>
-        <button class="nav-btn active" data-tab="airflow">風量計算</button>
+      <nav id="main-nav">
+        <button class="nav-back" id="nav-back" onclick="showDashboard()" style="display:none">← 返回</button>
+        <button class="nav-btn" data-tab="airflow">風量計算</button>
         <button class="nav-btn" data-tab="waterflow">水量計算</button>
         <button class="nav-btn" data-tab="reference">公式參考</button>
         <button class="nav-btn" data-tab="cleanroom">潔淨室</button>
@@ -45,6 +46,113 @@
   </header>
 
   <main>
+    <!-- ── 儀表板首頁 ── -->
+    <section id="tab-dashboard" class="tab-section active">
+      <div class="dashboard-hero">
+        <div class="dh-label">HVAC ENGINEERING TOOLS</div>
+        <h1 class="dh-title">空調計算資料庫</h1>
+        <p class="dh-desc">整合風量、水量、潔淨室、MAU 等專業計算工具，快速完成工程估算</p>
+        <div class="dh-stats">
+          <div class="dh-stat"><span class="ds-num">6</span><span class="ds-lbl">計算分類</span></div>
+          <div class="dh-stat"><span class="ds-num">21</span><span class="ds-lbl">計算工具</span></div>
+          <div class="dh-stat"><span class="ds-num">2</span><span class="ds-lbl">主題模式</span></div>
+        </div>
+      </div>
+
+      <div class="db-grid">
+
+        <div class="db-card" onclick="showTab('airflow')" data-color="teal">
+          <div class="dbc-icon">💨</div>
+          <div class="dbc-badge">4 工具</div>
+          <div class="dbc-num">01</div>
+          <h3 class="dbc-title">風量計算</h3>
+          <p class="dbc-desc">換氣次數法、顯熱負荷法、新鮮空氣量、風管截面積</p>
+          <ul class="dbc-list">
+            <li>AF-01 換氣次數法 Q = V×n</li>
+            <li>AF-02 顯熱負荷法</li>
+            <li>AF-03 新鮮空氣量</li>
+            <li>AF-04 風管截面積</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+        <div class="db-card" onclick="showTab('waterflow')" data-color="blue">
+          <div class="dbc-icon">💧</div>
+          <div class="dbc-badge">4 工具</div>
+          <div class="dbc-num">02</div>
+          <h3 class="dbc-title">水量計算</h3>
+          <p class="dbc-desc">冷凍水、冷卻水流量、管道管徑選定、制冷量換算</p>
+          <ul class="dbc-list">
+            <li>WF-01 冷凍水流量</li>
+            <li>WF-02 冷卻水流量</li>
+            <li>WF-03 管道管徑選定</li>
+            <li>WF-04 制冷量換算</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+        <div class="db-card" onclick="showTab('cleanroom')" data-color="purple">
+          <div class="dbc-icon">🏭</div>
+          <div class="dbc-badge">5 工具</div>
+          <div class="dbc-num">03</div>
+          <h3 class="dbc-title">潔淨室</h3>
+          <p class="dbc-desc">空間排氣參數、熱負荷、DCC選型、FFU、回風道計算</p>
+          <ul class="dbc-list">
+            <li>CR-01 空間與排氣參數</li>
+            <li>CR-02 熱負荷</li>
+            <li>CR-03 DCC 選型</li>
+            <li>CR-04 FFU · CR-05 回風道</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+        <div class="db-card" onclick="showTab('dcc')" data-color="amber">
+          <div class="dbc-icon">❄️</div>
+          <div class="dbc-badge">3 工具</div>
+          <div class="dbc-num">04</div>
+          <h3 class="dbc-title">乾式盤管</h3>
+          <p class="dbc-desc">顯熱冷卻量、盤管面積與面速度、CHW需求與露點確認</p>
+          <ul class="dbc-list">
+            <li>DCC-01 顯熱冷卻量</li>
+            <li>DCC-02 盤管面積/面速度</li>
+            <li>DCC-03 CHW 需求</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+        <div class="db-card" onclick="showTab('mau')" data-color="green">
+          <div class="dbc-icon">🌡️</div>
+          <div class="dbc-badge">5 工具</div>
+          <div class="dbc-num">05</div>
+          <h3 class="dbc-title">MAU 外調機</h3>
+          <p class="dbc-desc">設計目標、盤管排列、除濕量、冷凍水、焓濕圖</p>
+          <ul class="dbc-list">
+            <li>MAU-D 設計目標</li>
+            <li>MAU-02 除濕量計算</li>
+            <li>MAU-03 冷凍水需求</li>
+            <li>MAU-04 空氣線圖</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+        <div class="db-card" onclick="showTab('reference')" data-color="gray">
+          <div class="dbc-icon">📋</div>
+          <div class="dbc-badge">6 表格</div>
+          <div class="dbc-num">06</div>
+          <h3 class="dbc-title">公式參考</h3>
+          <p class="dbc-desc">風量/水量公式、空氣/水物理常數、換氣次數建議值</p>
+          <ul class="dbc-list">
+            <li>風量 · 水量計算公式</li>
+            <li>空氣 · 水物理常數</li>
+            <li>換氣次數建議值</li>
+            <li>單位換算表</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+      </div>
+    </section>
+
     <!-- ── 風量計算 ── -->
     <section id="tab-airflow" class="tab-section active">
       <div class="section-header">
