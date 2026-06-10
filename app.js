@@ -469,6 +469,7 @@ function initPsychroChart() {
     }
     if (path) {
       h += `<path d="${path}" stroke="#1e3555" stroke-width="0.7" fill="none" clip-path="url(#cc)"/>`;
+      if (lx != null) h += `<text x="${lx+3}" y="${ly+4}" fill="#2a4560" font-size="9" font-family="Share Tech Mono,monospace">${rh}%</text>`;
     }
   }
 
