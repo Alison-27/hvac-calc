@@ -864,4 +864,35 @@ footer {
   .result-box.multi { grid-template-columns: repeat(2, 1fr); }
   .mau3d-wrap { flex-direction: column; }
   .mau3d-controls { width: 100%; }
+  .mau-layout { grid-template-columns: 1fr; }
+}
+
+/* ── MAU two-column layout ── */
+.mau-layout {
+  display: grid;
+  grid-template-columns: 390px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.mau-calcs,
+.mau-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Right-column cards fill their column (override chart-card spanning) */
+.mau-charts .calc-card,
+.mau-charts .chart-card {
+  width: 100%;
+}
+
+/* 3D container shorter in the right column to balance with the chart */
+.mau-charts #mau3d-container {
+  height: 360px;
+}
+
+@media (max-width: 960px) {
+  .mau-layout { grid-template-columns: 1fr; }
 }
