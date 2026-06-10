@@ -89,7 +89,7 @@ header {
 }
 
 .header-inner {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 2rem;
   height: 64px;
@@ -213,7 +213,7 @@ nav {
 
 /* ── Main ── */
 main {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 2.5rem 2rem;
   position: relative;
@@ -571,7 +571,7 @@ footer {
 }
 
 .footer-inner {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -1098,6 +1098,38 @@ footer {
 .fcb-q { font-family: var(--mono); font-size: .66rem; color: #60c8ff; line-height: 1.45; }
 .fcb-q.heat { color: var(--amber); }
 .coil-seq-actions { display: flex; align-items: center; gap: .75rem; margin-top: .6rem; }
+
+/* ── MAU-06 Vertical Layout ── */
+.coil-flow-vert { display: flex; flex-direction: column; align-items: stretch; }
+.flow-node-h { display: flex; align-items: center; gap: .45rem; min-width: auto; text-align: left; flex-wrap: wrap; }
+.flow-node-h .fnode-tag { margin-bottom: 0; }
+.coil-seq-vert { display: flex; flex-direction: column; align-items: stretch; }
+.cf-arr-v { text-align: center; color: var(--border2); font-size: .8rem; padding: 2px 0; line-height: 1; }
+.flow-coil-block-v {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: .32rem .55rem;
+  display: flex; align-items: center; gap: .45rem; flex-wrap: wrap;
+}
+.fcbv-select {
+  flex: 0 0 auto; min-width: 120px; max-width: 155px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 3px; color: var(--text); font-family: var(--sans);
+  font-size: .69rem; padding: 2px 3px;
+}
+.fcbv-field { display: flex; align-items: center; gap: .15rem; font-size: .7rem; }
+.fcbv-field label { color: var(--text-muted); font-size: .62rem; white-space: nowrap; }
+.fcbv-field input {
+  width: 44px; background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 3px; color: var(--text); font-family: var(--mono);
+  font-size: .72rem; padding: 2px 4px; text-align: right;
+}
+.fcbv-field span { font-size: .62rem; color: var(--text-muted); white-space: nowrap; }
+.fcbv-sep { color: var(--border2); padding: 0 2px; font-size: .75rem; }
+.fcbv-res {
+  flex: 1; min-width: 70px; font-family: var(--mono);
+  font-size: .65rem; color: #60c8ff; text-align: right; white-space: nowrap;
+}
+.fcbv-res.heat { color: var(--amber); }
 
 /* ── MAU-07 Summary Table ── */
 .mau-summary-wrap { overflow-x: auto; }

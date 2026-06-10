@@ -165,6 +165,16 @@ function dewPoint(T, RH) {
   const g = (a * T / (b + T)) + Math.log(RH / 100);
   return (b * g) / (a - g);
 }
+// Wet bulb temperature (°C) — Stull 2011 approximation
+function wetBulb(T, RH) {
+  return T * Math.atan(0.151977 * Math.sqrt(RH + 8.313659)) +
+    Math.atan(T + RH) - Math.atan(RH - 1.676331) +
+    0.00391838 * Math.pow(RH, 1.5) * Math.atan(0.023101 * RH) - 4.686035;
+}
+// Specific volume of moist air (m³/kg dry air) at 101.325 kPa
+function specificVol(T, RH) {
+  return 287.042 * (T + 273.15) * (1 + 1.6078 * omegaFromTRH(T, RH)) / 101325;
+}
 
 // ── Clean Room 連動狀態 ───────────────────────────────────────
 const ISO_ACH = { 5: [240, 360], 6: [150, 200], 7: [60, 100], 8: [5, 30] };
@@ -477,6 +487,7 @@ function initPsychroChart() {
   h += `<g id="psychro-target"></g>`;
   h += `<g id="psychro-process"></g>`;
   h += `<g id="psychro-pts"></g>`;
+  h += `<g id="psychro-tooltip"></g>`;
   svg.innerHTML = h;
 }
 
@@ -485,6 +496,13 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
   if (!grp) return;
   const proc = document.getElementById('psychro-process');
   if (proc) proc.innerHTML = '';
+  _currentPsychroStates = [
+    { id:'OA', label:'室外空氣', T:T1, RH:RH1, wg:omegaFromTRH(T1,RH1)*1000, h:enthalpyAir(T1,omegaFromTRH(T1,RH1)) },
+    { id:'SA', label:'送風',     T:T2, RH:RH2, wg:omegaFromTRH(T2,RH2)*1000, h:enthalpyAir(T2,omegaFromTRH(T2,RH2)) },
+  ];
+  _tooltipIdx = -1;
+  const tt = document.getElementById('psychro-tooltip');
+  if (tt) tt.innerHTML = '';
   const w1 = Math.min(omegaFromTRH(T1, RH1) * 1000, 30);
   const w2 = Math.min(omegaFromTRH(T2, RH2) * 1000, 30);
   const x1 = PC.tx(T1), y1 = PC.ty(w1);
@@ -500,9 +518,9 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
   };
   grp.innerHTML =
     `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f0a430" stroke-width="1.8" stroke-dasharray="7,4" opacity=".9"/>` +
-    `<circle cx="${x1}" cy="${y1}" r="6" fill="#f0a430" stroke="#080d18" stroke-width="1.5"/>` +
+    `<circle cx="${x1}" cy="${y1}" r="6" fill="#f0a430" stroke="#080d18" stroke-width="1.5" onclick="clickPsychroPoint(0)" style="cursor:pointer"/>` +
     lbl(x1, y1, '#f0a430', `OA ${T1}°C/${RH1}%`, `h=${h1} kJ/kg`) +
-    `<circle cx="${x2}" cy="${y2}" r="6" fill="#00d4aa" stroke="#080d18" stroke-width="1.5"/>` +
+    `<circle cx="${x2}" cy="${y2}" r="6" fill="#00d4aa" stroke="#080d18" stroke-width="1.5" onclick="clickPsychroPoint(1)" style="cursor:pointer"/>` +
     lbl(x2, y2, '#00d4aa', `SA ${T2}°C/${RH2}%`, `h=${h2} kJ/kg`);
   syncPsychroModal();
 }
@@ -632,6 +650,69 @@ function setTheme(theme) {
   localStorage.setItem('hvac-theme', theme);
 }
 
+// ── Psychrometric Chart Tooltip ──────────────────────────────
+
+let _currentPsychroStates = [];
+let _tooltipIdx = -1;
+
+function clickPsychroPoint(idx) {
+  if (_tooltipIdx === idx) {
+    _tooltipIdx = -1;
+    const g = document.getElementById('psychro-tooltip');
+    if (g) g.innerHTML = '';
+  } else {
+    _tooltipIdx = idx;
+    drawPsychroTooltip();
+  }
+  syncPsychroModal();
+}
+
+function drawPsychroTooltip() {
+  const grp = document.getElementById('psychro-tooltip');
+  if (!grp || _tooltipIdx < 0 || !_currentPsychroStates[_tooltipIdx]) {
+    if (grp) grp.innerHTML = '';
+    return;
+  }
+  const s  = _currentPsychroStates[_tooltipIdx];
+  const wb = wetBulb(s.T, s.RH);
+  const dp = dewPoint(s.T, s.RH);
+  const v  = specificVol(s.T, s.RH);
+  const px = PC.tx(Math.max(PC.Tmin + 0.5, Math.min(PC.Tmax - 0.5, s.T)));
+  const py = PC.ty(Math.min(Math.max(s.wg, PC.wmin), PC.wmax - 0.5));
+
+  const rows = [
+    ['DB', s.T.toFixed(1),  '°C'],
+    ['WB', wb.toFixed(1),   '°C'],
+    ['RH', s.RH.toFixed(1), '%' ],
+    ['DP', dp.toFixed(1),   '°C'],
+    ['W',  s.wg.toFixed(2), 'g/kg'],
+    ['H',  s.h.toFixed(1),  'kJ/kg'],
+    ['V',  v.toFixed(3),    'm³/kg'],
+  ];
+
+  const rH = 13, hH = 17, W1 = 18, W2 = 50, W3 = 40;
+  const TW = W1 + W2 + W3 + 8, TH = hH + rows.length * rH + 4;
+  let bx = px + 10, by = py - TH / 2;
+  if (bx + TW > PC.ml + PC.cw - 2) bx = px - TW - 10;
+  if (bx < PC.ml + 2) bx = PC.ml + 2;
+  if (by < PC.mt + 2) by = PC.mt + 2;
+  if (by + TH > PC.mt + PC.ch - 2) by = PC.mt + PC.ch - TH - 2;
+
+  const isOA = _tooltipIdx === 0, isSA = _tooltipIdx === _currentPsychroStates.length - 1;
+  const color = isOA ? '#f0a430' : isSA ? '#00d4aa' : '#60c8ff';
+
+  let h = `<rect x="${bx}" y="${by}" width="${TW}" height="${TH}" rx="2" fill="rgba(4,8,16,.96)" stroke="${color}" stroke-width="0.8"/>`;
+  h += `<text x="${bx + TW/2}" y="${by + 12}" text-anchor="middle" fill="${color}" font-size="9" font-family="Share Tech Mono,monospace" font-weight="bold">${s.id}</text>`;
+  h += `<line x1="${bx+1}" y1="${by+hH}" x2="${bx+TW-1}" y2="${by+hH}" stroke="${color}" stroke-width="0.4" opacity=".5"/>`;
+  rows.forEach((r, i) => {
+    const ry = by + hH + i * rH + 10;
+    h += `<text x="${bx+3}" y="${ry}" fill="#4a6a88" font-size="8" font-family="Share Tech Mono,monospace">${r[0]}</text>`;
+    h += `<text x="${bx+W1+2}" y="${ry}" fill="#c0d8f0" font-size="8" font-family="Share Tech Mono,monospace">${r[1]}</text>`;
+    h += `<text x="${bx+W1+W2+2}" y="${ry}" fill="#4a6a88" font-size="7.5" font-family="Share Tech Mono,monospace">${r[2]}</text>`;
+  });
+  grp.innerHTML = h;
+}
+
 // ── MAU-06/07 Coil Process ───────────────────────────────────
 
 const COIL_TYPES = [
@@ -666,23 +747,22 @@ function renderCoilBlocks() {
     const opts = COIL_TYPES.map(c =>
       `<option value="${c.key}"${b.name === c.key ? ' selected' : ''}>${c.label}</option>`
     ).join('');
-    return `<div class="cf-arrow">→</div>
-<div class="flow-coil-block" id="fcb-${b.id}">
-  <div class="fcb-hdr">
-    <select class="fcb-select" onchange="updateCB(${b.id},'name',this.value)">${opts}</select>
-    <button class="fcb-del" onclick="removeCB(${b.id})" title="刪除">✕</button>
-  </div>
-  <div class="fcb-field">
+    return `<div class="cf-arr-v">↓</div>
+<div class="flow-coil-block-v" id="fcb-${b.id}">
+  <select class="fcbv-select" onchange="updateCB(${b.id},'name',this.value)">${opts}</select>
+  <span class="fcbv-sep">|</span>
+  <div class="fcbv-field">
     <label>出口 DB</label>
     <input type="number" value="${b.outDB}" step="0.5" onchange="updateCB(${b.id},'outDB',+this.value)">
     <span>°C</span>
   </div>
-  <div class="fcb-field">
+  <div class="fcbv-field">
     <label>出口 RH</label>
     <input type="number" value="${b.outRH}" step="1" min="0" max="100" onchange="updateCB(${b.id},'outRH',+this.value)">
     <span>%</span>
   </div>
-  <div class="fcb-result" id="fcb-res-${b.id}"><div class="fcb-q">— kW</div></div>
+  <div class="fcbv-res" id="fcb-res-${b.id}">— kW</div>
+  <button class="fcb-del" onclick="removeCB(${b.id})" title="刪除">✕</button>
 </div>`;
   }).join('');
 }
@@ -758,11 +838,8 @@ function calcCoilProcess() {
     const s   = states[i + 1];
     const res = document.getElementById('fcb-res-' + b.id);
     if (!res || !s) return;
-    const qSign = s.dQ >= 0 ? '+' : '';
-    const cls   = s.dQ >= 0 ? '' : ' heat';
-    res.innerHTML =
-      `<div class="fcb-q${cls}">ΔQ: ${qSign}${s.dQ.toFixed(1)} kW</div>` +
-      `<div class="fcb-q${cls}" style="opacity:.7">Δw: ${(states[i].wg - s.wg).toFixed(2)} g/kg</div>`;
+    res.className   = 'fcbv-res' + (s.dQ >= 0 ? '' : ' heat');
+    res.textContent = `ΔQ:${s.dQ>=0?'+':''}${s.dQ.toFixed(1)} kW  Δw:${(states[i].wg-s.wg).toFixed(2)}g/kg`;
   });
 
   const sa = states[states.length - 1];
@@ -809,22 +886,22 @@ function renderSummaryTable(states, mdot) {
 
   // ── 狀態點 Detail table ──────────────────────────────
   const rows = states.map((s, i) => {
-    const cls  = i === 0 ? 'sp-oa' : i === states.length - 1 ? 'sp-sa' : 'sp-mid';
-    const qCls = s.dQ != null ? (s.dQ >= 0 ? ' class="q-heat"' : ' class="q-cool"') : '';
+    const cls = i === 0 ? 'sp-oa' : i === states.length - 1 ? 'sp-sa' : 'sp-mid';
+    const wb  = wetBulb(s.T, s.RH).toFixed(1);
+    const dp  = dewPoint(s.T, s.RH).toFixed(1);
+    const v   = specificVol(s.T, s.RH).toFixed(3);
     return `<tr class="${cls}">
 <td>${s.id}</td><td>${s.label}</td>
-<td>${fmt(s.T,1)}</td><td>${fmt(s.RH,1)}</td>
-<td>${fmt(s.wg,2)}</td><td>${fmt(s.h,1)}</td>
-<td${qCls}>${signFmt(s.dQ)}</td>
-<td${qCls}>${signFmt(s.dQs)}</td>
-<td${qCls}>${signFmt(s.dQl)}</td>
+<td>${fmt(s.T,1)}</td><td>${wb}</td><td>${fmt(s.RH,1)}</td>
+<td>${dp}</td><td>${fmt(s.wg,2)}</td><td>${fmt(s.h,1)}</td>
+<td>${v}</td>
 </tr>`;
   }).join('');
   wrap.innerHTML =
     `<table class="mau-tbl"><thead><tr>
 <th>節點</th><th>名稱</th>
-<th>DB °C</th><th>RH %</th><th>ω g/kg</th><th>h kJ/kg</th>
-<th>ΔQ kW</th><th>ΔQs kW</th><th>ΔQl kW</th>
+<th>DB °C</th><th>WB °C</th><th>RH %</th><th>DP °C</th>
+<th>W g/kg</th><th>H kJ/kg</th><th>V m³/kg</th>
 </tr></thead><tbody>${rows}</tbody></table>`;
 
   if (!totEl) return;
@@ -867,6 +944,10 @@ function renderSummaryTable(states, mdot) {
 }
 
 function updatePsychroProcess(states) {
+  _currentPsychroStates = states;
+  _tooltipIdx = -1;
+  const tt = document.getElementById('psychro-tooltip');
+  if (tt) tt.innerHTML = '';
   const grp = document.getElementById('psychro-process');
   if (!grp || states.length < 2) { if (grp) grp.innerHTML = ''; return; }
 
@@ -887,7 +968,7 @@ function updatePsychroProcess(states) {
     const col = isOA ? '#f0a430' : isSA ? '#00d4aa' : COLS[i % COLS.length];
     const lx  = p.px > PC.ml + PC.cw - 114 ? p.px - 106 : p.px + 8;
     const ly  = p.py > PC.mt + 50 ? p.py - 10 : p.py + 18;
-    h += `<circle cx="${p.px}" cy="${p.py}" r="${isOA||isSA ? 6 : 5}" fill="${col}" stroke="#080d18" stroke-width="1.5" clip-path="url(#cc)"/>`;
+    h += `<circle cx="${p.px}" cy="${p.py}" r="${isOA||isSA ? 6 : 5}" fill="${col}" stroke="#080d18" stroke-width="1.5" clip-path="url(#cc)" onclick="clickPsychroPoint(${i})" style="cursor:pointer"/>`;
     h += `<rect x="${lx-2}" y="${ly-12}" width="104" height="28" rx="2" fill="rgba(8,13,24,.9)"/>`;
     h += `<text x="${lx}" y="${ly}" fill="${col}" font-size="10" font-family="Share Tech Mono,monospace">${p.id} ${p.T.toFixed(1)}°C/${p.RH}%</text>`;
     h += `<text x="${lx}" y="${ly+13}" fill="${col}88" font-size="9" font-family="Share Tech Mono,monospace">h=${p.h.toFixed(1)} ω=${p.wg.toFixed(2)} g/kg</text>`;
@@ -905,7 +986,11 @@ function syncPsychroModal() {
   if (!psychroModalOpen) return;
   const src = document.getElementById('psychro-svg');
   const dst = document.getElementById('psychro-modal-svg');
-  if (src && dst) dst.innerHTML = src.innerHTML;
+  if (src && dst) {
+    dst.innerHTML = src.innerHTML
+      .replace(/id="cc"/g, 'id="cc-m"')
+      .replace(/url\(#cc\)/g, 'url(#cc-m)');
+  }
 }
 
 function openPsychroModal() {

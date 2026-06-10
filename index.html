@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
   <script type="importmap">
   {
     "imports": {
@@ -1099,19 +1099,19 @@
             <span class="formula-badge">Process Flow</span>
           </div>
           <div class="card-body">
-            <div class="coil-flow-outer">
-              <div class="flow-node flow-node-oa">
-                <div class="fnode-tag">OA</div>
-                <div class="fnode-val" id="cf-oa-t">35.0°C</div>
-                <div class="fnode-val" id="cf-oa-rh">70% RH</div>
+            <div class="coil-flow-vert">
+              <div class="flow-node flow-node-oa flow-node-h">
+                <span class="fnode-tag">OA</span>
+                <span class="fnode-val" id="cf-oa-t">35.0°C</span>
+                <span class="fnode-val" id="cf-oa-rh">70% RH</span>
               </div>
-              <div id="coil-seq-blocks" class="coil-seq-blocks"></div>
-              <div class="cf-arrow cf-arrow-end">→</div>
-              <div class="flow-node flow-node-sa">
-                <div class="fnode-tag">SA</div>
-                <div class="fnode-val" id="cf-sa-t">—</div>
-                <div class="fnode-val" id="cf-sa-rh">—</div>
-                <div id="cf-sa-badge" class="cf-sa-badge"></div>
+              <div id="coil-seq-blocks" class="coil-seq-vert"></div>
+              <div class="cf-arr-v">↓</div>
+              <div class="flow-node flow-node-sa flow-node-h">
+                <span class="fnode-tag">SA</span>
+                <span class="fnode-val" id="cf-sa-t">—</span>
+                <span class="fnode-val" id="cf-sa-rh">—</span>
+                <span id="cf-sa-badge" class="cf-sa-badge"></span>
               </div>
             </div>
             <div class="coil-seq-actions">
@@ -1334,7 +1334,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
   <script type="module" src="mau3d.js"></script>
 </body>
 </html>
