@@ -875,18 +875,22 @@ footer {
   align-items: start;
 }
 
+/* Each column is an independent scroll area */
 .mau-calcs,
 .mau-charts {
-  position: sticky;
-  top: 64px;
-  max-height: calc(100vh - 74px);
+  overflow-y: auto;
+  max-height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  overflow-y: auto;
   padding-bottom: 2rem;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
+}
+/* Cards must NOT shrink — max-height on a flex container causes shrink by default */
+.mau-calcs > *,
+.mau-charts > * {
+  flex-shrink: 0;
 }
 .mau-calcs::-webkit-scrollbar,
 .mau-charts::-webkit-scrollbar { width: 5px; }
@@ -931,7 +935,6 @@ footer {
 @media (max-width: 960px) {
   .mau-layout { grid-template-columns: 1fr; }
   .mau-calcs, .mau-charts {
-    position: static;
     max-height: none;
     overflow-y: visible;
   }
