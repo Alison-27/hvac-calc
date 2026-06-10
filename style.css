@@ -873,17 +873,16 @@ footer {
   grid-template-columns: 390px 1fr;
   gap: 1.5rem;
   align-items: start;
-  /* independent column scroll */
-  height: calc(100vh - 64px);
-  overflow: hidden;
 }
 
 .mau-calcs,
 .mau-charts {
+  position: sticky;
+  top: 64px;
+  max-height: calc(100vh - 74px);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  height: 100%;
   overflow-y: auto;
   padding-bottom: 2rem;
   scrollbar-width: thin;
@@ -930,13 +929,10 @@ footer {
 }
 
 @media (max-width: 960px) {
-  .mau-layout {
-    grid-template-columns: 1fr;
-    height: auto;
-    overflow: visible;
-  }
+  .mau-layout { grid-template-columns: 1fr; }
   .mau-calcs, .mau-charts {
-    height: auto;
+    position: static;
+    max-height: none;
     overflow-y: visible;
   }
 }
