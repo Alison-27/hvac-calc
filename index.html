@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=9" />
   <script type="importmap">
   {
     "imports": {
@@ -26,13 +26,14 @@
         <span class="logo-text">空調計算資料庫</span>
       </div>
       <nav id="main-nav">
-        <button class="nav-back" id="nav-back" onclick="showDashboard()" style="display:none">← 返回</button>
+        <button class="nav-back" id="nav-back" onclick="showDashboard()">← 返回儀表板</button>
         <button class="nav-btn" data-tab="airflow">風量計算</button>
         <button class="nav-btn" data-tab="waterflow">水量計算</button>
         <button class="nav-btn" data-tab="reference">公式參考</button>
         <button class="nav-btn" data-tab="cleanroom">潔淨室</button>
         <button class="nav-btn" data-tab="dcc">乾式盤管</button>
         <button class="nav-btn" data-tab="mau">MAU</button>
+        <button class="nav-btn" data-tab="datacenter">AI 資料中心</button>
       </nav>
       <div class="status-bar">
         <span class="status-dot"></span>
@@ -49,103 +50,129 @@
     <!-- ── 儀表板首頁 ── -->
     <section id="tab-dashboard" class="tab-section active">
       <div class="dashboard-hero">
-        <div class="dh-label">HVAC ENGINEERING TOOLS</div>
-        <h1 class="dh-title">空調計算資料庫</h1>
-        <p class="dh-desc">整合風量、水量、潔淨室、MAU 等專業計算工具，快速完成工程估算</p>
+        <div class="dh-eyebrow">HVAC · CLEANROOM · AI DATA CENTER</div>
+        <h1 class="dh-title">工程計算平台</h1>
+        <p class="dh-desc">整合傳統 HVAC 與新世代 AI 資料中心冷卻工具<br>從風量估算、潔淨室設計到 GPU 機房液冷模擬，一站完成</p>
         <div class="dh-stats">
-          <div class="dh-stat"><span class="ds-num">6</span><span class="ds-lbl">計算分類</span></div>
-          <div class="dh-stat"><span class="ds-num">21</span><span class="ds-lbl">計算工具</span></div>
-          <div class="dh-stat"><span class="ds-num">2</span><span class="ds-lbl">主題模式</span></div>
+          <div class="dh-stat"><span class="ds-num">7</span><span class="ds-lbl">計算分類</span></div>
+          <div class="dh-stat dh-divider"></div>
+          <div class="dh-stat"><span class="ds-num">25+</span><span class="ds-lbl">計算工具</span></div>
+          <div class="dh-stat dh-divider"></div>
+          <div class="dh-stat"><span class="ds-num">3D</span><span class="ds-lbl">互動視覺化</span></div>
         </div>
       </div>
 
       <div class="db-grid">
 
         <div class="db-card" onclick="showTab('airflow')" data-color="teal">
+          <div class="dbc-topbar"></div>
           <div class="dbc-icon">💨</div>
           <div class="dbc-badge">4 工具</div>
           <div class="dbc-num">01</div>
           <h3 class="dbc-title">風量計算</h3>
-          <p class="dbc-desc">換氣次數法、顯熱負荷法、新鮮空氣量、風管截面積</p>
+          <p class="dbc-desc">換氣次數法、顯熱負荷法、新鮮空氣量需求、風管截面積選定</p>
           <ul class="dbc-list">
-            <li>AF-01 換氣次數法 Q = V×n</li>
+            <li>AF-01 換氣次數法 Q = V × n</li>
             <li>AF-02 顯熱負荷法</li>
             <li>AF-03 新鮮空氣量</li>
-            <li>AF-04 風管截面積</li>
+            <li>AF-04 風管截面積 / 風速</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
 
         <div class="db-card" onclick="showTab('waterflow')" data-color="blue">
+          <div class="dbc-topbar"></div>
           <div class="dbc-icon">💧</div>
           <div class="dbc-badge">4 工具</div>
           <div class="dbc-num">02</div>
           <h3 class="dbc-title">水量計算</h3>
-          <p class="dbc-desc">冷凍水、冷卻水流量、管道管徑選定、制冷量換算</p>
+          <p class="dbc-desc">冷凍水 / 冷卻水流量、管道管徑選定、制冷量單位換算</p>
           <ul class="dbc-list">
             <li>WF-01 冷凍水流量</li>
-            <li>WF-02 冷卻水流量</li>
+            <li>WF-02 冷卻水流量 + COP</li>
             <li>WF-03 管道管徑選定</li>
-            <li>WF-04 制冷量換算</li>
+            <li>WF-04 制冷量換算 (RT/kW/BTU)</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
 
         <div class="db-card" onclick="showTab('cleanroom')" data-color="purple">
+          <div class="dbc-topbar"></div>
           <div class="dbc-icon">🏭</div>
           <div class="dbc-badge">5 工具</div>
           <div class="dbc-num">03</div>
-          <h3 class="dbc-title">潔淨室</h3>
-          <p class="dbc-desc">空間排氣參數、熱負荷、DCC選型、FFU、回風道計算</p>
+          <h3 class="dbc-title">潔淨室空調</h3>
+          <p class="dbc-desc">ISO 等級、熱負荷、DCC 選型、FFU 配置、回風道截面核算</p>
           <ul class="dbc-list">
-            <li>CR-01 空間與排氣參數</li>
-            <li>CR-02 熱負荷</li>
+            <li>CR-01 空間 / 排氣參數</li>
+            <li>CR-02 熱負荷分析</li>
             <li>CR-03 DCC 選型</li>
-            <li>CR-04 FFU · CR-05 回風道</li>
+            <li>CR-04 FFU 核算 · CR-05 回風道</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
 
         <div class="db-card" onclick="showTab('dcc')" data-color="amber">
+          <div class="dbc-topbar"></div>
           <div class="dbc-icon">❄️</div>
           <div class="dbc-badge">3 工具</div>
           <div class="dbc-num">04</div>
-          <h3 class="dbc-title">乾式盤管</h3>
-          <p class="dbc-desc">顯熱冷卻量、盤管面積與面速度、CHW需求與露點確認</p>
+          <h3 class="dbc-title">乾式盤管 DCC</h3>
+          <p class="dbc-desc">顯熱冷卻量計算、盤管面積與面速度、CHW 需求 + 結露風險確認</p>
           <ul class="dbc-list">
             <li>DCC-01 顯熱冷卻量</li>
-            <li>DCC-02 盤管面積/面速度</li>
-            <li>DCC-03 CHW 需求</li>
+            <li>DCC-02 盤管面積 / 面速度</li>
+            <li>DCC-03 CHW 需求 + 露點確認</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
 
         <div class="db-card" onclick="showTab('mau')" data-color="green">
+          <div class="dbc-topbar"></div>
           <div class="dbc-icon">🌡️</div>
-          <div class="dbc-badge">5 工具</div>
+          <div class="dbc-badge">7 工具</div>
           <div class="dbc-num">05</div>
           <h3 class="dbc-title">MAU 外調機</h3>
-          <p class="dbc-desc">設計目標、盤管排列、除濕量、冷凍水、焓濕圖</p>
+          <p class="dbc-desc">設計目標設定、盤管處理排列、除濕量、冷凍水需求、焓濕圖、3D 模型</p>
           <ul class="dbc-list">
-            <li>MAU-D 設計目標</li>
-            <li>MAU-02 除濕量計算</li>
-            <li>MAU-03 冷凍水需求</li>
-            <li>MAU-04 空氣線圖</li>
+            <li>MAU-D 設計目標 + 容差設定</li>
+            <li>MAU-06 盤管處理排列</li>
+            <li>MAU-02/03 除濕量 / 冷凍水</li>
+            <li>MAU-04 焓濕圖 · MAU-05 3D 模型</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
 
         <div class="db-card" onclick="showTab('reference')" data-color="gray">
+          <div class="dbc-topbar"></div>
           <div class="dbc-icon">📋</div>
           <div class="dbc-badge">6 表格</div>
           <div class="dbc-num">06</div>
           <h3 class="dbc-title">公式參考</h3>
-          <p class="dbc-desc">風量/水量公式、空氣/水物理常數、換氣次數建議值</p>
+          <p class="dbc-desc">風量 / 水量公式、空氣 / 水物理常數、換氣次數建議值、單位換算</p>
           <ul class="dbc-list">
             <li>風量 · 水量計算公式</li>
             <li>空氣 · 水物理常數</li>
-            <li>換氣次數建議值</li>
-            <li>單位換算表</li>
+            <li>換氣次數建議值 (ACH)</li>
+            <li>制冷 · 流量 · 壓力換算表</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+        <!-- AI DATA CENTER CARD -->
+        <div class="db-card db-card-ai" onclick="showTab('datacenter')" data-color="ai">
+          <div class="dbc-topbar"></div>
+          <div class="dbc-ai-glow"></div>
+          <div class="dbc-icon">🤖</div>
+          <div class="dbc-badge dbc-badge-ai">NEW · 4 工具</div>
+          <div class="dbc-num">07</div>
+          <h3 class="dbc-title">AI Data Center 模擬器</h3>
+          <p class="dbc-desc">GPU 機架熱密度分析、冷卻方式智能選型、PUE 效率計算、液冷 CHW 需求估算</p>
+          <ul class="dbc-list">
+            <li>ADC-01 IT 熱負荷估算</li>
+            <li>ADC-02 冷卻方式智能選型</li>
+            <li>ADC-03 PUE / DCiE 計算</li>
+            <li>ADC-04 液冷 CHW 需求</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -1418,12 +1445,241 @@
 
       </div><!-- /.mau-layout -->
     </section>
+    <!-- ── AI Data Center Simulator ── -->
+    <section id="tab-datacenter" class="tab-section">
+      <div class="section-header adc-header">
+        <h2><span class="tag tag-ai">07</span> AI Data Center 冷卻模擬器</h2>
+        <p class="section-desc">AI / GPU Data Center Thermal &amp; Cooling Simulation · PUE · Liquid Cooling</p>
+      </div>
+      <div class="calc-grid">
+
+        <!-- ADC-01 IT Load -->
+        <div class="calc-card adc-card">
+          <div class="card-header">
+            <span class="card-num card-num-ai">ADC-01</span>
+            <h3>IT 熱負荷估算</h3>
+            <span class="formula-badge">IT Load = Racks × kW/Rack</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>機架數量</label>
+              <div class="input-row">
+                <input type="number" id="adc1-racks" placeholder="50" step="1" min="1" value="50" />
+                <span class="unit">架</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>每架平均功率密度</label>
+              <div class="input-row">
+                <input type="number" id="adc1-density" placeholder="20" step="1" min="1" value="20" />
+                <span class="unit">kW/架</span>
+              </div>
+              <div class="hint">一般伺服器：5–15 kW｜GPU/AI 訓練：20–80 kW｜液冷 DGX：60–100 kW</div>
+            </div>
+            <div class="input-group">
+              <label>UPS 損失率</label>
+              <div class="input-row">
+                <input type="number" id="adc1-ups" placeholder="4" step="0.5" min="0" max="20" value="4" />
+                <span class="unit">%</span>
+              </div>
+              <div class="hint">現代高效 UPS：3–5%｜老舊 UPS：8–12%</div>
+            </div>
+            <div class="input-group">
+              <label>PDU 損失率</label>
+              <div class="input-row">
+                <input type="number" id="adc1-pdu" placeholder="2" step="0.5" min="0" max="10" value="2" />
+                <span class="unit">%</span>
+              </div>
+            </div>
+            <button class="calc-btn calc-btn-ai" onclick="calcADC1()">計算 IT 負荷</button>
+            <div class="result-box multi" id="adc1-result">
+              <div class="result-item">
+                <span class="result-label">純 IT 負荷</span>
+                <span class="result-value" id="adc1-it">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">UPS+PDU 損失</span>
+                <span class="result-value" id="adc1-ups">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">總 IT 側負荷</span>
+                <span class="result-value" id="adc1-total">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADC-02 Cooling Selection -->
+        <div class="calc-card adc-card">
+          <div class="card-header">
+            <span class="card-num card-num-ai">ADC-02</span>
+            <h3>冷卻方式智能選型</h3>
+            <span class="formula-badge">Cooling Strategy</span>
+          </div>
+          <div class="card-body">
+            <div class="cr-ref-row">
+              <span class="cr-ref-label">IT 側負荷 <span class="cr-ref-tag">↑ ADC-01</span></span>
+              <span><span class="cr-ref-val" id="adc2-ref-it">—</span> <span class="cr-ref-unit">kW</span></span>
+            </div>
+            <div class="input-group">
+              <label>機架功率密度</label>
+              <div class="input-row">
+                <input type="number" id="adc2-density" placeholder="20" step="1" min="1" value="20" />
+                <span class="unit">kW/架</span>
+              </div>
+              <div class="hint">依此判斷最適冷卻方案，可直接輸入或從 ADC-01 帶入</div>
+            </div>
+            <button class="calc-btn calc-btn-ai" onclick="calcADC2()">選型分析</button>
+            <div class="result-box" id="adc2-result">
+              <div id="adc2-result-inner" class="adc-rec-wrap">
+                <div class="adc-rec-placeholder">請輸入機架功率密度後按「選型分析」</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADC-03 PUE -->
+        <div class="calc-card adc-card">
+          <div class="card-header">
+            <span class="card-num card-num-ai">ADC-03</span>
+            <h3>PUE / DCiE 計算</h3>
+            <span class="formula-badge">PUE = Total / IT</span>
+          </div>
+          <div class="card-body">
+            <div class="cr-ref-row">
+              <span class="cr-ref-label">IT 側負荷 <span class="cr-ref-tag">↑ ADC-01</span></span>
+              <span><span class="cr-ref-val" id="adc3-ref-it">—</span> <span class="cr-ref-unit">kW</span></span>
+            </div>
+            <div class="input-group">
+              <label>IT 設備功耗</label>
+              <div class="input-row">
+                <input type="number" id="adc3-it" placeholder="1000" step="10" min="0" />
+                <span class="unit">kW</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>冷卻系統功耗 (冰機+冷卻塔+泵)</label>
+              <div class="input-row">
+                <input type="number" id="adc3-cool" placeholder="300" step="10" min="0" />
+                <span class="unit">kW</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>照明 + 辦公功耗</label>
+              <div class="input-row">
+                <input type="number" id="adc3-light" placeholder="20" step="5" min="0" value="20" />
+                <span class="unit">kW</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>其他雜項</label>
+              <div class="input-row">
+                <input type="number" id="adc3-other" placeholder="10" step="5" min="0" value="10" />
+                <span class="unit">kW</span>
+              </div>
+            </div>
+            <button class="calc-btn calc-btn-ai" onclick="calcADC3()">計算 PUE</button>
+            <div class="result-box multi" id="adc3-result">
+              <div class="result-item">
+                <span class="result-label">設施總功耗</span>
+                <span class="result-value" id="adc3-total">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">PUE</span>
+                <span class="result-value" id="adc3-pue">—</span>
+                <span class="result-unit"></span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">DCiE</span>
+                <span class="result-value" id="adc3-dcie">—</span>
+                <span class="result-unit">%</span>
+              </div>
+              <div class="result-item" style="grid-column:1/-1">
+                <span class="result-label">效能評級</span>
+                <span class="result-value" id="adc3-grade" style="font-size:.9rem">—</span>
+                <span class="result-unit"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADC-04 Liquid Cooling -->
+        <div class="calc-card adc-card">
+          <div class="card-header">
+            <span class="card-num card-num-ai">ADC-04</span>
+            <h3>液冷 CHW 需求估算</h3>
+            <span class="formula-badge">L = Q·ratio / (Cp·ρ·ΔT)</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>IT 總熱負荷</label>
+              <div class="input-row">
+                <input type="number" id="adc4-it" placeholder="1000" step="10" min="0" />
+                <span class="unit">kW</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>液冷帶走比例</label>
+              <div class="input-row">
+                <input type="number" id="adc4-ratio" placeholder="70" step="5" min="10" max="100" value="70" />
+                <span class="unit">%</span>
+              </div>
+              <div class="hint">背板液冷：60–80%｜直接液冷 DLC：85–95%｜沉浸式：95–100%</div>
+            </div>
+            <div class="input-group">
+              <label>冷卻水供水溫度 Ts</label>
+              <div class="input-row">
+                <input type="number" id="adc4-ts" placeholder="20" step="1" value="20" />
+                <span class="unit">°C</span>
+              </div>
+              <div class="hint">直接液冷可用 40–45°C 供水免冷機，節能效益最大</div>
+            </div>
+            <div class="input-group">
+              <label>冷卻水回水溫度 Tr</label>
+              <div class="input-row">
+                <input type="number" id="adc4-tr" placeholder="30" step="1" value="30" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <button class="calc-btn calc-btn-ai" onclick="calcADC4()">計算液冷需求</button>
+            <div class="result-box multi" id="adc4-result">
+              <div class="result-item">
+                <span class="result-label">液冷側熱量</span>
+                <span class="result-value" id="adc4-liquid">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">殘餘空冷熱量</span>
+                <span class="result-value" id="adc4-air">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">冷卻水流量</span>
+                <span class="result-value" id="adc4-flow">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">冷卻水流量</span>
+                <span class="result-value" id="adc4-lmin">—</span>
+                <span class="result-unit">L/min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 
   <footer>
     <div class="footer-inner">
       <span>HVAC Calculation Database © 2026</span>
-      <span class="footer-build">Build 2.0.0 · 風量 / 水量 / 潔淨室 / DCC / MAU</span>
+      <span class="footer-build">Build 3.0.0 · 風量 / 水量 / 潔淨室 / DCC / MAU / AI Data Center</span>
     </div>
   </footer>
 
@@ -1466,7 +1722,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
   <script type="module" src="mau3d.js?v=4"></script>
 </body>
 </html>

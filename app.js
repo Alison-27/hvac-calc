@@ -6,6 +6,9 @@ function showDashboard() {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const navBack = document.getElementById('nav-back');
   if (navBack) navBack.style.display = 'none';
+  // Hide nav tab buttons on dashboard
+  const nav = document.getElementById('main-nav');
+  if (nav) nav.classList.add('dashboard-mode');
 }
 
 function showTab(tabId) {
@@ -17,6 +20,9 @@ function showTab(tabId) {
   if (activeBtn) activeBtn.classList.add('active');
   const navBack = document.getElementById('nav-back');
   if (navBack) navBack.style.display = '';
+  // Show nav tab buttons when in a section
+  const nav = document.getElementById('main-nav');
+  if (nav) nav.classList.remove('dashboard-mode');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1050,3 +1056,107 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
 setTheme(localStorage.getItem('hvac-theme') || 'dark');
+
+// ── AI Data Center Simulator ─────────────────────────────────
+
+// ADC-01: IT Load Estimation
+function calcADC1() {
+  const racks    = parseFloat(document.getElementById('adc1-racks').value);
+  const density  = parseFloat(document.getElementById('adc1-density').value);
+  const upsPct   = parseFloat(document.getElementById('adc1-ups').value) / 100;
+  const pduPct   = parseFloat(document.getElementById('adc1-pdu').value) / 100;
+  if (!racks || !density) return;
+  const itLoad   = racks * density;                          // kW
+  const upsLoss  = itLoad * upsPct;
+  const pduLoss  = itLoad * pduPct;
+  const totalIT  = itLoad + upsLoss + pduLoss;
+  setResult('adc1-it',    itLoad,  1);
+  setResult('adc1-ups',   upsLoss, 1);
+  setResult('adc1-total', totalIT, 1);
+  // push to ADC-02/03/04
+  const d2 = document.getElementById('adc2-density');
+  const d3 = document.getElementById('adc3-it');
+  const d4 = document.getElementById('adc4-it');
+  if (d2) d2.value = density.toFixed(1);
+  if (d3) d3.value = totalIT.toFixed(1);
+  if (d4) d4.value = totalIT.toFixed(1);
+  const r2 = document.getElementById('adc2-ref-it');
+  const r3 = document.getElementById('adc3-ref-it');
+  if (r2) r2.textContent = totalIT.toFixed(1);
+  if (r3) r3.textContent = totalIT.toFixed(1);
+}
+
+// ADC-02: Cooling Selection
+function calcADC2() {
+  const density = parseFloat(document.getElementById('adc2-density').value);
+  if (!density) return;
+  let method = '', color = '', pue = '', note = '';
+  if (density < 5) {
+    method = '傳統空調 (CRAC/CRAH)'; color = '#34d399';
+    pue = '1.6 – 2.0'; note = '低密度機架，一般空調即可滿足需求';
+  } else if (density < 15) {
+    method = '精密空調 + 熱走道封閉'; color = '#3b9eff';
+    pue = '1.4 – 1.7'; note = '中等密度，建議熱冷走道隔離，Row-based CRAC';
+  } else if (density < 30) {
+    method = '背板液冷 (Rear-door Heat Exchanger)'; color = '#a78bfa';
+    pue = '1.2 – 1.5'; note = '高密度，背板液冷可直接帶走 70–100% 熱量';
+  } else if (density < 60) {
+    method = '直接液冷 DLC (Warm Water Cooling)'; color = '#f0a430';
+    pue = '1.1 – 1.3'; note = '超高密度，直接液冷至晶片/模組，40–45°C 供水可免冷機';
+  } else {
+    method = '沉浸式液冷 (Immersion Cooling)'; color = '#ff6b8a';
+    pue = '1.03 – 1.15'; note = '極端密度 (AI/GPU)，整機浸入冷卻液，近零顯熱散逸至空氣';
+  }
+  const el = document.getElementById('adc2-result-inner');
+  if (el) {
+    el.innerHTML = `
+      <div class="adc-rec-label">建議冷卻方式</div>
+      <div class="adc-rec-method" style="color:${color}">${method}</div>
+      <div class="adc-rec-pue"><span class="adc-rec-key">預期 PUE</span><span class="adc-rec-val" style="color:${color}">${pue}</span></div>
+      <div class="adc-rec-note">${note}</div>
+    `;
+    const box = el.closest('.result-box');
+    if (box) box.classList.add('has-result');
+  }
+}
+
+// ADC-03: PUE Calculation
+function calcADC3() {
+  const itLoad    = parseFloat(document.getElementById('adc3-it').value);
+  const coolLoad  = parseFloat(document.getElementById('adc3-cool').value);
+  const lightLoad = parseFloat(document.getElementById('adc3-light').value) || 0;
+  const otherLoad = parseFloat(document.getElementById('adc3-other').value) || 0;
+  if (!itLoad || !coolLoad) return;
+  const totalFac = itLoad + coolLoad + lightLoad + otherLoad;
+  const pue = totalFac / itLoad;
+  const dcie = (1 / pue * 100);
+  let grade = '', gradeColor = '';
+  if (pue < 1.2) { grade = 'Platinum — 世界頂級'; gradeColor = '#34d399'; }
+  else if (pue < 1.4) { grade = 'Gold — 業界領先'; gradeColor = '#3b9eff'; }
+  else if (pue < 1.6) { grade = 'Silver — 良好'; gradeColor = '#a78bfa'; }
+  else if (pue < 2.0) { grade = 'Bronze — 一般水準'; gradeColor = '#f0a430'; }
+  else { grade = '待改善 — 效率偏低'; gradeColor = '#ff6b8a'; }
+  setResult('adc3-total', totalFac, 1);
+  setResult('adc3-pue',   pue, 3);
+  setResult('adc3-dcie',  dcie, 1);
+  const gradeEl = document.getElementById('adc3-grade');
+  if (gradeEl) { gradeEl.textContent = grade; gradeEl.style.color = gradeColor; }
+}
+
+// ADC-04: Liquid Cooling CHW Demand
+function calcADC4() {
+  const itLoad  = parseFloat(document.getElementById('adc4-it').value);
+  const ratio   = parseFloat(document.getElementById('adc4-ratio').value) / 100;
+  const ts      = parseFloat(document.getElementById('adc4-ts').value);
+  const tr      = parseFloat(document.getElementById('adc4-tr').value);
+  if (!itLoad || !ratio || !ts || !tr || tr <= ts) return;
+  const liquidLoad = itLoad * ratio;                        // kW
+  const airLoad    = itLoad - liquidLoad;                   // kW
+  const dt         = tr - ts;
+  const flow_m3h   = (liquidLoad * 3600) / (4186 * dt);    // m³/h
+  const flow_lmin  = flow_m3h * 1000 / 60;
+  setResult('adc4-liquid', liquidLoad, 1);
+  setResult('adc4-air',    airLoad,    1);
+  setResult('adc4-flow',   flow_m3h,   2);
+  setResult('adc4-lmin',   flow_lmin,  1);
+}
