@@ -469,7 +469,6 @@ function initPsychroChart() {
     }
     if (path) {
       h += `<path d="${path}" stroke="#1e3555" stroke-width="0.7" fill="none" clip-path="url(#cc)"/>`;
-      if (lx != null) h += `<text x="${lx+3}" y="${ly+4}" fill="#2a4560" font-size="9" font-family="Share Tech Mono,monospace">${rh}%</text>`;
     }
   }
 
@@ -507,21 +506,16 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
   const w2 = Math.min(omegaFromTRH(T2, RH2) * 1000, 30);
   const x1 = PC.tx(T1), y1 = PC.ty(w1);
   const x2 = PC.tx(T2), y2 = PC.ty(w2);
-  const h1 = enthalpyAir(T1, w1/1000).toFixed(1);
-  const h2 = enthalpyAir(T2, w2/1000).toFixed(1);
-  const lbl = (x, y, color, line1, line2) => {
-    const lx = x > PC.ml + PC.cw - 110 ? x - 96 : x + 8;
-    const ly = y > PC.mt + 50 ? y - 8 : y + 18;
-    return `<rect x="${lx-2}" y="${ly-12}" width="94" height="29" rx="2" fill="rgba(8,13,24,.9)"/>` +
-           `<text x="${lx}" y="${ly}" fill="${color}" font-size="10" font-family="Share Tech Mono,monospace">${line1}</text>` +
-           `<text x="${lx}" y="${ly+13}" fill="${color}88" font-size="9" font-family="Share Tech Mono,monospace">${line2}</text>`;
-  };
+  const lx1 = x1 > PC.ml + PC.cw - 28 ? x1 - 22 : x1 + 8;
+  const ly1 = y1 > PC.mt + 14 ? y1 - 7 : y1 + 14;
+  const lx2 = x2 > PC.ml + PC.cw - 28 ? x2 - 22 : x2 + 8;
+  const ly2 = y2 > PC.mt + 14 ? y2 - 7 : y2 + 14;
   grp.innerHTML =
     `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f0a430" stroke-width="1.8" stroke-dasharray="7,4" opacity=".9"/>` +
     `<circle cx="${x1}" cy="${y1}" r="6" fill="#f0a430" stroke="#080d18" stroke-width="1.5" onclick="clickPsychroPoint(0)" style="cursor:pointer"/>` +
-    lbl(x1, y1, '#f0a430', `OA ${T1}°C/${RH1}%`, `h=${h1} kJ/kg`) +
+    `<text x="${lx1}" y="${ly1}" fill="#f0a430" font-size="9.5" font-family="Share Tech Mono,monospace" font-weight="bold">OA</text>` +
     `<circle cx="${x2}" cy="${y2}" r="6" fill="#00d4aa" stroke="#080d18" stroke-width="1.5" onclick="clickPsychroPoint(1)" style="cursor:pointer"/>` +
-    lbl(x2, y2, '#00d4aa', `SA ${T2}°C/${RH2}%`, `h=${h2} kJ/kg`);
+    `<text x="${lx2}" y="${ly2}" fill="#00d4aa" font-size="9.5" font-family="Share Tech Mono,monospace" font-weight="bold">SA</text>`;
   syncPsychroModal();
 }
 
@@ -966,12 +960,10 @@ function updatePsychroProcess(states) {
   pts.forEach((p, i) => {
     const isOA = i === 0, isSA = i === pts.length - 1;
     const col = isOA ? '#f0a430' : isSA ? '#00d4aa' : COLS[i % COLS.length];
-    const lx  = p.px > PC.ml + PC.cw - 114 ? p.px - 106 : p.px + 8;
-    const ly  = p.py > PC.mt + 50 ? p.py - 10 : p.py + 18;
+    const lx = p.px > PC.ml + PC.cw - 28 ? p.px - 22 : p.px + 8;
+    const ly = p.py > PC.mt + 14 ? p.py - 7 : p.py + 14;
     h += `<circle cx="${p.px}" cy="${p.py}" r="${isOA||isSA ? 6 : 5}" fill="${col}" stroke="#080d18" stroke-width="1.5" clip-path="url(#cc)" onclick="clickPsychroPoint(${i})" style="cursor:pointer"/>`;
-    h += `<rect x="${lx-2}" y="${ly-12}" width="104" height="28" rx="2" fill="rgba(8,13,24,.9)"/>`;
-    h += `<text x="${lx}" y="${ly}" fill="${col}" font-size="10" font-family="Share Tech Mono,monospace">${p.id} ${p.T.toFixed(1)}°C/${p.RH}%</text>`;
-    h += `<text x="${lx}" y="${ly+13}" fill="${col}88" font-size="9" font-family="Share Tech Mono,monospace">h=${p.h.toFixed(1)} ω=${p.wg.toFixed(2)} g/kg</text>`;
+    h += `<text x="${lx}" y="${ly}" fill="${col}" font-size="9.5" font-family="Share Tech Mono,monospace" font-weight="bold">${p.id}</text>`;
   });
 
   grp.innerHTML = h;
