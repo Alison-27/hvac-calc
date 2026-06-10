@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=8" />
   <script type="importmap">
   {
     "imports": {
@@ -1276,6 +1276,7 @@
             <span class="card-num">MAU-05</span>
             <h3>MAU 構造 3D 模型</h3>
             <span class="formula-badge">Interactive 3D · 可編輯</span>
+            <button class="chart-expand-btn" onclick="window.mau3dExpand()" title="放大視窗">⛶</button>
           </div>
           <div class="card-body">
             <div class="mau3d-wrap">
@@ -1283,6 +1284,12 @@
                 <div id="mau3d-container"></div>
                 <div id="mau3d-param-panel">
                   <!-- filled by mau3d.js on component click -->
+                </div>
+                <!-- Toolbar below 3D canvas -->
+                <div class="mau3d-toolbar">
+                  <button id="mau3d-door-btn" class="mau3d-tool-btn" onclick="window.mau3dToggleDoor()">🔑 打開外殼門</button>
+                  <span class="mau3d-tool-sep">|</span>
+                  <button class="mau3d-tool-btn" onclick="window.mau3dExpand()">⛶ 放大視窗</button>
                 </div>
               </div>
               <div class="mau3d-controls">
@@ -1312,6 +1319,25 @@
     </div>
   </footer>
 
+  <!-- MAU-05 3D Expand Modal -->
+  <div id="mau3d-modal" onclick="if(event.target===this)window.mau3dCollapse()">
+    <div class="mau3d-modal-inner">
+      <div class="mau3d-modal-hdr">
+        <span class="mau3d-modal-title">MAU 構造 3D 模型</span>
+        <div class="mau3d-modal-actions">
+          <button id="mau3d-modal-door-btn" class="mau3d-tool-btn" onclick="window.mau3dToggleDoor()">🔑 打開外殼門</button>
+          <button class="psychro-modal-close" onclick="window.mau3dCollapse()">✕ 關閉</button>
+        </div>
+      </div>
+      <div class="mau3d-modal-body">
+        <div id="mau3d-modal-canvas-wrap"></div>
+        <div id="mau3d-modal-info">
+          <div class="m3d-info-empty">點選零件查看參數</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Psychrometric Chart Modal -->
   <div id="psychro-modal" class="psychro-modal" style="display:none" onclick="if(event.target===this)closePsychroModal()">
     <div class="psychro-modal-inner">
@@ -1333,6 +1359,6 @@
   </div>
 
   <script src="app.js?v=9"></script>
-  <script type="module" src="mau3d.js?v=3"></script>
+  <script type="module" src="mau3d.js?v=4"></script>
 </body>
 </html>

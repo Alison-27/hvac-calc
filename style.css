@@ -985,6 +985,134 @@ footer {
 }
 .psychro-modal-body svg { flex: 1; }
 
+/* ── MAU-05 3D Expand Modal ── */
+#mau3d-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  background: rgba(4,8,16,.92);
+  backdrop-filter: blur(10px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#mau3d-modal.active {
+  display: flex;
+  animation: fadeUp .15s ease;
+}
+.mau3d-modal-inner {
+  width: 97vw;
+  height: 94vh;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 28px 90px rgba(0,0,0,.75);
+}
+.mau3d-modal-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .55rem 1rem;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: .65rem;
+}
+.mau3d-modal-title {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: .88rem;
+  letter-spacing: .06em;
+  color: var(--teal);
+  text-transform: uppercase;
+}
+.mau3d-modal-actions { display: flex; gap: .45rem; align-items: center; }
+.mau3d-modal-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+#mau3d-modal-canvas-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  background: #060c16;
+}
+#mau3d-modal-canvas-wrap canvas {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+#mau3d-modal-info {
+  width: 240px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  background: var(--bg2);
+}
+#mau3d-modal-info .mpanel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .55rem .75rem .4rem;
+  border-bottom: 1px solid var(--border);
+}
+#mau3d-modal-info .mpanel-title {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: .82rem;
+  letter-spacing: .04em;
+}
+#mau3d-modal-info .mpanel-close { display: none; }
+#mau3d-modal-info .mpanel-body { padding: .55rem .75rem; }
+#mau3d-modal-info .mpanel-row { margin-bottom: .55rem; }
+.m3d-info-empty {
+  color: var(--text-muted);
+  font-family: var(--sans);
+  font-size: .72rem;
+  padding: 1.2rem .75rem;
+  text-align: center;
+}
+
+/* MAU 3D Toolbar */
+.mau3d-toolbar {
+  display: flex;
+  gap: .40rem;
+  padding: .36rem .55rem;
+  background: var(--bg3);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.mau3d-tool-btn {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--text-muted);
+  font-family: var(--sans);
+  font-size: .70rem;
+  font-weight: 600;
+  padding: .26rem .65rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.mau3d-tool-btn:hover { border-color: var(--teal-dim); color: var(--teal); }
+.mau3d-tool-btn.active {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,212,170,.07);
+}
+.mau3d-tool-sep {
+  color: var(--border2);
+  font-size: .80rem;
+  padding: 0 .05rem;
+  user-select: none;
+}
+
 /* ── MAU-07 tabs ── */
 .mau07-tabs {
   display: flex;
