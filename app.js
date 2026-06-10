@@ -551,22 +551,34 @@ function updatePsychroTarget() {
 // ── MAU-05 3D Interactive Model ──────────────────────────────
 
 const COMP_CATALOG = [
-  { key:'g4',   label:'初效濾 G4',   cat:'filter', w:0.5,  rgb:[36,62,96]  },
-  { key:'f7',   label:'中效濾 F7',   cat:'filter', w:0.5,  rgb:[46,74,112] },
-  { key:'hepa', label:'高效濾 HEPA', cat:'filter', w:0.5,  rgb:[58,88,132] },
-  { key:'chw',  label:'冰水盤管', cat:'chw',  w:1.8,  rgb:[0,104,145] },
-  { key:'hhw',  label:'熱水盤管', cat:'hhw',  w:1.8,  rgb:[145,68,0]  },
-  { key:'wash', label:'水洗段',        cat:'wash', w:2.0,  rgb:[18,58,96]  },
-  { key:'fan',  label:'送風機',         cat:'fan',  w:1.6,  rgb:[24,38,60]  },
+  { key:'ai',     label:'進風段 AI',   cat:'damper',  w:0.5,  rgb:[26,40,56]  },
+  { key:'mb',     label:'混合箱 MB',   cat:'mixing',  w:0.7,  rgb:[16,32,48]  },
+  { key:'ee',     label:'節能段 EE',   cat:'mixing',  w:0.7,  rgb:[16,30,48]  },
+  { key:'pf-g4',  label:'板式濾 G4',   cat:'filter',  w:0.5,  rgb:[36,62,96]  },
+  { key:'pf-f7',  label:'袋式濾 F7',   cat:'filter',  w:0.5,  rgb:[46,74,112] },
+  { key:'hf-h13', label:'高效濾 H13',  cat:'filter',  w:0.5,  rgb:[58,88,132] },
+  { key:'cc',     label:'冷水盤管 CC', cat:'chw',     w:1.8,  rgb:[0,104,145] },
+  { key:'hc',     label:'熱水盤管 HC', cat:'hhw',     w:1.8,  rgb:[145,68,0]  },
+  { key:'eh',     label:'電熱段 EH',   cat:'heater',  w:0.7,  rgb:[96,16,16]  },
+  { key:'ep',     label:'靜電除塵 EP', cat:'ep',      w:0.7,  rgb:[42,48,16]  },
+  { key:'sf_d',   label:'送風機 SF-D', cat:'fan',     w:1.6,  rgb:[24,38,60]  },
+  { key:'sf_e',   label:'送風機 EC',   cat:'fan',     w:1.6,  rgb:[20,50,60]  },
+  { key:'rf_d',   label:'回風機 RF-D', cat:'fan',     w:1.6,  rgb:[40,24,60]  },
+  { key:'es',     label:'空段 ES',     cat:'empty',   w:0.5,  rgb:[22,30,40]  },
+  { key:'ao',     label:'出風段 AO',   cat:'damper',  w:0.5,  rgb:[26,40,56]  },
 ];
 
 let mauComps = [
-  { id:1, key:'g4' },
-  { id:2, key:'chw' },
-  { id:3, key:'fan' },
-  { id:4, key:'f7' },
+  { id:1, key:'ai'    },
+  { id:2, key:'mb'    },
+  { id:3, key:'pf-g4' },
+  { id:4, key:'pf-f7' },
+  { id:5, key:'cc'    },
+  { id:6, key:'hc'    },
+  { id:7, key:'sf_d'  },
+  { id:8, key:'ao'    },
 ];
-let _nid = 5;
+let _nid = 9;
 
 function updateMAUDiagram(T1, RH1, T2, RH2) {
   window.mau3dUpdateState?.({ T: T1, RH: RH1 }, { T: T2, RH: RH2 });
