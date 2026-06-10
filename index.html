@@ -7,6 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three":          "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.min.js",
+      "three/addons/":  "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
   <div class="grid-bg"></div>
@@ -1220,7 +1228,10 @@
           <div class="card-body">
             <div class="mau3d-wrap">
               <div class="mau3d-canvas-wrap">
-                <canvas id="mau3d" width="800" height="360" style="width:100%;display:block"></canvas>
+                <div id="mau3d-container"></div>
+                <div id="mau3d-param-panel">
+                  <!-- filled by mau3d.js on component click -->
+                </div>
               </div>
               <div class="mau3d-controls">
                 <div class="mau3d-section">
@@ -1248,5 +1259,6 @@
   </footer>
 
   <script src="app.js"></script>
+  <script type="module" src="mau3d.js"></script>
 </body>
 </html>

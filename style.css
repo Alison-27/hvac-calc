@@ -665,8 +665,108 @@ footer {
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--bg);
+  position: relative;
 }
-.mau3d-canvas-wrap canvas { display: block; width: 100%; }
+#mau3d-container {
+  width: 100%;
+  height: 420px;
+  display: block;
+}
+#mau3d-container canvas { display: block; width: 100% !important; height: 100% !important; }
+
+/* Parameter panel overlay */
+#mau3d-param-panel {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 210px;
+  background: rgba(8, 13, 24, 0.94);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  transform: translateX(calc(100% + 0.8rem));
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 10;
+}
+#mau3d-param-panel.visible {
+  transform: translateX(0);
+  pointer-events: all;
+}
+[data-theme="light"] #mau3d-param-panel {
+  background: rgba(240, 244, 249, 0.96);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.mpanel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.75rem 0.45rem;
+  border-bottom: 1px solid var(--border);
+}
+.mpanel-title {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--teal);
+}
+.mpanel-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color 0.12s, background 0.12s;
+}
+.mpanel-close:hover { color: var(--amber); background: var(--amber-dim); }
+.mpanel-body { padding: 0.55rem 0.75rem; }
+.mpanel-row {
+  margin-bottom: 0.5rem;
+}
+.mpanel-row:last-child { margin-bottom: 0; }
+.mpanel-label {
+  display: block;
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 0.22rem;
+}
+.mpanel-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.mpanel-input {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.5rem;
+  min-width: 0;
+  transition: border-color 0.15s;
+}
+.mpanel-input:focus {
+  outline: none;
+  border-color: var(--teal-dim);
+  box-shadow: 0 0 0 2px var(--teal-glow);
+}
+.mpanel-unit {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 .mau3d-controls {
   width: 192px;
   flex-shrink: 0;

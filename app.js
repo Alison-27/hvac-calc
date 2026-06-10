@@ -1,4 +1,4 @@
-// ── Tab Navigation ──────────────────────────────────────────
+// ?? Tab Navigation ??????????????????????????????????????????
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const tab = btn.dataset.tab;
@@ -9,9 +9,9 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-// ── Helpers ─────────────────────────────────────────────────
+// ?? Helpers ?????????????????????????????????????????????????
 function fmt(n, dec = 2) {
-  if (!isFinite(n) || isNaN(n)) return '—';
+  if (!isFinite(n) || isNaN(n)) return '??;
   return n.toLocaleString('zh-TW', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
@@ -27,7 +27,7 @@ function getVal(id) {
   return parseFloat(document.getElementById(id).value);
 }
 
-// ── AF-01 換氣次數法 ─────────────────────────────────────────
+// ?? AF-01 ?除甈⊥瘜??????????????????????????????????????????
 function calcAF1() {
   const V = getVal('af1-volume');
   const n = getVal('af1-ach');
@@ -35,19 +35,19 @@ function calcAF1() {
   setResult('af1-val', V * n);
 }
 
-// ── AF-02 顯熱負荷法 ─────────────────────────────────────────
-// Q (m³/h) = Qs (W) / (ρ × Cp × ΔT) × 3600
+// ?? AF-02 憿舐鞎瘜??????????????????????????????????????????
+// Q (m糧/h) = Qs (W) / (? ? Cp ? ?T) ? 3600
 function calcAF2() {
   const Qs  = getVal('af2-qs');
   const dT  = getVal('af2-dt');
   const rho = getVal('af2-rho') || 1.2;
-  const Cp  = 1005; // J/(kg·K)
+  const Cp  = 1005; // J/(kg繚K)
   if (!Qs || !dT || Qs <= 0 || dT <= 0) return;
   const Q_m3h = (Qs / (rho * Cp * dT)) * 3600;
   setResult('af2-val', Q_m3h);
 }
 
-// ── AF-03 新鮮空氣量 ─────────────────────────────────────────
+// ?? AF-03 ?圈悅蝛箸除???????????????????????????????????????????
 function calcAF3() {
   const N = getVal('af3-people');
   const q = getVal('af3-q');
@@ -55,20 +55,20 @@ function calcAF3() {
   setResult('af3-val', N * q);
 }
 
-// ── AF-04 風管截面積 ─────────────────────────────────────────
+// ?? AF-04 憸函恣?芷蝛??????????????????????????????????????????
 function calcAF4() {
   const Q_m3h = getVal('af4-q');
   const v     = getVal('af4-v');
   if (!Q_m3h || !v || Q_m3h <= 0 || v <= 0) return;
   const Q_m3s = Q_m3h / 3600;
-  const A = Q_m3s / v;           // m²
+  const A = Q_m3s / v;           // m簡
   const D = Math.sqrt(4 * A / Math.PI) * 1000; // mm
   setResult('af4-area', A, 4);
   setResult('af4-diam', D, 0);
 }
 
-// ── WF-01 冷凍水流量 ─────────────────────────────────────────
-// m³/h = kW × 3600 / (4186 × ΔT)
+// ?? WF-01 ?瑕?瘞湔????????????????????????????????????????????
+// m糧/h = kW ? 3600 / (4186 ? ?T)
 function calcWF1() {
   const Q_kw = getVal('wf1-load');
   const dT   = getVal('wf1-dt');
@@ -83,7 +83,7 @@ function calcWF1() {
   setResult('wf1-gpm', gpm);
 }
 
-// ── WF-02 冷卻水流量 ─────────────────────────────────────────
+// ?? WF-02 ?瑕瘞湔????????????????????????????????????????????
 function calcWF2() {
   const Qevap = getVal('wf2-qevap');
   const COP   = getVal('wf2-cop');
@@ -97,7 +97,7 @@ function calcWF2() {
   setResult('wf2-flow', m3h);
 }
 
-// ── WF-03 管道管徑 ──────────────────────────────────────────
+// ?? WF-03 蝞⊿?蝞∪? ??????????????????????????????????????????
 const DN_SERIES = [15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500];
 
 function selectDN(calcDiam_mm) {
@@ -122,7 +122,7 @@ function calcWF3() {
   document.getElementById('wf3-dn').closest('.result-box').classList.add('has-result');
 }
 
-// ── WF-04 制冷量單位換算 ────────────────────────────────────
+// ?? WF-04 ?嗅?雿?蝞?????????????????????????????????????
 // 1 RT = 3.517 kW = 3024 kcal/h = 12000 BTU/h
 function calcWF4() {
   const rawVal  = getVal('wf4-val');
@@ -144,12 +144,12 @@ function calcWF4() {
   setResult('wf4-btu',  kw * 3412.14, 0);
 }
 
-// ── Psychrometric Helpers ────────────────────────────────────
+// ?? Psychrometric Helpers ????????????????????????????????????
 // Saturation vapor pressure (Magnus formula, kPa)
 function satPressure(T) {
   return 0.61078 * Math.exp(17.27 * T / (T + 237.3));
 }
-// Humidity ratio ω (kg water / kg dry air)
+// Humidity ratio ? (kg water / kg dry air)
 function omegaFromTRH(T, RH) {
   const pws = satPressure(T);
   const pw  = (RH / 100) * pws;
@@ -159,14 +159,14 @@ function omegaFromTRH(T, RH) {
 function enthalpyAir(T, omega) {
   return 1.006 * T + omega * (2501 + 1.86 * T);
 }
-// Dew point temperature (°C)
+// Dew point temperature (簞C)
 function dewPoint(T, RH) {
   const a = 17.27, b = 237.3;
   const g = (a * T / (b + T)) + Math.log(RH / 100);
   return (b * g) / (a - g);
 }
 
-// ── Clean Room 連動狀態 ───────────────────────────────────────
+// ?? Clean Room ?????????????????????????????????????????????
 const ISO_ACH = { 5: [240, 360], 6: [150, 200], 7: [60, 100], 8: [5, 30] };
 
 const crState = {
@@ -181,7 +181,7 @@ function syncCR() {
   const sv = (id, val, dec) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.textContent = (val !== null && isFinite(val)) ? fmt(val, dec !== undefined ? dec : 1) : '—';
+    el.textContent = (val !== null && isFinite(val)) ? fmt(val, dec !== undefined ? dec : 1) : '??;
   };
   sv('cr2-ref-area',    crState.area,       1);
   sv('cr3-ref-qtotal',  crState.Qtotal,     1);
@@ -196,7 +196,7 @@ function syncCR() {
   }
 }
 
-// ── CR-01 空間與排氣參數 ──────────────────────────────────────
+// ?? CR-01 蝛粹???瘞??????????????????????????????????????????
 function calcCR1() {
   const iso = parseInt(document.getElementById('cr1-iso').value);
   const L   = getVal('cr1-L'), W = getVal('cr1-W'), H = getVal('cr1-H');
@@ -214,7 +214,7 @@ function calcCR1() {
   syncCR();
 }
 
-// ── CR-02 熱負荷與環境參數 ────────────────────────────────────
+// ?? CR-02 ?梯??瑁??啣?? ????????????????????????????????????
 function calcCR2() {
   const area  = crState.area;
   const equip = getVal('cr2-equip') || 0;
@@ -234,7 +234,7 @@ function calcCR2() {
   syncCR();
 }
 
-// ── CR-03 DCC 選型 ────────────────────────────────────────────
+// ?? CR-03 DCC ?詨? ????????????????????????????????????????????
 function calcCR3() {
   const Q  = crState.Qtotal, dT = crState.dT;
   if (!Q || !dT || Q <= 0 || dT <= 0) return;
@@ -253,13 +253,13 @@ function calcCR3() {
   setResult('cr3-aface',  aFace,  3);
   const dimsEl = document.getElementById('cr3-dims');
   if (dimsEl) {
-    dimsEl.textContent = fmt(fH, 2) + '×' + fmt(fW, 2);
+    dimsEl.textContent = fmt(fH, 2) + '?' + fmt(fW, 2);
     const box = dimsEl.closest('.result-box');
     if (box) box.classList.add('has-result');
   }
 }
 
-// ── CR-04 FFU 送風核算 ────────────────────────────────────────
+// ?? CR-04 FFU ?◢?貊? ????????????????????????????????????????
 function calcCR4() {
   const area    = crState.area;
   const ffuArea = parseFloat(document.getElementById('cr4-fsize').value);
@@ -283,10 +283,10 @@ function calcCR4() {
       const r = qTotal / crState.QsupDesign;
       if (r >= 1) {
         cmpEl.className = 'cr-compare ok';
-        cmpEl.textContent = '✓ FFU 供風 ' + fmt(qTotal, 0) + ' m³/h ≥ 設計需求 ' + fmt(crState.QsupDesign, 0) + ' m³/h（+' + fmt((r - 1) * 100, 1) + '%）';
+        cmpEl.textContent = '??FFU 靘◢ ' + fmt(qTotal, 0) + ' m糧/h ??閮剛??瘙?' + fmt(crState.QsupDesign, 0) + ' m糧/h嚗?' + fmt((r - 1) * 100, 1) + '%嚗?;
       } else {
         cmpEl.className = 'cr-compare warn';
-        cmpEl.textContent = '⚠ FFU 供風不足：' + fmt(qTotal, 0) + ' < 需求 ' + fmt(crState.QsupDesign, 0) + ' m³/h（差 ' + fmt((1 - r) * 100, 1) + '%）';
+        cmpEl.textContent = '??FFU 靘◢銝雲嚗? + fmt(qTotal, 0) + ' < ?瘙?' + fmt(crState.QsupDesign, 0) + ' m糧/h嚗榆 ' + fmt((1 - r) * 100, 1) + '%嚗?;
       }
     } else {
       cmpEl.className = 'cr-compare';
@@ -295,7 +295,7 @@ function calcCR4() {
   }
 }
 
-// ── CR-05 回風道實務核算 ──────────────────────────────────────
+// ?? CR-05 ?◢?祕?蝞???????????????????????????????????????
 function calcCR5() {
   const QFFU  = crState.QFFU || 0;
   const Qex   = crState.Qex  || 0;
@@ -316,8 +316,8 @@ function calcCR5() {
   const dimsEl = document.getElementById('cr5-dims');
   if (dimsEl) {
     const dims = dtype === 'round'
-      ? 'Ø' + fmt(Math.sqrt(4 * aDuct / Math.PI) * 1000, 0) + ' mm'
-      : fmt(dH, 2) + '×' + fmt(aDuct / dH, 2) + ' m';
+      ? '?' + fmt(Math.sqrt(4 * aDuct / Math.PI) * 1000, 0) + ' mm'
+      : fmt(dH, 2) + '?' + fmt(aDuct / dH, 2) + ' m';
     dimsEl.textContent = dims;
     const box = dimsEl.closest('.result-box');
     if (box) box.classList.add('has-result');
@@ -329,7 +329,7 @@ function toggleCR5DuctH() {
   if (g) g.style.display = document.getElementById('cr5-dtype').value === 'rect' ? '' : 'none';
 }
 
-// ── DCC-01 顯熱冷卻量 ─────────────────────────────────────────
+// ?? DCC-01 憿舐?瑕???????????????????????????????????????????
 function calcDCC1() {
   const Q   = getVal('dcc1-q');
   const T1  = getVal('dcc1-t1'), T2 = getVal('dcc1-t2');
@@ -340,7 +340,7 @@ function calcDCC1() {
   setResult('dcc1-rt',  kw / 3.517);
 }
 
-// ── DCC-02 盤管面積 ───────────────────────────────────────────
+// ?? DCC-02 ?斤恣?Ｙ? ???????????????????????????????????????????
 function calcDCC2() {
   const Q  = getVal('dcc2-q');
   const fv = getVal('dcc2-fv');
@@ -349,11 +349,11 @@ function calcDCC2() {
   const side = Math.round(Math.sqrt(area) * 1000);
   setResult('dcc2-area', area, 3);
   const sideEl = document.getElementById('dcc2-side');
-  sideEl.textContent = side + ' × ' + side;
+  sideEl.textContent = side + ' ? ' + side;
   sideEl.closest('.result-box').classList.add('has-result');
 }
 
-// ── DCC-03 CHW 需求 + 露點確認 ────────────────────────────────
+// ?? DCC-03 CHW ?瘙?+ ?脤?蝣箄? ????????????????????????????????
 function calcDCC3() {
   const cap  = getVal('dcc3-cap');
   const Ts   = getVal('dcc3-ts'), Tr = getVal('dcc3-tr');
@@ -365,12 +365,12 @@ function calcDCC3() {
   setResult('dcc3-flow', m3h);
   setResult('dcc3-dp',   dp, 1);
   const riskEl = document.getElementById('dcc3-risk');
-  riskEl.textContent = safe ? '✓ 安全' : '⚠ 結露風險';
+  riskEl.textContent = safe ? '??摰' : '??蝯憸券';
   riskEl.style.color  = safe ? 'var(--teal)' : 'var(--amber)';
   riskEl.closest('.result-box').classList.add('has-result');
 }
 
-// ── MAU-01 全熱冷卻負荷 ───────────────────────────────────────
+// ?? MAU-01 ?函?瑕鞎 ???????????????????????????????????????
 function calcMAU1() {
   const Q  = getVal('mau1-q');
   const T1 = getVal('mau1-t1'), RH1 = getVal('mau1-rh1');
@@ -390,7 +390,7 @@ function calcMAU1() {
   updateMAUDiagram(T1, RH1, T2, RH2);
 }
 
-// ── MAU-02 除濕量 ─────────────────────────────────────────────
+// ?? MAU-02 ?斗????????????????????????????????????????????????
 function calcMAU2() {
   const Q  = getVal('mau2-q');
   const T1 = getVal('mau2-t1'), RH1 = getVal('mau2-rh1');
@@ -406,7 +406,7 @@ function calcMAU2() {
   updateMAUDiagram(T1, RH1, T2, RH2);
 }
 
-// ── MAU-03 CHW 需求 ───────────────────────────────────────────
+// ?? MAU-03 CHW ?瘙????????????????????????????????????????????
 function calcMAU3() {
   const cap = getVal('mau3-cap');
   const Ts  = getVal('mau3-ts'), Tr = getVal('mau3-tr');
@@ -416,7 +416,7 @@ function calcMAU3() {
   setResult('mau3-lmin', m3h * 1000 / 60);
 }
 
-// ── Psychrometric Chart ──────────────────────────────────────
+// ?? Psychrometric Chart ??????????????????????????????????????
 const PC = {
   ml: 64, mr: 25, mt: 22, mb: 48,
   vw: 700, vh: 420,
@@ -428,6 +428,8 @@ const PC = {
 };
 
 function initPsychroChart() {
+renderCompPanel();
+window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
   const svg = document.getElementById('psychro-svg');
   if (!svg) return;
   const { ml, mr, mt, mb, vw, vh, cw, ch } = PC;
@@ -472,8 +474,8 @@ function initPsychroChart() {
   }
   h += `<path d="${sat}" stroke="#00a882" stroke-width="2" fill="none" clip-path="url(#cc)"/>`;
   h += `<rect x="${ml}" y="${mt}" width="${cw}" height="${ch}" fill="none" stroke="#243d5c" stroke-width="1"/>`;
-  h += `<text x="${ml+cw/2}" y="${vh-5}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600">乾球溫度 (°C)</text>`;
-  h += `<text x="${ml-48}" y="${mt+ch/2}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600" transform="rotate(-90,${ml-48},${mt+ch/2})">含濕量 ω (g/kg)</text>`;
+  h += `<text x="${ml+cw/2}" y="${vh-5}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600">銋曄?皞怠漲 (簞C)</text>`;
+  h += `<text x="${ml-48}" y="${mt+ch/2}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600" transform="rotate(-90,${ml-48},${mt+ch/2})">?急???? (g/kg)</text>`;
   h += `<g id="psychro-pts"></g>`;
   svg.innerHTML = h;
 }
@@ -497,21 +499,21 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
   grp.innerHTML =
     `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f0a430" stroke-width="1.8" stroke-dasharray="7,4" opacity=".9"/>` +
     `<circle cx="${x1}" cy="${y1}" r="6" fill="#f0a430" stroke="#080d18" stroke-width="1.5"/>` +
-    lbl(x1, y1, '#f0a430', `OA ${T1}°C/${RH1}%`, `h=${h1} kJ/kg`) +
+    lbl(x1, y1, '#f0a430', `OA ${T1}簞C/${RH1}%`, `h=${h1} kJ/kg`) +
     `<circle cx="${x2}" cy="${y2}" r="6" fill="#00d4aa" stroke="#080d18" stroke-width="1.5"/>` +
-    lbl(x2, y2, '#00d4aa', `SA ${T2}°C/${RH2}%`, `h=${h2} kJ/kg`);
+    lbl(x2, y2, '#00d4aa', `SA ${T2}簞C/${RH2}%`, `h=${h2} kJ/kg`);
 }
 
-// ── MAU-05 3D Interactive Model ──────────────────────────────
+// ?? MAU-05 3D Interactive Model ??????????????????????????????
 
 const COMP_CATALOG = [
-  { key:'g4',   label:'初效濾 G4',   cat:'filter', w:0.5,  rgb:[36,62,96]  },
-  { key:'f7',   label:'中效濾 F7',   cat:'filter', w:0.5,  rgb:[46,74,112] },
-  { key:'hepa', label:'高效濾 HEPA', cat:'filter', w:0.5,  rgb:[58,88,132] },
-  { key:'chw',  label:'冰水盤管', cat:'chw',  w:1.8,  rgb:[0,104,145] },
-  { key:'hhw',  label:'熱水盤管', cat:'hhw',  w:1.8,  rgb:[145,68,0]  },
-  { key:'wash', label:'水洗段',        cat:'wash', w:2.0,  rgb:[18,58,96]  },
-  { key:'fan',  label:'送風機',         cat:'fan',  w:1.6,  rgb:[24,38,60]  },
+  { key:'g4',   label:'??瞈?G4',   cat:'filter', w:0.5,  rgb:[36,62,96]  },
+  { key:'f7',   label:'銝剜?瞈?F7',   cat:'filter', w:0.5,  rgb:[46,74,112] },
+  { key:'hepa', label:'擃?瞈?HEPA', cat:'filter', w:0.5,  rgb:[58,88,132] },
+  { key:'chw',  label:'?唳偌?斤恣', cat:'chw',  w:1.8,  rgb:[0,104,145] },
+  { key:'hhw',  label:'?望偌?斤恣', cat:'hhw',  w:1.8,  rgb:[145,68,0]  },
+  { key:'wash', label:'瘞湔?畾?,        cat:'wash', w:2.0,  rgb:[18,58,96]  },
+  { key:'fan',  label:'?◢璈?,         cat:'fan',  w:1.6,  rgb:[24,38,60]  },
 ];
 
 let mauComps = [
@@ -521,197 +523,9 @@ let mauComps = [
   { id:4, key:'f7' },
 ];
 let _nid = 5;
-let _mauOA = null;
-let _mauSA = null;
 
 function updateMAUDiagram(T1, RH1, T2, RH2) {
-  _mauOA = { T: T1, RH: RH1 };
-  _mauSA = { T: T2, RH: RH2 };
-  drawMAU3D();
-}
-
-function drawMAU3D() {
-  const cv = document.getElementById('mau3d');
-  if (!cv) return;
-  const ctx = cv.getContext('2d');
-  const W = cv.width, H = cv.height;
-
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = '#080d18';
-  ctx.fillRect(0, 0, W, H);
-
-  const DH = 3.0, DD = 3.5;
-  const GAP = 0.12, INLET = 0.7, OUTLET = 0.7;
-
-  const nComps = mauComps.length;
-  const compLen = nComps
-    ? mauComps.reduce((s, c) => {
-        const d = COMP_CATALOG.find(x => x.key === c.key);
-        return s + (d ? d.w : 1) + GAP;
-      }, -GAP)
-    : 0;
-  const outStart = INLET + (nComps ? compLen + GAP * 2 : 0);
-  const totalLen = outStart + OUTLET;
-
-  const xspan = (totalLen + DD) * 0.866;
-  const yspan = DH + (totalLen + DD) * 0.5;
-  const U = Math.min((W * 0.64) / xspan, (H * 0.74) / yspan, 60);
-
-  const ox = W / 2 - (totalLen - DD) / 2 * U * 0.866;
-  const oy = H / 2 + DH * U / 2 - (totalLen + DD) * U / 4;
-
-  const p3 = (x, y, z) => ({
-    x: ox + (x - z) * U * 0.866,
-    y: oy - y * U + (x + z) * U * 0.5
-  });
-
-  const clamp = v => Math.max(0, Math.min(255, Math.round(v)));
-  const col = ([r, g, b], f, a) => {
-    f = f === undefined ? 1 : f;
-    a = a === undefined ? 1 : a;
-    return 'rgba(' + clamp(r*f) + ',' + clamp(g*f) + ',' + clamp(b*f) + ',' + a + ')';
-  };
-  const poly = (verts, fill, stroke) => {
-    ctx.beginPath();
-    ctx.moveTo(verts[0].x, verts[0].y);
-    for (let i = 1; i < verts.length; i++) ctx.lineTo(verts[i].x, verts[i].y);
-    ctx.closePath();
-    ctx.fillStyle = fill; ctx.fill();
-    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 0.7; ctx.stroke(); }
-  };
-
-  const drawBox = (x0, dx, rgb, caps) => {
-    caps = caps || {};
-    const e = 'rgba(0,0,0,0.2)';
-    if (caps.left)
-      poly([p3(x0,0,0),p3(x0,0,DD),p3(x0,DH,DD),p3(x0,DH,0)], col(rgb,0.78), e);
-    poly([p3(x0,DH,0),p3(x0+dx,DH,0),p3(x0+dx,DH,DD),p3(x0,DH,DD)], col(rgb,1.40), e);
-    poly([p3(x0,0,DD),p3(x0+dx,0,DD),p3(x0+dx,DH,DD),p3(x0,DH,DD)], col(rgb,1.00), e);
-    if (caps.right !== false)
-      poly([p3(x0+dx,0,0),p3(x0+dx,0,DD),p3(x0+dx,DH,DD),p3(x0+dx,DH,0)], col(rgb,0.65), e);
-  };
-
-  const ductRGB = [18, 34, 56];
-  drawBox(0, INLET, ductRGB, { left: true, right: false });
-
-  const fnt = sz => Math.round(U * sz) + 'px Rajdhani,sans-serif';
-  const mfnt = sz => Math.round(U * sz) + 'px Share Tech Mono,monospace';
-
-  const oaMid = p3(INLET / 2, DH / 2, DD);
-  ctx.fillStyle = '#4a6a88'; ctx.font = 'bold ' + fnt(0.42);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('OA', oaMid.x, oaMid.y);
-  if (_mauOA) {
-    const lp = p3(INLET / 2, DH + 0.55, DD * 0.55);
-    ctx.fillStyle = '#f0a430'; ctx.font = mfnt(0.25);
-    ctx.fillText(_mauOA.T + '°C  ' + _mauOA.RH + '%RH', lp.x, lp.y);
-  }
-
-  let xPos = INLET + (nComps ? GAP : 0);
-  mauComps.forEach(comp => {
-    const def = COMP_CATALOG.find(d => d.key === comp.key);
-    if (!def) return;
-    drawBox(xPos, def.w, def.rgb, { right: true });
-    mau3dFaceDetail(ctx, p3, xPos, def.w, DH, DD, def, U);
-    const lbp = p3(xPos + def.w / 2, -0.65, DD * 0.7);
-    ctx.fillStyle = '#4a6a88'; ctx.font = fnt(0.26);
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(def.label, lbp.x, lbp.y);
-    xPos += def.w + GAP;
-  });
-
-  drawBox(outStart, OUTLET, ductRGB, { right: true });
-
-  const saMid = p3(outStart + OUTLET / 2, DH / 2, DD);
-  ctx.fillStyle = '#4a6a88'; ctx.font = 'bold ' + fnt(0.42);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('SA', saMid.x, saMid.y);
-  if (_mauSA) {
-    const lp = p3(outStart + OUTLET / 2, DH + 0.55, DD * 0.55);
-    ctx.fillStyle = '#00d4aa'; ctx.font = mfnt(0.25);
-    ctx.fillText(_mauSA.T + '°C  ' + _mauSA.RH + '%RH', lp.x, lp.y);
-  }
-
-  if (nComps > 0) {
-    const ay = DH * 0.5;
-    const as = p3(INLET, ay, DD), ae = p3(outStart, ay, DD);
-    ctx.strokeStyle = 'rgba(100,200,220,0.12)'; ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath(); ctx.moveTo(as.x, as.y); ctx.lineTo(ae.x, ae.y); ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  ctx.textBaseline = 'alphabetic';
-}
-
-function mau3dFaceDetail(ctx, p3, x0, dx, DH, DD, def, U) {
-  const fp = (fx, fy) => p3(x0 + fx * dx, fy * DH, DD);
-
-  if (def.cat === 'filter') {
-    const cols = Math.max(3, Math.ceil(dx / 0.18));
-    ctx.strokeStyle = 'rgba(100,170,230,0.2)'; ctx.lineWidth = 0.6;
-    for (let r = 1; r < 7; r++) {
-      const a = fp(0, r/7), b = fp(1, r/7);
-      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
-    }
-    for (let c = 1; c < cols; c++) {
-      const a = fp(c/cols, 0), b = fp(c/cols, 1);
-      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
-    }
-
-  } else if (def.cat === 'chw' || def.cat === 'hhw') {
-    const hot = def.cat === 'hhw';
-    const tc = hot ? 'rgba(255,130,50,0.75)' : 'rgba(40,200,255,0.75)';
-    const dc = hot ? 'rgba(255,160,70,0.9)' : 'rgba(50,220,255,0.9)';
-    ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-    for (let r = 0; r < 8; r++) {
-      const fy = (r + 0.5) / 8;
-      const a = fp(0.05,fy), b = fp(0.95,fy);
-      ctx.strokeStyle = tc; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
-      ctx.fillStyle = dc; ctx.beginPath(); ctx.arc(b.x,b.y,2.5,0,Math.PI*2); ctx.fill();
-    }
-    ctx.lineWidth = 4;
-    const lt=fp(0.05,0),lb=fp(0.05,1),rt=fp(0.95,0),rb=fp(0.95,1);
-    ctx.strokeStyle = tc;
-    ctx.beginPath(); ctx.moveTo(lt.x,lt.y); ctx.lineTo(lb.x,lb.y); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(rt.x,rt.y); ctx.lineTo(rb.x,rb.y); ctx.stroke();
-    ctx.lineCap = 'butt';
-
-  } else if (def.cat === 'wash') {
-    const nz = Math.max(2, Math.floor(dx / 0.75));
-    ctx.lineWidth = 1;
-    for (let n = 0; n < nz; n++) {
-      const fx = (n + 0.5) / nz, top = fp(fx, 0.1);
-      for (let d = 0; d < 5; d++) {
-        const fy = 0.1 + d * 0.17, sp = d * 0.045;
-        ctx.strokeStyle = 'rgba(50,180,255,0.35)';
-        const la = fp(fx-sp, fy), ra = fp(fx+sp, fy);
-        ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(la.x,la.y); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(top.x,top.y); ctx.lineTo(ra.x,ra.y); ctx.stroke();
-        const dp = fp(fx, fy);
-        ctx.fillStyle = 'rgba(50,190,255,0.5)';
-        ctx.beginPath(); ctx.arc(dp.x,dp.y,1.8,0,Math.PI*2); ctx.fill();
-      }
-      ctx.fillStyle = 'rgba(80,190,230,0.8)';
-      ctx.beginPath(); ctx.arc(top.x,top.y,3.5,0,Math.PI*2); ctx.fill();
-    }
-
-  } else if (def.cat === 'fan') {
-    const ctr = fp(0.5, 0.5), r = U * DH * 0.34;
-    ctx.strokeStyle = 'rgba(80,150,200,0.22)'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(ctr.x,ctr.y,r,0,Math.PI*2); ctx.stroke();
-    ctx.fillStyle = 'rgba(60,110,170,0.35)';
-    ctx.beginPath(); ctx.arc(ctr.x,ctr.y,r*0.17,0,Math.PI*2); ctx.fill();
-    ctx.lineWidth = 3.5; ctx.lineCap = 'round';
-    for (let b = 0; b < 6; b++) {
-      const ang = (b / 6) * Math.PI * 2 + Math.PI / 12;
-      const i2 = { x: ctr.x + Math.cos(ang)*r*0.2,  y: ctr.y + Math.sin(ang)*r*0.2  };
-      const o2 = { x: ctr.x + Math.cos(ang)*r*0.88, y: ctr.y + Math.sin(ang)*r*0.88 };
-      ctx.strokeStyle = 'rgba(80,160,220,0.52)';
-      ctx.beginPath(); ctx.moveTo(i2.x,i2.y); ctx.lineTo(o2.x,o2.y); ctx.stroke();
-    }
-    ctx.lineCap = 'butt';
-  }
+  window.mau3dUpdateState?.({ T: T1, RH: RH1 }, { T: T2, RH: RH2 });
 }
 
 function renderCompPanel() {
@@ -726,12 +540,12 @@ function renderCompPanel() {
           '<span class="comp-num">' + (i+1) + '</span>' +
           '<span class="comp-label">' + (d ? d.label : c.key) + '</span>' +
           '<div class="comp-acts">' +
-            '<button onclick="moveComp(' + c.id + ',-1)"' + (i===0?' disabled':'') + '>↑</button>' +
-            '<button onclick="moveComp(' + c.id + ',1)"'  + (i===n ?' disabled':'') + '>↓</button>' +
-            '<button class="comp-del" onclick="removeComp(' + c.id + ')">✕</button>' +
+            '<button onclick="moveComp(' + c.id + ',-1)"' + (i===0?' disabled':'') + '>??/button>' +
+            '<button onclick="moveComp(' + c.id + ',1)"'  + (i===n ?' disabled':'') + '>??/button>' +
+            '<button class="comp-del" onclick="removeComp(' + c.id + ')">??/button>' +
           '</div></div>';
       }).join('')
-    : '<div class="comp-empty">尚未加入零件</div>';
+    : '<div class="comp-empty">撠??嗡辣</div>';
   addEl.innerHTML = COMP_CATALOG
     .map(d => '<button class="comp-add-btn" onclick="addComp(\'' + d.key + '\')">' + d.label + '</button>')
     .join('');
@@ -757,23 +571,23 @@ function moveComp(id, dir) {
 
 function refreshMAU3D() {
   renderCompPanel();
-  drawMAU3D();
+  window.mau3dRefresh?.(mauComps);
 }
 
-// ── Enter key triggers calc ──────────────────────────────────
+// ?? Enter key triggers calc ??????????????????????????????????
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const card = e.target.closest('.calc-card');
   if (card) card.querySelector('.calc-btn')?.click();
 });
 
-// ── cr4-rh manual edit tracking ─────────────────────────────
+// ?? cr4-rh manual edit tracking ?????????????????????????????
 (function () {
   const el = document.getElementById('cr4-rh');
   if (el) el.addEventListener('input', function () { this.dataset.edited = '1'; });
 })();
 
-// ── Theme Toggle ─────────────────────────────────────────────
+// ?? Theme Toggle ?????????????????????????????????????????????
 function setTheme(theme) {
   if (theme === 'light') {
     document.body.setAttribute('data-theme', 'light');
@@ -787,7 +601,8 @@ function setTheme(theme) {
   localStorage.setItem('hvac-theme', theme);
 }
 
-// ── Init ─────────────────────────────────────────────────────
+// ?? Init ?????????????????????????????????????????????????????
 initPsychroChart();
-refreshMAU3D();
+renderCompPanel();
+window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
 setTheme(localStorage.getItem('hvac-theme') || 'dark');
