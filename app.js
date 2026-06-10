@@ -504,6 +504,7 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
     lbl(x1, y1, '#f0a430', `OA ${T1}°C/${RH1}%`, `h=${h1} kJ/kg`) +
     `<circle cx="${x2}" cy="${y2}" r="6" fill="#00d4aa" stroke="#080d18" stroke-width="1.5"/>` +
     lbl(x2, y2, '#00d4aa', `SA ${T2}°C/${RH2}%`, `h=${h2} kJ/kg`);
+  syncPsychroModal();
 }
 
 function updatePsychroTarget() {
@@ -531,6 +532,7 @@ function updatePsychroTarget() {
   grp.innerHTML =
     `<polygon points="${pts}" fill="rgba(0,212,170,.05)" stroke="#00d4aa" stroke-width="1.2" stroke-dasharray="4,3" clip-path="url(#cc)"/>` +
     `<text x="${lx}" y="${ly}" fill="#00d4aa" font-size="9" font-family="Share Tech Mono,monospace" opacity=".7">SA Target</text>`;
+  syncPsychroModal();
 }
 
 // ── MAU-05 3D Interactive Model ──────────────────────────────
@@ -892,6 +894,33 @@ function updatePsychroProcess(states) {
   });
 
   grp.innerHTML = h;
+  syncPsychroModal();
+}
+
+// ── Psychrometric Chart Modal ─────────────────────────────────
+
+let psychroModalOpen = false;
+
+function syncPsychroModal() {
+  if (!psychroModalOpen) return;
+  const src = document.getElementById('psychro-svg');
+  const dst = document.getElementById('psychro-modal-svg');
+  if (src && dst) dst.innerHTML = src.innerHTML;
+}
+
+function openPsychroModal() {
+  const modal = document.getElementById('psychro-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  psychroModalOpen = true;
+  syncPsychroModal();
+}
+
+function closePsychroModal() {
+  const modal = document.getElementById('psychro-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  psychroModalOpen = false;
 }
 
 // ── Init ─────────────────────────────────────────────────────
@@ -905,5 +934,8 @@ renderCoilBlocks();
 ['tgt-sa-t','tgt-sa-t-tol','tgt-sa-rh','tgt-sa-rh-tol'].forEach(id =>
   document.getElementById(id)?.addEventListener('input', updatePsychroTarget)
 );
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && psychroModalOpen) closePsychroModal();
+});
 window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
 setTheme(localStorage.getItem('hvac-theme') || 'dark');

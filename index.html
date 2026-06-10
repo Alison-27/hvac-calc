@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="style.css?v=6" />
   <script type="importmap">
   {
     "imports": {
@@ -1091,61 +1091,32 @@
           </div>
         </div>
 
+        <!-- MAU-06 Coil Sequence (left column) -->
         <div class="calc-card">
           <div class="card-header">
-            <span class="card-num">MAU-01</span>
-            <h3>全熱冷卻負荷（焓差法）</h3>
-            <span class="formula-badge">Q = ṁ·(h₁ − h₂)</span>
+            <span class="card-num">MAU-06</span>
+            <h3>盤管處理排列</h3>
+            <span class="formula-badge">Process Flow</span>
           </div>
           <div class="card-body">
-            <div class="input-group">
-              <label>新鮮空氣量</label>
-              <div class="input-row">
-                <input type="number" id="mau1-q" placeholder="0.00" step="500" min="0" />
-                <span class="unit">m³/h</span>
+            <div class="coil-flow-outer">
+              <div class="flow-node flow-node-oa">
+                <div class="fnode-tag">OA</div>
+                <div class="fnode-val" id="cf-oa-t">35.0°C</div>
+                <div class="fnode-val" id="cf-oa-rh">70% RH</div>
+              </div>
+              <div id="coil-seq-blocks" class="coil-seq-blocks"></div>
+              <div class="cf-arrow cf-arrow-end">→</div>
+              <div class="flow-node flow-node-sa">
+                <div class="fnode-tag">SA</div>
+                <div class="fnode-val" id="cf-sa-t">—</div>
+                <div class="fnode-val" id="cf-sa-rh">—</div>
+                <div id="cf-sa-badge" class="cf-sa-badge"></div>
               </div>
             </div>
-            <div class="input-group">
-              <label>入口（室外）溫度 / RH</label>
-              <div class="input-row">
-                <input type="number" id="mau1-t1" placeholder="35" step="0.5" value="35" style="flex:1;min-width:0" />
-                <span class="unit" style="border-right:1px solid var(--border)">°C DB</span>
-                <input type="number" id="mau1-rh1" placeholder="70" step="1" value="70" style="flex:1;min-width:0" />
-                <span class="unit">% RH</span>
-              </div>
-              <div class="hint">台灣夏季設計：35°C / 70–80% RH</div>
-            </div>
-            <div class="input-group">
-              <label>出口（送風）溫度 / RH</label>
-              <div class="input-row">
-                <input type="number" id="mau1-t2" placeholder="13" step="0.5" value="13" style="flex:1;min-width:0" />
-                <span class="unit" style="border-right:1px solid var(--border)">°C DB</span>
-                <input type="number" id="mau1-rh2" placeholder="95" step="1" value="95" style="flex:1;min-width:0" />
-                <span class="unit">% RH</span>
-              </div>
-            </div>
-            <button class="calc-btn" onclick="calcMAU1()">計算</button>
-            <div class="result-box multi" id="mau1-result">
-              <div class="result-item">
-                <span class="result-label">全熱負荷</span>
-                <span class="result-value" id="mau1-qt">—</span>
-                <span class="result-unit">kW</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">顯熱</span>
-                <span class="result-value" id="mau1-qs">—</span>
-                <span class="result-unit">kW</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">潛熱</span>
-                <span class="result-value" id="mau1-ql">—</span>
-                <span class="result-unit">kW</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">SHR</span>
-                <span class="result-value" id="mau1-shr">—</span>
-                <span class="result-unit">—</span>
-              </div>
+            <div class="coil-seq-actions">
+              <button class="comp-add-btn" onclick="addCoilBlock()">+ 新增處理段</button>
+              <button class="calc-btn" onclick="calcCoilProcess()" style="margin-left:auto">計算</button>
             </div>
           </div>
         </div>
@@ -1253,42 +1224,13 @@
         <!-- ── Right: Charts ── -->
         <div class="mau-charts">
 
-        <!-- MAU-06 Coil Sequence -->
-        <div class="calc-card">
-          <div class="card-header">
-            <span class="card-num">MAU-06</span>
-            <h3>盤管處理排列</h3>
-            <span class="formula-badge">Process Flow</span>
-          </div>
-          <div class="card-body">
-            <div class="coil-flow-outer">
-              <div class="flow-node flow-node-oa">
-                <div class="fnode-tag">OA</div>
-                <div class="fnode-val" id="cf-oa-t">35.0°C</div>
-                <div class="fnode-val" id="cf-oa-rh">70% RH</div>
-              </div>
-              <div id="coil-seq-blocks" class="coil-seq-blocks"></div>
-              <div class="cf-arrow cf-arrow-end">→</div>
-              <div class="flow-node flow-node-sa">
-                <div class="fnode-tag">SA</div>
-                <div class="fnode-val" id="cf-sa-t">—</div>
-                <div class="fnode-val" id="cf-sa-rh">—</div>
-                <div id="cf-sa-badge" class="cf-sa-badge"></div>
-              </div>
-            </div>
-            <div class="coil-seq-actions">
-              <button class="comp-add-btn" onclick="addCoilBlock()">+ 新增處理段</button>
-              <button class="calc-btn" onclick="calcCoilProcess()" style="margin-left:auto">計算</button>
-            </div>
-          </div>
-        </div>
-
         <!-- MAU-04 Psychrometric Chart -->
         <div class="calc-card chart-card">
           <div class="card-header">
             <span class="card-num">MAU-04</span>
             <h3>空氣線圖（焓濕圖）</h3>
             <span class="formula-badge">Psychrometric Chart</span>
+            <button class="chart-expand-btn" onclick="openPsychroModal()" title="放大檢視">⛶</button>
           </div>
           <div class="card-body">
             <div class="chart-info">MAU-D 設定目標範圍 · 執行 MAU-01 / MAU-06 後標示狀態點路徑</div>
@@ -1371,7 +1313,28 @@
     </div>
   </footer>
 
-  <script src="app.js?v=4"></script>
+  <!-- Psychrometric Chart Modal -->
+  <div id="psychro-modal" class="psychro-modal" style="display:none" onclick="if(event.target===this)closePsychroModal()">
+    <div class="psychro-modal-inner">
+      <div class="psychro-modal-hdr">
+        <span class="card-num" style="font-size:.72rem">MAU-04</span>
+        <span class="psychro-modal-title">空氣線圖（焓濕圖）</span>
+        <div style="flex:1"></div>
+        <div class="psychro-modal-legend">
+          <span style="color:var(--amber)">● OA</span>
+          <span style="color:var(--teal)">● SA</span>
+          <span style="color:var(--teal);opacity:.6">□ 目標區</span>
+          <span style="color:#00a882">── 飽和線</span>
+        </div>
+        <button class="psychro-modal-close" onclick="closePsychroModal()" title="關閉 (ESC)">✕</button>
+      </div>
+      <div class="psychro-modal-body">
+        <svg id="psychro-modal-svg" viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block"></svg>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=5"></script>
   <script type="module" src="mau3d.js"></script>
 </body>
 </html>
