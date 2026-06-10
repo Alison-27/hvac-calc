@@ -1,4 +1,4 @@
-// ?? Tab Navigation ??????????????????????????????????????????
+// ── Tab Navigation ──────────────────────────────────────────
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const tab = btn.dataset.tab;
@@ -9,9 +9,9 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-// ?? Helpers ?????????????????????????????????????????????????
+// ── Helpers ─────────────────────────────────────────────────
 function fmt(n, dec = 2) {
-  if (!isFinite(n) || isNaN(n)) return '??;
+  if (!isFinite(n) || isNaN(n)) return '—';
   return n.toLocaleString('zh-TW', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
@@ -27,7 +27,7 @@ function getVal(id) {
   return parseFloat(document.getElementById(id).value);
 }
 
-// ?? AF-01 ?除甈⊥瘜??????????????????????????????????????????
+// ── AF-01 換氣次數法 ─────────────────────────────────────────
 function calcAF1() {
   const V = getVal('af1-volume');
   const n = getVal('af1-ach');
@@ -35,19 +35,19 @@ function calcAF1() {
   setResult('af1-val', V * n);
 }
 
-// ?? AF-02 憿舐鞎瘜??????????????????????????????????????????
-// Q (m糧/h) = Qs (W) / (? ? Cp ? ?T) ? 3600
+// ── AF-02 顯熱負荷法 ─────────────────────────────────────────
+// Q (m³/h) = Qs (W) / (ρ × Cp × ΔT) × 3600
 function calcAF2() {
   const Qs  = getVal('af2-qs');
   const dT  = getVal('af2-dt');
   const rho = getVal('af2-rho') || 1.2;
-  const Cp  = 1005; // J/(kg繚K)
+  const Cp  = 1005; // J/(kg·K)
   if (!Qs || !dT || Qs <= 0 || dT <= 0) return;
   const Q_m3h = (Qs / (rho * Cp * dT)) * 3600;
   setResult('af2-val', Q_m3h);
 }
 
-// ?? AF-03 ?圈悅蝛箸除???????????????????????????????????????????
+// ── AF-03 新鮮空氣量 ─────────────────────────────────────────
 function calcAF3() {
   const N = getVal('af3-people');
   const q = getVal('af3-q');
@@ -55,20 +55,20 @@ function calcAF3() {
   setResult('af3-val', N * q);
 }
 
-// ?? AF-04 憸函恣?芷蝛??????????????????????????????????????????
+// ── AF-04 風管截面積 ─────────────────────────────────────────
 function calcAF4() {
   const Q_m3h = getVal('af4-q');
   const v     = getVal('af4-v');
   if (!Q_m3h || !v || Q_m3h <= 0 || v <= 0) return;
   const Q_m3s = Q_m3h / 3600;
-  const A = Q_m3s / v;           // m簡
+  const A = Q_m3s / v;           // m²
   const D = Math.sqrt(4 * A / Math.PI) * 1000; // mm
   setResult('af4-area', A, 4);
   setResult('af4-diam', D, 0);
 }
 
-// ?? WF-01 ?瑕?瘞湔????????????????????????????????????????????
-// m糧/h = kW ? 3600 / (4186 ? ?T)
+// ── WF-01 冷凍水流量 ─────────────────────────────────────────
+// m³/h = kW × 3600 / (4186 × ΔT)
 function calcWF1() {
   const Q_kw = getVal('wf1-load');
   const dT   = getVal('wf1-dt');
@@ -83,7 +83,7 @@ function calcWF1() {
   setResult('wf1-gpm', gpm);
 }
 
-// ?? WF-02 ?瑕瘞湔????????????????????????????????????????????
+// ── WF-02 冷卻水流量 ─────────────────────────────────────────
 function calcWF2() {
   const Qevap = getVal('wf2-qevap');
   const COP   = getVal('wf2-cop');
@@ -97,7 +97,7 @@ function calcWF2() {
   setResult('wf2-flow', m3h);
 }
 
-// ?? WF-03 蝞⊿?蝞∪? ??????????????????????????????????????????
+// ── WF-03 管道管徑 ──────────────────────────────────────────
 const DN_SERIES = [15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500];
 
 function selectDN(calcDiam_mm) {
@@ -122,7 +122,7 @@ function calcWF3() {
   document.getElementById('wf3-dn').closest('.result-box').classList.add('has-result');
 }
 
-// ?? WF-04 ?嗅?雿?蝞?????????????????????????????????????
+// ── WF-04 制冷量單位換算 ────────────────────────────────────
 // 1 RT = 3.517 kW = 3024 kcal/h = 12000 BTU/h
 function calcWF4() {
   const rawVal  = getVal('wf4-val');
@@ -144,12 +144,12 @@ function calcWF4() {
   setResult('wf4-btu',  kw * 3412.14, 0);
 }
 
-// ?? Psychrometric Helpers ????????????????????????????????????
+// ── Psychrometric Helpers ────────────────────────────────────
 // Saturation vapor pressure (Magnus formula, kPa)
 function satPressure(T) {
   return 0.61078 * Math.exp(17.27 * T / (T + 237.3));
 }
-// Humidity ratio ? (kg water / kg dry air)
+// Humidity ratio ω (kg water / kg dry air)
 function omegaFromTRH(T, RH) {
   const pws = satPressure(T);
   const pw  = (RH / 100) * pws;
@@ -159,14 +159,14 @@ function omegaFromTRH(T, RH) {
 function enthalpyAir(T, omega) {
   return 1.006 * T + omega * (2501 + 1.86 * T);
 }
-// Dew point temperature (簞C)
+// Dew point temperature (°C)
 function dewPoint(T, RH) {
   const a = 17.27, b = 237.3;
   const g = (a * T / (b + T)) + Math.log(RH / 100);
   return (b * g) / (a - g);
 }
 
-// ?? Clean Room ?????????????????????????????????????????????
+// ── Clean Room 連動狀態 ───────────────────────────────────────
 const ISO_ACH = { 5: [240, 360], 6: [150, 200], 7: [60, 100], 8: [5, 30] };
 
 const crState = {
@@ -181,7 +181,7 @@ function syncCR() {
   const sv = (id, val, dec) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.textContent = (val !== null && isFinite(val)) ? fmt(val, dec !== undefined ? dec : 1) : '??;
+    el.textContent = (val !== null && isFinite(val)) ? fmt(val, dec !== undefined ? dec : 1) : '—';
   };
   sv('cr2-ref-area',    crState.area,       1);
   sv('cr3-ref-qtotal',  crState.Qtotal,     1);
@@ -196,7 +196,7 @@ function syncCR() {
   }
 }
 
-// ?? CR-01 蝛粹???瘞??????????????????????????????????????????
+// ── CR-01 空間與排氣參數 ──────────────────────────────────────
 function calcCR1() {
   const iso = parseInt(document.getElementById('cr1-iso').value);
   const L   = getVal('cr1-L'), W = getVal('cr1-W'), H = getVal('cr1-H');
@@ -214,7 +214,7 @@ function calcCR1() {
   syncCR();
 }
 
-// ?? CR-02 ?梯??瑁??啣?? ????????????????????????????????????
+// ── CR-02 熱負荷與環境參數 ────────────────────────────────────
 function calcCR2() {
   const area  = crState.area;
   const equip = getVal('cr2-equip') || 0;
@@ -234,7 +234,7 @@ function calcCR2() {
   syncCR();
 }
 
-// ?? CR-03 DCC ?詨? ????????????????????????????????????????????
+// ── CR-03 DCC 選型 ────────────────────────────────────────────
 function calcCR3() {
   const Q  = crState.Qtotal, dT = crState.dT;
   if (!Q || !dT || Q <= 0 || dT <= 0) return;
@@ -253,13 +253,13 @@ function calcCR3() {
   setResult('cr3-aface',  aFace,  3);
   const dimsEl = document.getElementById('cr3-dims');
   if (dimsEl) {
-    dimsEl.textContent = fmt(fH, 2) + '?' + fmt(fW, 2);
+    dimsEl.textContent = fmt(fH, 2) + '×' + fmt(fW, 2);
     const box = dimsEl.closest('.result-box');
     if (box) box.classList.add('has-result');
   }
 }
 
-// ?? CR-04 FFU ?◢?貊? ????????????????????????????????????????
+// ── CR-04 FFU 送風核算 ────────────────────────────────────────
 function calcCR4() {
   const area    = crState.area;
   const ffuArea = parseFloat(document.getElementById('cr4-fsize').value);
@@ -283,10 +283,10 @@ function calcCR4() {
       const r = qTotal / crState.QsupDesign;
       if (r >= 1) {
         cmpEl.className = 'cr-compare ok';
-        cmpEl.textContent = '??FFU 靘◢ ' + fmt(qTotal, 0) + ' m糧/h ??閮剛??瘙?' + fmt(crState.QsupDesign, 0) + ' m糧/h嚗?' + fmt((r - 1) * 100, 1) + '%嚗?;
+        cmpEl.textContent = '✓ FFU 供風 ' + fmt(qTotal, 0) + ' m³/h ≥ 設計需求 ' + fmt(crState.QsupDesign, 0) + ' m³/h（+' + fmt((r - 1) * 100, 1) + '%）';
       } else {
         cmpEl.className = 'cr-compare warn';
-        cmpEl.textContent = '??FFU 靘◢銝雲嚗? + fmt(qTotal, 0) + ' < ?瘙?' + fmt(crState.QsupDesign, 0) + ' m糧/h嚗榆 ' + fmt((1 - r) * 100, 1) + '%嚗?;
+        cmpEl.textContent = '⚠ FFU 供風不足：' + fmt(qTotal, 0) + ' < 需求 ' + fmt(crState.QsupDesign, 0) + ' m³/h（差 ' + fmt((1 - r) * 100, 1) + '%）';
       }
     } else {
       cmpEl.className = 'cr-compare';
@@ -295,7 +295,7 @@ function calcCR4() {
   }
 }
 
-// ?? CR-05 ?◢?祕?蝞???????????????????????????????????????
+// ── CR-05 回風道實務核算 ──────────────────────────────────────
 function calcCR5() {
   const QFFU  = crState.QFFU || 0;
   const Qex   = crState.Qex  || 0;
@@ -316,8 +316,8 @@ function calcCR5() {
   const dimsEl = document.getElementById('cr5-dims');
   if (dimsEl) {
     const dims = dtype === 'round'
-      ? '?' + fmt(Math.sqrt(4 * aDuct / Math.PI) * 1000, 0) + ' mm'
-      : fmt(dH, 2) + '?' + fmt(aDuct / dH, 2) + ' m';
+      ? 'Ø' + fmt(Math.sqrt(4 * aDuct / Math.PI) * 1000, 0) + ' mm'
+      : fmt(dH, 2) + '×' + fmt(aDuct / dH, 2) + ' m';
     dimsEl.textContent = dims;
     const box = dimsEl.closest('.result-box');
     if (box) box.classList.add('has-result');
@@ -329,7 +329,7 @@ function toggleCR5DuctH() {
   if (g) g.style.display = document.getElementById('cr5-dtype').value === 'rect' ? '' : 'none';
 }
 
-// ?? DCC-01 憿舐?瑕???????????????????????????????????????????
+// ── DCC-01 顯熱冷卻量 ─────────────────────────────────────────
 function calcDCC1() {
   const Q   = getVal('dcc1-q');
   const T1  = getVal('dcc1-t1'), T2 = getVal('dcc1-t2');
@@ -340,7 +340,7 @@ function calcDCC1() {
   setResult('dcc1-rt',  kw / 3.517);
 }
 
-// ?? DCC-02 ?斤恣?Ｙ? ???????????????????????????????????????????
+// ── DCC-02 盤管面積 ───────────────────────────────────────────
 function calcDCC2() {
   const Q  = getVal('dcc2-q');
   const fv = getVal('dcc2-fv');
@@ -349,11 +349,11 @@ function calcDCC2() {
   const side = Math.round(Math.sqrt(area) * 1000);
   setResult('dcc2-area', area, 3);
   const sideEl = document.getElementById('dcc2-side');
-  sideEl.textContent = side + ' ? ' + side;
+  sideEl.textContent = side + ' × ' + side;
   sideEl.closest('.result-box').classList.add('has-result');
 }
 
-// ?? DCC-03 CHW ?瘙?+ ?脤?蝣箄? ????????????????????????????????
+// ── DCC-03 CHW 需求 + 露點確認 ────────────────────────────────
 function calcDCC3() {
   const cap  = getVal('dcc3-cap');
   const Ts   = getVal('dcc3-ts'), Tr = getVal('dcc3-tr');
@@ -365,12 +365,12 @@ function calcDCC3() {
   setResult('dcc3-flow', m3h);
   setResult('dcc3-dp',   dp, 1);
   const riskEl = document.getElementById('dcc3-risk');
-  riskEl.textContent = safe ? '??摰' : '??蝯憸券';
+  riskEl.textContent = safe ? '✓ 安全' : '⚠ 結露風險';
   riskEl.style.color  = safe ? 'var(--teal)' : 'var(--amber)';
   riskEl.closest('.result-box').classList.add('has-result');
 }
 
-// ?? MAU-01 ?函?瑕鞎 ???????????????????????????????????????
+// ── MAU-01 全熱冷卻負荷 ───────────────────────────────────────
 function calcMAU1() {
   const Q  = getVal('mau1-q');
   const T1 = getVal('mau1-t1'), RH1 = getVal('mau1-rh1');
@@ -390,7 +390,7 @@ function calcMAU1() {
   updateMAUDiagram(T1, RH1, T2, RH2);
 }
 
-// ?? MAU-02 ?斗????????????????????????????????????????????????
+// ── MAU-02 除濕量 ─────────────────────────────────────────────
 function calcMAU2() {
   const Q  = getVal('mau2-q');
   const T1 = getVal('mau2-t1'), RH1 = getVal('mau2-rh1');
@@ -406,7 +406,7 @@ function calcMAU2() {
   updateMAUDiagram(T1, RH1, T2, RH2);
 }
 
-// ?? MAU-03 CHW ?瘙????????????????????????????????????????????
+// ── MAU-03 CHW 需求 ───────────────────────────────────────────
 function calcMAU3() {
   const cap = getVal('mau3-cap');
   const Ts  = getVal('mau3-ts'), Tr = getVal('mau3-tr');
@@ -416,7 +416,7 @@ function calcMAU3() {
   setResult('mau3-lmin', m3h * 1000 / 60);
 }
 
-// ?? Psychrometric Chart ??????????????????????????????????????
+// ── Psychrometric Chart ──────────────────────────────────────
 const PC = {
   ml: 64, mr: 25, mt: 22, mb: 48,
   vw: 700, vh: 420,
@@ -428,8 +428,6 @@ const PC = {
 };
 
 function initPsychroChart() {
-renderCompPanel();
-window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
   const svg = document.getElementById('psychro-svg');
   if (!svg) return;
   const { ml, mr, mt, mb, vw, vh, cw, ch } = PC;
@@ -474,8 +472,8 @@ window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
   }
   h += `<path d="${sat}" stroke="#00a882" stroke-width="2" fill="none" clip-path="url(#cc)"/>`;
   h += `<rect x="${ml}" y="${mt}" width="${cw}" height="${ch}" fill="none" stroke="#243d5c" stroke-width="1"/>`;
-  h += `<text x="${ml+cw/2}" y="${vh-5}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600">銋曄?皞怠漲 (簞C)</text>`;
-  h += `<text x="${ml-48}" y="${mt+ch/2}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600" transform="rotate(-90,${ml-48},${mt+ch/2})">?急???? (g/kg)</text>`;
+  h += `<text x="${ml+cw/2}" y="${vh-5}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600">乾球溫度 (°C)</text>`;
+  h += `<text x="${ml-48}" y="${mt+ch/2}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600" transform="rotate(-90,${ml-48},${mt+ch/2})">含濕量 ω (g/kg)</text>`;
   h += `<g id="psychro-pts"></g>`;
   svg.innerHTML = h;
 }
@@ -499,21 +497,21 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
   grp.innerHTML =
     `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f0a430" stroke-width="1.8" stroke-dasharray="7,4" opacity=".9"/>` +
     `<circle cx="${x1}" cy="${y1}" r="6" fill="#f0a430" stroke="#080d18" stroke-width="1.5"/>` +
-    lbl(x1, y1, '#f0a430', `OA ${T1}簞C/${RH1}%`, `h=${h1} kJ/kg`) +
+    lbl(x1, y1, '#f0a430', `OA ${T1}°C/${RH1}%`, `h=${h1} kJ/kg`) +
     `<circle cx="${x2}" cy="${y2}" r="6" fill="#00d4aa" stroke="#080d18" stroke-width="1.5"/>` +
-    lbl(x2, y2, '#00d4aa', `SA ${T2}簞C/${RH2}%`, `h=${h2} kJ/kg`);
+    lbl(x2, y2, '#00d4aa', `SA ${T2}°C/${RH2}%`, `h=${h2} kJ/kg`);
 }
 
-// ?? MAU-05 3D Interactive Model ??????????????????????????????
+// ── MAU-05 3D Interactive Model ──────────────────────────────
 
 const COMP_CATALOG = [
-  { key:'g4',   label:'??瞈?G4',   cat:'filter', w:0.5,  rgb:[36,62,96]  },
-  { key:'f7',   label:'銝剜?瞈?F7',   cat:'filter', w:0.5,  rgb:[46,74,112] },
-  { key:'hepa', label:'擃?瞈?HEPA', cat:'filter', w:0.5,  rgb:[58,88,132] },
-  { key:'chw',  label:'?唳偌?斤恣', cat:'chw',  w:1.8,  rgb:[0,104,145] },
-  { key:'hhw',  label:'?望偌?斤恣', cat:'hhw',  w:1.8,  rgb:[145,68,0]  },
-  { key:'wash', label:'瘞湔?畾?,        cat:'wash', w:2.0,  rgb:[18,58,96]  },
-  { key:'fan',  label:'?◢璈?,         cat:'fan',  w:1.6,  rgb:[24,38,60]  },
+  { key:'g4',   label:'初效濾 G4',   cat:'filter', w:0.5,  rgb:[36,62,96]  },
+  { key:'f7',   label:'中效濾 F7',   cat:'filter', w:0.5,  rgb:[46,74,112] },
+  { key:'hepa', label:'高效濾 HEPA', cat:'filter', w:0.5,  rgb:[58,88,132] },
+  { key:'chw',  label:'冰水盤管', cat:'chw',  w:1.8,  rgb:[0,104,145] },
+  { key:'hhw',  label:'熱水盤管', cat:'hhw',  w:1.8,  rgb:[145,68,0]  },
+  { key:'wash', label:'水洗段',        cat:'wash', w:2.0,  rgb:[18,58,96]  },
+  { key:'fan',  label:'送風機',         cat:'fan',  w:1.6,  rgb:[24,38,60]  },
 ];
 
 let mauComps = [
@@ -540,12 +538,12 @@ function renderCompPanel() {
           '<span class="comp-num">' + (i+1) + '</span>' +
           '<span class="comp-label">' + (d ? d.label : c.key) + '</span>' +
           '<div class="comp-acts">' +
-            '<button onclick="moveComp(' + c.id + ',-1)"' + (i===0?' disabled':'') + '>??/button>' +
-            '<button onclick="moveComp(' + c.id + ',1)"'  + (i===n ?' disabled':'') + '>??/button>' +
-            '<button class="comp-del" onclick="removeComp(' + c.id + ')">??/button>' +
+            '<button onclick="moveComp(' + c.id + ',-1)"' + (i===0?' disabled':'') + '>↑</button>' +
+            '<button onclick="moveComp(' + c.id + ',1)"'  + (i===n ?' disabled':'') + '>↓</button>' +
+            '<button class="comp-del" onclick="removeComp(' + c.id + ')">✕</button>' +
           '</div></div>';
       }).join('')
-    : '<div class="comp-empty">撠??嗡辣</div>';
+    : '<div class="comp-empty">尚未加入零件</div>';
   addEl.innerHTML = COMP_CATALOG
     .map(d => '<button class="comp-add-btn" onclick="addComp(\'' + d.key + '\')">' + d.label + '</button>')
     .join('');
@@ -574,20 +572,20 @@ function refreshMAU3D() {
   window.mau3dRefresh?.(mauComps);
 }
 
-// ?? Enter key triggers calc ??????????????????????????????????
+// ── Enter key triggers calc ──────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const card = e.target.closest('.calc-card');
   if (card) card.querySelector('.calc-btn')?.click();
 });
 
-// ?? cr4-rh manual edit tracking ?????????????????????????????
+// ── cr4-rh manual edit tracking ─────────────────────────────
 (function () {
   const el = document.getElementById('cr4-rh');
   if (el) el.addEventListener('input', function () { this.dataset.edited = '1'; });
 })();
 
-// ?? Theme Toggle ?????????????????????????????????????????????
+// ── Theme Toggle ─────────────────────────────────────────────
 function setTheme(theme) {
   if (theme === 'light') {
     document.body.setAttribute('data-theme', 'light');
@@ -601,7 +599,7 @@ function setTheme(theme) {
   localStorage.setItem('hvac-theme', theme);
 }
 
-// ?? Init ?????????????????????????????????????????????????????
+// ── Init ─────────────────────────────────────────────────────
 initPsychroChart();
 renderCompPanel();
 window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
