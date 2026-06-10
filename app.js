@@ -773,6 +773,21 @@ document.addEventListener('keydown', e => {
   if (el) el.addEventListener('input', function () { this.dataset.edited = '1'; });
 })();
 
+// ── Theme Toggle ─────────────────────────────────────────────
+function setTheme(theme) {
+  if (theme === 'light') {
+    document.body.setAttribute('data-theme', 'light');
+  } else {
+    document.body.removeAttribute('data-theme');
+  }
+  const btnDark  = document.getElementById('btn-dark');
+  const btnLight = document.getElementById('btn-light');
+  if (btnDark)  btnDark.classList.toggle('active',  theme !== 'light');
+  if (btnLight) btnLight.classList.toggle('active', theme === 'light');
+  localStorage.setItem('hvac-theme', theme);
+}
+
 // ── Init ─────────────────────────────────────────────────────
 initPsychroChart();
 refreshMAU3D();
+setTheme(localStorage.getItem('hvac-theme') || 'dark');
