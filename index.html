@@ -1043,6 +1043,54 @@
         <!-- ── Left: Calculations ── -->
         <div class="mau-calcs">
 
+        <!-- MAU-D Design Target -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">MAU-D</span>
+            <h3>設計目標與室外條件</h3>
+            <span class="formula-badge">Design Target</span>
+          </div>
+          <div class="card-body">
+            <div class="tgt-section-lbl">室外設計條件 (OA)</div>
+            <div class="tgt-row">
+              <label>溫度 / 濕度</label>
+              <div class="input-row">
+                <input type="number" id="tgt-oa-t"  value="35" step="0.5" style="flex:1;min-width:0">
+                <span class="unit" style="border-right:1px solid var(--border)">°C DB</span>
+                <input type="number" id="tgt-oa-rh" value="70" step="1" min="0" max="100" style="flex:1;min-width:0">
+                <span class="unit">% RH</span>
+              </div>
+            </div>
+            <div class="tgt-row">
+              <label>設計風量</label>
+              <div class="input-row">
+                <input type="number" id="tgt-q" value="10000" step="1000" min="0">
+                <span class="unit">m³/h</span>
+              </div>
+            </div>
+            <div class="tgt-section-lbl" style="margin-top:.6rem">供氣目標 (SA Target)</div>
+            <div class="tgt-row">
+              <label>溫度目標</label>
+              <div class="tgt-pm-wrap">
+                <input type="number" id="tgt-sa-t"     value="22"  step="0.5" class="tgt-ci">
+                <span class="tgt-pm">±</span>
+                <input type="number" id="tgt-sa-t-tol" value="1.0" step="0.5" min="0" class="tgt-ti">
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <div class="tgt-row">
+              <label>濕度目標</label>
+              <div class="tgt-pm-wrap">
+                <input type="number" id="tgt-sa-rh"     value="50" step="1" class="tgt-ci">
+                <span class="tgt-pm">±</span>
+                <input type="number" id="tgt-sa-rh-tol" value="5"  step="1" min="0" class="tgt-ti">
+                <span class="unit">% RH</span>
+              </div>
+            </div>
+            <div id="tgt-status" class="tgt-status"></div>
+          </div>
+        </div>
+
         <div class="calc-card">
           <div class="card-header">
             <span class="card-num">MAU-01</span>
@@ -1200,6 +1248,36 @@
           </div>
         </div>
 
+        <!-- MAU-06 Coil Sequence -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">MAU-06</span>
+            <h3>盤管處理排列</h3>
+            <span class="formula-badge">Process Flow</span>
+          </div>
+          <div class="card-body">
+            <div class="coil-flow-outer">
+              <div class="flow-node flow-node-oa">
+                <div class="fnode-tag">OA</div>
+                <div class="fnode-val" id="cf-oa-t">35.0°C</div>
+                <div class="fnode-val" id="cf-oa-rh">70% RH</div>
+              </div>
+              <div id="coil-seq-blocks" class="coil-seq-blocks"></div>
+              <div class="cf-arrow cf-arrow-end">→</div>
+              <div class="flow-node flow-node-sa">
+                <div class="fnode-tag">SA</div>
+                <div class="fnode-val" id="cf-sa-t">—</div>
+                <div class="fnode-val" id="cf-sa-rh">—</div>
+                <div id="cf-sa-badge" class="cf-sa-badge"></div>
+              </div>
+            </div>
+            <div class="coil-seq-actions">
+              <button class="comp-add-btn" onclick="addCoilBlock()">+ 新增處理段</button>
+              <button class="calc-btn" onclick="calcCoilProcess()" style="margin-left:auto">計算</button>
+            </div>
+          </div>
+        </div>
+
         </div><!-- /.mau-calcs -->
 
         <!-- ── Right: Charts ── -->
@@ -1223,6 +1301,21 @@
               <span style="color:#00a882">── 飽和線 100%RH</span>
               <span style="color:#2a4060">── 等RH線</span>
             </div>
+          </div>
+        </div>
+
+        <!-- MAU-07 Summary Table -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">MAU-07</span>
+            <h3>核算總表 — 狀態點 Detail</h3>
+            <span class="formula-badge">State Points Summary</span>
+          </div>
+          <div class="card-body">
+            <div id="mau-summary-table" class="mau-summary-wrap">
+              <div class="mau-summary-empty">請先在 MAU-06 輸入處理段並按「計算」</div>
+            </div>
+            <div id="mau-summary-totals" class="mau-summary-totals"></div>
           </div>
         </div>
 

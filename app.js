@@ -474,6 +474,7 @@ function initPsychroChart() {
   h += `<rect x="${ml}" y="${mt}" width="${cw}" height="${ch}" fill="none" stroke="#243d5c" stroke-width="1"/>`;
   h += `<text x="${ml+cw/2}" y="${vh-5}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600">乾球溫度 (°C)</text>`;
   h += `<text x="${ml-48}" y="${mt+ch/2}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600" transform="rotate(-90,${ml-48},${mt+ch/2})">含濕量 ω (g/kg)</text>`;
+  h += `<g id="psychro-process"></g>`;
   h += `<g id="psychro-pts"></g>`;
   svg.innerHTML = h;
 }
@@ -481,6 +482,8 @@ function initPsychroChart() {
 function updatePsychroPoints(T1, RH1, T2, RH2) {
   const grp = document.getElementById('psychro-pts');
   if (!grp) return;
+  const proc = document.getElementById('psychro-process');
+  if (proc) proc.innerHTML = '';
   const w1 = Math.min(omegaFromTRH(T1, RH1) * 1000, 30);
   const w2 = Math.min(omegaFromTRH(T2, RH2) * 1000, 30);
   const x1 = PC.tx(T1), y1 = PC.ty(w1);
@@ -599,8 +602,244 @@ function setTheme(theme) {
   localStorage.setItem('hvac-theme', theme);
 }
 
+// ── MAU-06/07 Coil Process ───────────────────────────────────
+
+const COIL_TYPES = [
+  { key:'chw',   label:'CHW 冰水盤管' },
+  { key:'hhw',   label:'HHW 熱水盤管' },
+  { key:'dx',    label:'DX 直膨' },
+  { key:'pre',   label:'預冷盤管' },
+  { key:'rh',    label:'後熱盤管 (RH)' },
+  { key:'humid', label:'加濕段' },
+  { key:'heat',  label:'電熱段' },
+];
+
+let coilBlocks = [{ id:1, name:'chw', outDB:13, outRH:95 }];
+let _cbId = 2;
+
+function psyState(T, RH) {
+  const w = omegaFromTRH(T, RH);
+  return { T, RH, wg: w * 1000, h: enthalpyAir(T, w) };
+}
+
+function renderCoilBlocks() {
+  const container = document.getElementById('coil-seq-blocks');
+  if (!container) return;
+  const T0  = parseFloat(document.getElementById('tgt-oa-t')?.value)  || 35;
+  const RH0 = parseFloat(document.getElementById('tgt-oa-rh')?.value) || 70;
+  const oaT  = document.getElementById('cf-oa-t');
+  const oaRH = document.getElementById('cf-oa-rh');
+  if (oaT)  oaT.textContent  = T0.toFixed(1) + '°C';
+  if (oaRH) oaRH.textContent = RH0.toFixed(0) + '% RH';
+
+  container.innerHTML = coilBlocks.map(b => {
+    const opts = COIL_TYPES.map(c =>
+      `<option value="${c.key}"${b.name === c.key ? ' selected' : ''}>${c.label}</option>`
+    ).join('');
+    return `<div class="cf-arrow">→</div>
+<div class="flow-coil-block" id="fcb-${b.id}">
+  <div class="fcb-hdr">
+    <select class="fcb-select" onchange="updateCB(${b.id},'name',this.value)">${opts}</select>
+    <button class="fcb-del" onclick="removeCB(${b.id})" title="刪除">✕</button>
+  </div>
+  <div class="fcb-field">
+    <label>出口 DB</label>
+    <input type="number" value="${b.outDB}" step="0.5" onchange="updateCB(${b.id},'outDB',+this.value)">
+    <span>°C</span>
+  </div>
+  <div class="fcb-field">
+    <label>出口 RH</label>
+    <input type="number" value="${b.outRH}" step="1" min="0" max="100" onchange="updateCB(${b.id},'outRH',+this.value)">
+    <span>%</span>
+  </div>
+  <div class="fcb-result" id="fcb-res-${b.id}"><div class="fcb-q">— kW</div></div>
+</div>`;
+  }).join('');
+}
+
+function addCoilBlock() {
+  coilBlocks.push({ id: _cbId++, name:'chw', outDB:13, outRH:95 });
+  renderCoilBlocks();
+}
+
+function removeCB(id) {
+  coilBlocks = coilBlocks.filter(b => b.id !== id);
+  renderCoilBlocks();
+  clearCoilSummary();
+}
+
+function updateCB(id, key, val) {
+  const b = coilBlocks.find(b => b.id === id);
+  if (b) b[key] = val;
+}
+
+function clearCoilSummary() {
+  const el = document.getElementById('mau-summary-table');
+  if (el) el.innerHTML = '<div class="mau-summary-empty">請先在 MAU-06 輸入處理段並按「計算」</div>';
+  const tot = document.getElementById('mau-summary-totals');
+  if (tot) tot.innerHTML = '';
+  const status = document.getElementById('tgt-status');
+  if (status) { status.className = 'tgt-status'; status.textContent = ''; }
+  const badge = document.getElementById('cf-sa-badge');
+  if (badge) { badge.className = 'cf-sa-badge'; badge.textContent = ''; }
+  const saT  = document.getElementById('cf-sa-t');
+  const saRH = document.getElementById('cf-sa-rh');
+  if (saT)  saT.textContent  = '—';
+  if (saRH) saRH.textContent = '—';
+  const proc = document.getElementById('psychro-process');
+  if (proc) proc.innerHTML = '';
+}
+
+function calcCoilProcess() {
+  const T0  = parseFloat(document.getElementById('tgt-oa-t')?.value)  || 35;
+  const RH0 = parseFloat(document.getElementById('tgt-oa-rh')?.value) || 70;
+  const Q   = parseFloat(document.getElementById('tgt-q')?.value)     || 10000;
+  const mdot = Q * 1.2 / 3600;
+
+  if (!coilBlocks.length) { clearCoilSummary(); return; }
+
+  const states = [{ id:'OA', label:'室外空氣 (OA)', ...psyState(T0, RH0) }];
+  coilBlocks.forEach((b, i) => {
+    const name = COIL_TYPES.find(c => c.key === b.name)?.label || b.name;
+    states.push({ id: i === coilBlocks.length - 1 ? 'SA' : ('A' + (i+1)),
+                  label: i === coilBlocks.length - 1 ? '送風 (SA)' : name,
+                  coilLabel: name,
+                  ...psyState(b.outDB, b.outRH) });
+  });
+
+  states.forEach((s, i) => {
+    if (i === 0) return;
+    const p = states[i - 1];
+    s.dQ  = mdot * (s.h  - p.h);
+    s.dQs = mdot * 1.006 * (s.T - p.T);
+    s.dQl = s.dQ - s.dQs;
+  });
+
+  coilBlocks.forEach((b, i) => {
+    const s   = states[i + 1];
+    const res = document.getElementById('fcb-res-' + b.id);
+    if (!res || !s) return;
+    const qSign = s.dQ >= 0 ? '+' : '';
+    const cls   = s.dQ >= 0 ? '' : ' heat';
+    res.innerHTML =
+      `<div class="fcb-q${cls}">ΔQ: ${qSign}${s.dQ.toFixed(1)} kW</div>` +
+      `<div class="fcb-q${cls}" style="opacity:.7">Δw: ${(states[i].wg - s.wg).toFixed(2)} g/kg</div>`;
+  });
+
+  const sa = states[states.length - 1];
+  const saT  = document.getElementById('cf-sa-t');
+  const saRH = document.getElementById('cf-sa-rh');
+  if (saT)  saT.textContent  = sa.T.toFixed(1)  + '°C';
+  if (saRH) saRH.textContent = sa.RH.toFixed(0) + '% RH';
+
+  const tgtT    = parseFloat(document.getElementById('tgt-sa-t')?.value)     || 22;
+  const tgtTtol = parseFloat(document.getElementById('tgt-sa-t-tol')?.value) || 1;
+  const tgtRH   = parseFloat(document.getElementById('tgt-sa-rh')?.value)    || 50;
+  const tgtRHtol= parseFloat(document.getElementById('tgt-sa-rh-tol')?.value)|| 5;
+  const tOk  = Math.abs(sa.T  - tgtT)  <= tgtTtol;
+  const rhOk = Math.abs(sa.RH - tgtRH) <= tgtRHtol;
+  const allOk = tOk && rhOk;
+
+  const status = document.getElementById('tgt-status');
+  if (status) {
+    status.className = 'tgt-status ' + (allOk ? 'ok' : 'warn');
+    status.innerHTML =
+      (allOk ? '✓ 達標' : '✗ 偏差') +
+      ` · ${sa.T.toFixed(1)}°C (目標 ${tgtT}±${tgtTtol}°C)` +
+      ` · ${sa.RH.toFixed(0)}% RH (目標 ${tgtRH}±${tgtRHtol}%)`;
+  }
+  const badge = document.getElementById('cf-sa-badge');
+  if (badge) {
+    badge.className = 'cf-sa-badge ' + (allOk ? 'ok' : 'warn');
+    badge.textContent = allOk ? '✓' : '✗';
+  }
+
+  renderSummaryTable(states, mdot);
+  updatePsychroProcess(states);
+  const ptsGrp = document.getElementById('psychro-pts');
+  if (ptsGrp) ptsGrp.innerHTML = '';
+}
+
+function renderSummaryTable(states, mdot) {
+  const wrap = document.getElementById('mau-summary-table');
+  const totEl = document.getElementById('mau-summary-totals');
+  if (!wrap) return;
+
+  const fmt = (v, d=2) => v == null ? '—' : Number(v).toFixed(d);
+  const signFmt = v => v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1);
+
+  const rows = states.map((s, i) => {
+    const cls = i === 0 ? 'sp-oa' : i === states.length - 1 ? 'sp-sa' : 'sp-mid';
+    const qCls = s.dQ != null ? (s.dQ >= 0 ? ' class="q-heat"' : ' class="q-cool"') : '';
+    return `<tr class="${cls}">
+  <td>${s.id}</td><td>${s.label}</td>
+  <td>${fmt(s.T,1)}</td><td>${fmt(s.RH,1)}</td>
+  <td>${fmt(s.wg,2)}</td><td>${fmt(s.h,1)}</td>
+  <td${qCls}>${signFmt(s.dQ)}</td>
+  <td${qCls}>${signFmt(s.dQs)}</td>
+  <td${qCls}>${signFmt(s.dQl)}</td>
+</tr>`;
+  }).join('');
+
+  wrap.innerHTML =
+    `<table class="mau-tbl"><thead><tr>
+<th>節點</th><th>名稱</th>
+<th>DB °C</th><th>RH %</th><th>ω g/kg</th><th>h kJ/kg</th>
+<th>ΔQ kW</th><th>ΔQs kW</th><th>ΔQl kW</th>
+</tr></thead><tbody>${rows}</tbody></table>`;
+
+  if (!totEl) return;
+  const oa = states[0], sa = states[states.length - 1];
+  const totQ   = mdot * (sa.h  - oa.h);
+  const totQs  = mdot * 1.006 * (sa.T  - oa.T);
+  const totQl  = totQ - totQs;
+  const dehumid= mdot * (oa.wg - sa.wg) / 1000 * 3600;
+  const isCool = totQ < 0;
+  const vClass = isCool ? '' : ' heat';
+  totEl.innerHTML =
+    `<div class="stot"><span class="stot-lbl">總負荷</span><span class="stot-val${vClass}">${totQ.toFixed(1)}</span><span class="stot-unit">kW</span></div>` +
+    `<div class="stot"><span class="stot-lbl">顏熱 Qs</span><span class="stot-val${vClass}">${totQs.toFixed(1)}</span><span class="stot-unit">kW</span></div>` +
+    `<div class="stot"><span class="stot-lbl">潛熱 Ql</span><span class="stot-val${vClass}">${totQl.toFixed(1)}</span><span class="stot-unit">kW</span></div>` +
+    `<div class="stot"><span class="stot-lbl">除濕量</span><span class="stot-val">${Math.abs(dehumid).toFixed(2)}</span><span class="stot-unit">kg/h</span></div>` +
+    `<div class="stot"><span class="stot-lbl">OA→SA 焉差</span><span class="stot-val">${(oa.h - sa.h).toFixed(1)}</span><span class="stot-unit">kJ/kg</span></div>`;
+}
+
+function updatePsychroProcess(states) {
+  const grp = document.getElementById('psychro-process');
+  if (!grp || states.length < 2) { if (grp) grp.innerHTML = ''; return; }
+
+  const COLS = ['#f0a430','#60c8ff','#80e060','#e080c0','#c0a040','#80b0ff','#00d4aa','#ff8060'];
+  const pts = states.map(s => ({
+    ...s,
+    px: PC.tx(Math.max(PC.Tmin + 0.5, Math.min(PC.Tmax - 0.5, s.T))),
+    py: PC.ty(Math.min(Math.max(s.wg, PC.wmin), PC.wmax - 0.5)),
+  }));
+
+  let h = '';
+  for (let i = 1; i < pts.length; i++) {
+    h += `<line x1="${pts[i-1].px}" y1="${pts[i-1].py}" x2="${pts[i].px}" y2="${pts[i].py}" stroke="#a06828" stroke-width="2.2" stroke-dasharray="5,3" clip-path="url(#cc)"/>`;
+  }
+
+  pts.forEach((p, i) => {
+    const isOA = i === 0, isSA = i === pts.length - 1;
+    const col = isOA ? '#f0a430' : isSA ? '#00d4aa' : COLS[i % COLS.length];
+    const lx  = p.px > PC.ml + PC.cw - 114 ? p.px - 106 : p.px + 8;
+    const ly  = p.py > PC.mt + 50 ? p.py - 10 : p.py + 18;
+    h += `<circle cx="${p.px}" cy="${p.py}" r="${isOA||isSA ? 6 : 5}" fill="${col}" stroke="#080d18" stroke-width="1.5" clip-path="url(#cc)"/>`;
+    h += `<rect x="${lx-2}" y="${ly-12}" width="104" height="28" rx="2" fill="rgba(8,13,24,.9)"/>`;
+    h += `<text x="${lx}" y="${ly}" fill="${col}" font-size="10" font-family="Share Tech Mono,monospace">${p.id} ${p.T.toFixed(1)}°C/${p.RH}%</text>`;
+    h += `<text x="${lx}" y="${ly+13}" fill="${col}88" font-size="9" font-family="Share Tech Mono,monospace">h=${p.h.toFixed(1)} ω=${p.wg.toFixed(2)} g/kg</text>`;
+  });
+
+  grp.innerHTML = h;
+}
+
 // ── Init ─────────────────────────────────────────────────────
 initPsychroChart();
 renderCompPanel();
+renderCoilBlocks();
+['tgt-oa-t','tgt-oa-rh'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', renderCoilBlocks);
+});
 window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
 setTheme(localStorage.getItem('hvac-theme') || 'dark');
