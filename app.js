@@ -205,6 +205,24 @@ function calcCR3() {
   setResult('cr3-qtotal',  qEqp + qLight + qPeople);
 }
 
+// ── CR-04 FFU 台數計算 ────────────────────────────────────────
+function calcCR4() {
+  const ffuArea = parseFloat(document.getElementById('cr4-ffu-size').value);
+  const vel  = getVal('cr4-vel');
+  const cov  = getVal('cr4-cov');
+  const area = getVal('cr4-area');
+  const rh   = getVal('cr4-rh');
+  if (!vel || !cov || !area || !rh || area <= 0 || rh <= 0) return;
+  const qEach  = ffuArea * vel * 3600;
+  const nFFU   = Math.ceil((area * cov / 100) / ffuArea);
+  const qTotal = nFFU * qEach;
+  const ach    = qTotal / (area * rh);
+  setResult('cr4-q-each', qEach, 0);
+  setResult('cr4-n',      nFFU,  0);
+  setResult('cr4-q-total', qTotal, 0);
+  setResult('cr4-ach',    ach,   1);
+}
+
 // ── DCC-01 顯熱冷卻量 ─────────────────────────────────────────
 function calcDCC1() {
   const Q   = getVal('dcc1-q');
