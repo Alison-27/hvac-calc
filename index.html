@@ -1248,6 +1248,11 @@
           </div>
         </div>
 
+        </div><!-- /.mau-calcs -->
+
+        <!-- ── Right: Charts ── -->
+        <div class="mau-charts">
+
         <!-- MAU-06 Coil Sequence -->
         <div class="calc-card">
           <div class="card-header">
@@ -1278,11 +1283,6 @@
           </div>
         </div>
 
-        </div><!-- /.mau-calcs -->
-
-        <!-- ── Right: Charts ── -->
-        <div class="mau-charts">
-
         <!-- MAU-04 Psychrometric Chart -->
         <div class="calc-card chart-card">
           <div class="card-header">
@@ -1291,31 +1291,41 @@
             <span class="formula-badge">Psychrometric Chart</span>
           </div>
           <div class="card-body">
-            <div class="chart-info">執行 MAU-01 後圖表自動標示室外 / 送風狀態點</div>
+            <div class="chart-info">MAU-D 設定目標範圍 · 執行 MAU-01 / MAU-06 後標示狀態點路徑</div>
             <div class="chart-wrap">
               <svg id="psychro-svg" viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block"></svg>
             </div>
             <div class="chart-legend">
               <span style="color:var(--amber)">● OA 室外</span>
               <span style="color:var(--teal)">● SA 送風</span>
-              <span style="color:#00a882">── 飽和線 100%RH</span>
-              <span style="color:#2a4060">── 等RH線</span>
+              <span style="color:var(--teal);opacity:.55">□ SA 目標區</span>
+              <span style="color:#00a882">── 飽和線</span>
             </div>
           </div>
         </div>
 
-        <!-- MAU-07 Summary Table -->
+        <!-- MAU-07 Summary -->
         <div class="calc-card">
           <div class="card-header">
             <span class="card-num">MAU-07</span>
-            <h3>核算總表 — 狀態點 Detail</h3>
-            <span class="formula-badge">State Points Summary</span>
+            <h3>設計核算總表</h3>
+            <span class="formula-badge">Calculation Summary</span>
           </div>
           <div class="card-body">
-            <div id="mau-summary-table" class="mau-summary-wrap">
-              <div class="mau-summary-empty">請先在 MAU-06 輸入處理段並按「計算」</div>
+            <div class="mau07-tabs">
+              <button class="mau07-tab active" id="tab-summ"   onclick="setMau07Tab('summ')">核算結果</button>
+              <button class="mau07-tab"         id="tab-detail" onclick="setMau07Tab('detail')">狀態點 Detail</button>
             </div>
-            <div id="mau-summary-totals" class="mau-summary-totals"></div>
+            <div id="mau07-summ-view">
+              <div id="mau-summary-totals" class="mau-summary-totals">
+                <div class="mau-summary-empty">請先在 MAU-06 按「計算」</div>
+              </div>
+            </div>
+            <div id="mau07-detail-view" style="display:none">
+              <div id="mau-summary-table" class="mau-summary-wrap">
+                <div class="mau-summary-empty">請先在 MAU-06 輸入處理段並按「計算」</div>
+              </div>
+            </div>
           </div>
         </div>
 

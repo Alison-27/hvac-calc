@@ -873,6 +873,9 @@ footer {
   grid-template-columns: 390px 1fr;
   gap: 1.5rem;
   align-items: start;
+  /* independent column scroll */
+  height: calc(100vh - 64px);
+  overflow: hidden;
 }
 
 .mau-calcs,
@@ -880,21 +883,62 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 2rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
 }
+.mau-calcs::-webkit-scrollbar,
+.mau-charts::-webkit-scrollbar { width: 5px; }
+.mau-calcs::-webkit-scrollbar-thumb,
+.mau-charts::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
-/* Right-column cards fill their column (override chart-card spanning) */
+/* Right-column cards fill their column */
 .mau-charts .calc-card,
-.mau-charts .chart-card {
-  width: 100%;
-}
+.mau-charts .chart-card { width: 100%; }
 
-/* 3D container shorter in the right column to balance with the chart */
-.mau-charts #mau3d-container {
-  height: 360px;
+/* 3D container shorter in right column */
+.mau-charts #mau3d-container { height: 360px; }
+
+/* ── MAU-07 tabs ── */
+.mau07-tabs {
+  display: flex;
+  gap: .35rem;
+  margin-bottom: .9rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: .55rem;
+}
+.mau07-tab {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: var(--sans);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  padding: .3rem .9rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.mau07-tab:hover { border-color: var(--border2); color: var(--text-dim); }
+.mau07-tab.active {
+  background: rgba(0,212,170,.08);
+  border-color: var(--teal-dim);
+  color: var(--teal);
 }
 
 @media (max-width: 960px) {
-  .mau-layout { grid-template-columns: 1fr; }
+  .mau-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+  }
+  .mau-calcs, .mau-charts {
+    height: auto;
+    overflow-y: visible;
+  }
 }
 
 /* ── MAU Design Target Card ── */
@@ -1003,7 +1047,7 @@ footer {
 .mau-tbl .q-cool { color: #60c8ff; }
 .mau-tbl .q-heat { color: var(--amber); }
 .mau-summary-totals {
-  display: flex; flex-wrap: wrap; gap: .45rem 1.2rem;
+  display: block;
   margin-top: .65rem; padding-top: .6rem;
   border-top: 1px solid var(--border);
 }
@@ -1012,3 +1056,42 @@ footer {
 .stot-val { font-family: var(--mono); color: var(--teal); font-weight: 700; }
 .stot-val.heat { color: var(--amber); }
 .stot-unit { font-size: .63rem; color: var(--text-muted); }
+
+/* ── 核算結果 grid ── */
+.stot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .5rem .75rem;
+  margin-bottom: .85rem;
+}
+.stot-ri {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .45rem .6rem;
+}
+.stot-ri.heat { border-color: rgba(240,164,48,.25); background: rgba(240,164,48,.04); }
+.stot-ri-lbl { font-size: .63rem; color: var(--text-muted); margin-bottom: .18rem; letter-spacing: .04em; }
+.stot-ri-val { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--teal); line-height: 1.1; }
+.stot-ri.heat .stot-ri-val { color: var(--amber); }
+.stot-ri-unit { font-size: .6rem; color: var(--text-muted); margin-top: 1px; }
+.stot-stages-lbl {
+  font-size: .67rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text-muted); margin-bottom: .35rem;
+}
+.stot-stages { display: flex; flex-direction: column; gap: .25rem; }
+.stot-stage {
+  display: flex; align-items: center; gap: .5rem;
+  background: var(--bg3); border-radius: 4px;
+  padding: .3rem .55rem; border-left: 3px solid var(--border2);
+  font-size: .73rem;
+}
+.stot-stage.cool { border-left-color: #60c8ff; }
+.stot-stage.heat { border-left-color: var(--amber); }
+.stot-stage-id { font-family: var(--mono); font-weight: 700; font-size: .68rem; min-width: 28px; }
+.stot-stage.cool .stot-stage-id { color: #60c8ff; }
+.stot-stage.heat .stot-stage-id { color: var(--amber); }
+.stot-stage-name { flex: 1; color: var(--text-dim); font-size: .71rem; }
+.stot-stage-q { font-family: var(--mono); font-size: .72rem; font-weight: 600; }
+.stot-stage.cool .stot-stage-q { color: #60c8ff; }
+.stot-stage.heat .stot-stage-q { color: var(--amber); }

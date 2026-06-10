@@ -474,6 +474,7 @@ function initPsychroChart() {
   h += `<rect x="${ml}" y="${mt}" width="${cw}" height="${ch}" fill="none" stroke="#243d5c" stroke-width="1"/>`;
   h += `<text x="${ml+cw/2}" y="${vh-5}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600">乾球溫度 (°C)</text>`;
   h += `<text x="${ml-48}" y="${mt+ch/2}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600" transform="rotate(-90,${ml-48},${mt+ch/2})">含濕量 ω (g/kg)</text>`;
+  h += `<g id="psychro-target"></g>`;
   h += `<g id="psychro-process"></g>`;
   h += `<g id="psychro-pts"></g>`;
   svg.innerHTML = h;
@@ -503,6 +504,33 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
     lbl(x1, y1, '#f0a430', `OA ${T1}°C/${RH1}%`, `h=${h1} kJ/kg`) +
     `<circle cx="${x2}" cy="${y2}" r="6" fill="#00d4aa" stroke="#080d18" stroke-width="1.5"/>` +
     lbl(x2, y2, '#00d4aa', `SA ${T2}°C/${RH2}%`, `h=${h2} kJ/kg`);
+}
+
+function updatePsychroTarget() {
+  const grp = document.getElementById('psychro-target');
+  if (!grp) return;
+  const get = id => parseFloat(document.getElementById(id)?.value);
+  const tgtT    = get('tgt-sa-t')     ?? 22;
+  const tgtTtol = get('tgt-sa-t-tol') ?? 1;
+  const tgtRH   = get('tgt-sa-rh')    ?? 50;
+  const tgtRHtol= get('tgt-sa-rh-tol')?? 5;
+
+  const corners = [
+    [tgtT - tgtTtol, tgtRH - tgtRHtol],
+    [tgtT + tgtTtol, tgtRH - tgtRHtol],
+    [tgtT + tgtTtol, tgtRH + tgtRHtol],
+    [tgtT - tgtTtol, tgtRH + tgtRHtol],
+  ].map(([T, RH]) => {
+    const wg = Math.max(0, Math.min(omegaFromTRH(T, Math.max(1, Math.min(100, RH))) * 1000, PC.wmax));
+    return { x: PC.tx(T), y: PC.ty(wg) };
+  });
+
+  const pts = corners.map(c => `${c.x},${c.y}`).join(' ');
+  const lx = corners[3].x + 3;
+  const ly = corners[2].y - 4;
+  grp.innerHTML =
+    `<polygon points="${pts}" fill="rgba(0,212,170,.05)" stroke="#00d4aa" stroke-width="1.2" stroke-dasharray="4,3" clip-path="url(#cc)"/>` +
+    `<text x="${lx}" y="${ly}" fill="#00d4aa" font-size="9" font-family="Share Tech Mono,monospace" opacity=".7">SA Target</text>`;
 }
 
 // ── MAU-05 3D Interactive Model ──────────────────────────────
@@ -673,11 +701,20 @@ function updateCB(id, key, val) {
   if (b) b[key] = val;
 }
 
+let mau07Tab = 'summ';
+function setMau07Tab(tab) {
+  mau07Tab = tab;
+  document.getElementById('mau07-summ-view').style.display   = tab === 'summ'   ? '' : 'none';
+  document.getElementById('mau07-detail-view').style.display = tab === 'detail' ? '' : 'none';
+  document.getElementById('tab-summ').classList.toggle('active',   tab === 'summ');
+  document.getElementById('tab-detail').classList.toggle('active', tab === 'detail');
+}
+
 function clearCoilSummary() {
   const el = document.getElementById('mau-summary-table');
   if (el) el.innerHTML = '<div class="mau-summary-empty">請先在 MAU-06 輸入處理段並按「計算」</div>';
   const tot = document.getElementById('mau-summary-totals');
-  if (tot) tot.innerHTML = '';
+  if (tot) tot.innerHTML = '<div class="mau-summary-empty">請先在 MAU-06 按「計算」</div>';
   const status = document.getElementById('tgt-status');
   if (status) { status.className = 'tgt-status'; status.textContent = ''; }
   const badge = document.getElementById('cf-sa-badge');
@@ -761,26 +798,26 @@ function calcCoilProcess() {
 }
 
 function renderSummaryTable(states, mdot) {
-  const wrap = document.getElementById('mau-summary-table');
+  const wrap  = document.getElementById('mau-summary-table');
   const totEl = document.getElementById('mau-summary-totals');
   if (!wrap) return;
 
-  const fmt = (v, d=2) => v == null ? '—' : Number(v).toFixed(d);
+  const fmt     = (v, d=2) => v == null ? '—' : Number(v).toFixed(d);
   const signFmt = v => v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1);
 
+  // ── 狀態點 Detail table ──────────────────────────────
   const rows = states.map((s, i) => {
-    const cls = i === 0 ? 'sp-oa' : i === states.length - 1 ? 'sp-sa' : 'sp-mid';
+    const cls  = i === 0 ? 'sp-oa' : i === states.length - 1 ? 'sp-sa' : 'sp-mid';
     const qCls = s.dQ != null ? (s.dQ >= 0 ? ' class="q-heat"' : ' class="q-cool"') : '';
     return `<tr class="${cls}">
-  <td>${s.id}</td><td>${s.label}</td>
-  <td>${fmt(s.T,1)}</td><td>${fmt(s.RH,1)}</td>
-  <td>${fmt(s.wg,2)}</td><td>${fmt(s.h,1)}</td>
-  <td${qCls}>${signFmt(s.dQ)}</td>
-  <td${qCls}>${signFmt(s.dQs)}</td>
-  <td${qCls}>${signFmt(s.dQl)}</td>
+<td>${s.id}</td><td>${s.label}</td>
+<td>${fmt(s.T,1)}</td><td>${fmt(s.RH,1)}</td>
+<td>${fmt(s.wg,2)}</td><td>${fmt(s.h,1)}</td>
+<td${qCls}>${signFmt(s.dQ)}</td>
+<td${qCls}>${signFmt(s.dQs)}</td>
+<td${qCls}>${signFmt(s.dQl)}</td>
 </tr>`;
   }).join('');
-
   wrap.innerHTML =
     `<table class="mau-tbl"><thead><tr>
 <th>節點</th><th>名稱</th>
@@ -789,19 +826,42 @@ function renderSummaryTable(states, mdot) {
 </tr></thead><tbody>${rows}</tbody></table>`;
 
   if (!totEl) return;
-  const oa = states[0], sa = states[states.length - 1];
-  const totQ   = mdot * (sa.h  - oa.h);
-  const totQs  = mdot * 1.006 * (sa.T  - oa.T);
-  const totQl  = totQ - totQs;
-  const dehumid= mdot * (oa.wg - sa.wg) / 1000 * 3600;
+
+  // ── 核算結果 summary ──────────────────────────────────
+  const oa  = states[0], sa = states[states.length - 1];
+  const Q   = mdot * 3600 / 1.2;
+  const totQ  = mdot * (sa.h  - oa.h);
+  const totQs = mdot * 1.006 * (sa.T - oa.T);
+  const totQl = totQ - totQs;
+  const dehumid = mdot * (oa.wg - sa.wg) / 1000 * 3600;
+  const SHR   = totQs / (totQ || 1);
   const isCool = totQ < 0;
-  const vClass = isCool ? '' : ' heat';
+  const qCls   = isCool ? '' : ' heat';
+
+  const ri = (lbl, val, unit, cls='') =>
+    `<div class="stot-ri${cls}"><div class="stot-ri-lbl">${lbl}</div><div class="stot-ri-val">${val}</div><div class="stot-ri-unit">${unit}</div></div>`;
+
+  // Per-stage breakdown
+  const stageRows = states.slice(1).map(s =>
+    `<div class="stot-stage${s.dQ >= 0 ? ' cool' : ' heat'}">
+      <span class="stot-stage-id">${s.id}</span>
+      <span class="stot-stage-name">${s.label}</span>
+      <span class="stot-stage-q">ΔQ ${s.dQ >= 0 ? '' : '+'}${(-s.dQ).toFixed(1)} kW</span>
+    </div>`
+  ).join('');
+
   totEl.innerHTML =
-    `<div class="stot"><span class="stot-lbl">總負荷</span><span class="stot-val${vClass}">${totQ.toFixed(1)}</span><span class="stot-unit">kW</span></div>` +
-    `<div class="stot"><span class="stot-lbl">顏熱 Qs</span><span class="stot-val${vClass}">${totQs.toFixed(1)}</span><span class="stot-unit">kW</span></div>` +
-    `<div class="stot"><span class="stot-lbl">潛熱 Ql</span><span class="stot-val${vClass}">${totQl.toFixed(1)}</span><span class="stot-unit">kW</span></div>` +
-    `<div class="stot"><span class="stot-lbl">除濕量</span><span class="stot-val">${Math.abs(dehumid).toFixed(2)}</span><span class="stot-unit">kg/h</span></div>` +
-    `<div class="stot"><span class="stot-lbl">OA→SA 焉差</span><span class="stot-val">${(oa.h - sa.h).toFixed(1)}</span><span class="stot-unit">kJ/kg</span></div>`;
+    `<div class="stot-grid">
+      ${ri('總負荷 Q',    totQ.toFixed(1),              'kW',   qCls)}
+      ${ri('顯熱 Qs',     totQs.toFixed(1),             'kW',   qCls)}
+      ${ri('潛熱 Ql',     totQl.toFixed(1),             'kW',   qCls)}
+      ${ri('顯熱比 SHR', (SHR * 100).toFixed(1),       '%'        )}
+      ${ri('除濕量',       Math.abs(dehumid).toFixed(2), 'kg/h'     )}
+      ${ri('OA→SA 焓差', (oa.h - sa.h).toFixed(1),     'kJ/kg'    )}
+      ${ri('設計風量 Q',  Q.toFixed(0),                  'm³/h'     )}
+    </div>
+    <div class="stot-stages-lbl">各段負荷</div>
+    <div class="stot-stages">${stageRows}</div>`;
 }
 
 function updatePsychroProcess(states) {
@@ -836,10 +896,14 @@ function updatePsychroProcess(states) {
 
 // ── Init ─────────────────────────────────────────────────────
 initPsychroChart();
+updatePsychroTarget();
 renderCompPanel();
 renderCoilBlocks();
-['tgt-oa-t','tgt-oa-rh'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', renderCoilBlocks);
-});
+['tgt-oa-t','tgt-oa-rh'].forEach(id =>
+  document.getElementById(id)?.addEventListener('change', renderCoilBlocks)
+);
+['tgt-sa-t','tgt-sa-t-tol','tgt-sa-rh','tgt-sa-rh-tol'].forEach(id =>
+  document.getElementById(id)?.addEventListener('input', updatePsychroTarget)
+);
 window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
 setTheme(localStorage.getItem('hvac-theme') || 'dark');
