@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -471,15 +471,16 @@
     <section id="tab-cleanroom" class="tab-section">
       <div class="section-header">
         <h2><span class="tag">04</span> 潔淨室空調計算</h2>
-        <p class="section-desc">Clean Room HVAC · ISO 14644 · ACH / Cooling Load</p>
+        <p class="section-desc">Clean Room HVAC · ISO 14644 · 五模組連動</p>
       </div>
       <div class="calc-grid">
 
+        <!-- CR-01 -->
         <div class="calc-card">
           <div class="card-header">
             <span class="card-num">CR-01</span>
-            <h3>ISO 等級換氣需求</h3>
-            <span class="formula-badge">Q = V × ACH</span>
+            <h3>空間與排氣參數</h3>
+            <span class="formula-badge">Q<sub>min</sub> = V × ACH</span>
           </div>
           <div class="card-body">
             <div class="input-group">
@@ -494,166 +495,228 @@
               </div>
             </div>
             <div class="input-group">
-              <label>房間長度 L</label>
+              <label>房間長 L</label>
               <div class="input-row">
-                <input type="number" id="cr1-l" placeholder="0.00" step="0.1" min="0" />
+                <input type="number" id="cr1-L" placeholder="0.00" step="0.1" min="0" />
                 <span class="unit">m</span>
               </div>
             </div>
             <div class="input-group">
-              <label>房間寬度 W</label>
+              <label>房間寬 W</label>
               <div class="input-row">
-                <input type="number" id="cr1-w" placeholder="0.00" step="0.1" min="0" />
+                <input type="number" id="cr1-W" placeholder="0.00" step="0.1" min="0" />
                 <span class="unit">m</span>
               </div>
             </div>
             <div class="input-group">
-              <label>房間高度 H</label>
+              <label>房間高 H</label>
               <div class="input-row">
-                <input type="number" id="cr1-h" placeholder="3.0" step="0.1" min="0" value="3.0" />
+                <input type="number" id="cr1-H" placeholder="3.0" step="0.1" min="0" value="3.0" />
                 <span class="unit">m</span>
               </div>
+            </div>
+            <div class="input-group">
+              <label>製程排氣量 Q<sub>ex</sub></label>
+              <div class="input-row">
+                <input type="number" id="cr1-qex" placeholder="0" step="100" min="0" value="0" />
+                <span class="unit">m³/h</span>
+              </div>
+              <div class="hint">製程排氣需補充等量新鮮空氣</div>
             </div>
             <button class="calc-btn" onclick="calcCR1()">計算</button>
             <div class="result-box multi" id="cr1-result">
               <div class="result-item">
-                <span class="result-label">最低 ACH</span>
-                <span class="result-value" id="cr1-ach-min">—</span>
+                <span class="result-label">地板面積</span>
+                <span class="result-value" id="cr1-area">—</span>
+                <span class="result-unit">m²</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">房間體積</span>
+                <span class="result-value" id="cr1-vol">—</span>
+                <span class="result-unit">m³</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">ISO ACH 下限</span>
+                <span class="result-value" id="cr1-ach-lo">—</span>
                 <span class="result-unit">次/h</span>
               </div>
               <div class="result-item">
-                <span class="result-label">建議 ACH</span>
-                <span class="result-value" id="cr1-ach-mid">—</span>
-                <span class="result-unit">次/h</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">最低風量</span>
-                <span class="result-value" id="cr1-q-min">—</span>
+                <span class="result-label">最低供風量</span>
+                <span class="result-value" id="cr1-qsup">—</span>
                 <span class="result-unit">m³/h</span>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- CR-02 -->
         <div class="calc-card">
           <div class="card-header">
             <span class="card-num">CR-02</span>
-            <h3>循環 / 新鮮風量分配</h3>
-            <span class="formula-badge">Qrc = Qt × (1 − r%)</span>
+            <h3>熱負荷與環境參數</h3>
+            <span class="formula-badge">Q = q<sub>eqp</sub>+q<sub>lgt</sub>+q<sub>ppl</sub></span>
           </div>
           <div class="card-body">
-            <div class="input-group">
-              <label>總供風量 Qt</label>
-              <div class="input-row">
-                <input type="number" id="cr2-qt" placeholder="0.00" step="100" min="0" />
-                <span class="unit">m³/h</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>新鮮空氣比例</label>
-              <div class="input-row">
-                <input type="number" id="cr2-fa" placeholder="5" step="1" min="0" max="100" value="5" />
-                <span class="unit">%</span>
-              </div>
-              <div class="hint">潔淨室一般新鮮空氣比例 2–10%</div>
-            </div>
-            <button class="calc-btn" onclick="calcCR2()">計算</button>
-            <div class="result-box multi" id="cr2-result">
-              <div class="result-item">
-                <span class="result-label">新鮮空氣量</span>
-                <span class="result-value" id="cr2-fresh">—</span>
-                <span class="result-unit">m³/h</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">循環風量</span>
-                <span class="result-value" id="cr2-recirc">—</span>
-                <span class="result-unit">m³/h</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="calc-card">
-          <div class="card-header">
-            <span class="card-num">CR-03</span>
-            <h3>潔淨室冷卻負荷估算</h3>
-            <span class="formula-badge">Q = Qeqp + Qlight + Qppl</span>
-          </div>
-          <div class="card-body">
-            <div class="input-group">
-              <label>房間面積</label>
-              <div class="input-row">
-                <input type="number" id="cr3-area" placeholder="0.00" step="1" min="0" />
-                <span class="unit">m²</span>
-              </div>
+            <div class="cr-ref-row">
+              <span class="cr-ref-label">房間面積 <span class="cr-ref-tag">↑ CR-01</span></span>
+              <span><span class="cr-ref-val" id="cr2-ref-area">—</span> <span class="cr-ref-unit">m²</span></span>
             </div>
             <div class="input-group">
               <label>設備熱負荷密度</label>
               <div class="input-row">
-                <input type="number" id="cr3-equip" placeholder="500" step="50" min="0" value="500" />
+                <input type="number" id="cr2-equip" placeholder="500" step="50" min="0" value="500" />
                 <span class="unit">W/m²</span>
               </div>
-              <div class="hint">一般 FAB 製程區：500–2000 W/m²</div>
+              <div class="hint">一般 FAB：500–2000 W/m²</div>
             </div>
             <div class="input-group">
               <label>照明負荷密度</label>
               <div class="input-row">
-                <input type="number" id="cr3-light" placeholder="30" step="5" min="0" value="30" />
+                <input type="number" id="cr2-light" placeholder="30" step="5" min="0" value="30" />
                 <span class="unit">W/m²</span>
               </div>
             </div>
             <div class="input-group">
-              <label>人員數量</label>
+              <label>人員數</label>
               <div class="input-row">
-                <input type="number" id="cr3-people" placeholder="0" step="1" min="0" />
+                <input type="number" id="cr2-ppl" placeholder="0" step="1" min="0" value="0" />
                 <span class="unit">人</span>
               </div>
             </div>
-            <button class="calc-btn" onclick="calcCR3()">計算</button>
-            <div class="result-box multi" id="cr3-result">
+            <div class="input-group">
+              <label>設計室溫 T<sub>room</sub></label>
+              <div class="input-row">
+                <input type="number" id="cr2-troom" placeholder="22" step="0.5" value="22" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>送風溫度 T<sub>sup</sub></label>
+              <div class="input-row">
+                <input type="number" id="cr2-tsup" placeholder="16" step="0.5" value="16" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcCR2()">計算</button>
+            <div class="result-box multi" id="cr2-result">
               <div class="result-item">
-                <span class="result-label">設備</span>
-                <span class="result-value" id="cr3-qeqp">—</span>
+                <span class="result-label">總顯熱負荷</span>
+                <span class="result-value" id="cr2-qtotal">—</span>
                 <span class="result-unit">kW</span>
               </div>
               <div class="result-item">
-                <span class="result-label">照明</span>
-                <span class="result-value" id="cr3-qlight">—</span>
-                <span class="result-unit">kW</span>
+                <span class="result-label">冷卻需求風量</span>
+                <span class="result-value" id="cr2-qcool">—</span>
+                <span class="result-unit">m³/h</span>
               </div>
               <div class="result-item">
-                <span class="result-label">人員</span>
-                <span class="result-value" id="cr3-qpeople">—</span>
-                <span class="result-unit">kW</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">合計</span>
-                <span class="result-value" id="cr3-qtotal">—</span>
-                <span class="result-unit">kW</span>
+                <span class="result-label">設計供風量</span>
+                <span class="result-value" id="cr2-qdesign">—</span>
+                <span class="result-unit">m³/h</span>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- CR-03 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">CR-03</span>
+            <h3>DCC 選型</h3>
+            <span class="formula-badge">Q<sub>w</sub> = Q / (c<sub>p</sub>·ΔT<sub>chw</sub>)</span>
+          </div>
+          <div class="card-body">
+            <div class="cr-ref-row">
+              <span class="cr-ref-label">總冷卻負荷 <span class="cr-ref-tag">↑ CR-02</span></span>
+              <span><span class="cr-ref-val" id="cr3-ref-qtotal">—</span> <span class="cr-ref-unit">kW</span></span>
+            </div>
+            <div class="cr-ref-row">
+              <span class="cr-ref-label">空氣 ΔT <span class="cr-ref-tag">↑ CR-02</span></span>
+              <span><span class="cr-ref-val" id="cr3-ref-dt">—</span> <span class="cr-ref-unit">°C</span></span>
+            </div>
+            <div class="input-group">
+              <label>冰水供水溫度</label>
+              <div class="input-row">
+                <input type="number" id="cr3-chws" placeholder="7" step="0.5" value="7" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>冰水回水溫度</label>
+              <div class="input-row">
+                <input type="number" id="cr3-chwr" placeholder="12" step="0.5" value="12" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>DCC 台數</label>
+              <div class="input-row">
+                <input type="number" id="cr3-ndcc" placeholder="2" step="1" min="1" value="2" />
+                <span class="unit">台</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>盤管面風速</label>
+              <div class="input-row">
+                <input type="number" id="cr3-vface" placeholder="2.5" step="0.1" min="1" value="2.5" />
+                <span class="unit">m/s</span>
+              </div>
+              <div class="hint">建議 2.0–3.0 m/s</div>
+            </div>
+            <button class="calc-btn" onclick="calcCR3()">計算</button>
+            <div class="result-box multi" id="cr3-result">
+              <div class="result-item">
+                <span class="result-label">每台冷量</span>
+                <span class="result-value" id="cr3-qunit">—</span>
+                <span class="result-unit">kW</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">每台冰水量</span>
+                <span class="result-value" id="cr3-mwater">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">每台面積</span>
+                <span class="result-value" id="cr3-aface">—</span>
+                <span class="result-unit">m²</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">建議尺寸 H×W</span>
+                <span class="result-value" id="cr3-dims">—</span>
+                <span class="result-unit">m</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CR-04 -->
         <div class="calc-card">
           <div class="card-header">
             <span class="card-num">CR-04</span>
-            <h3>FFU 台數計算</h3>
+            <h3>FFU 送風核算</h3>
             <span class="formula-badge">N = A<sub>cov</sub> / A<sub>ffu</sub></span>
           </div>
           <div class="card-body">
+            <div class="cr-ref-row">
+              <span class="cr-ref-label">房間面積 <span class="cr-ref-tag">↑ CR-01</span></span>
+              <span><span class="cr-ref-val" id="cr4-ref-area">—</span> <span class="cr-ref-unit">m²</span></span>
+            </div>
+            <div class="cr-ref-row">
+              <span class="cr-ref-label">設計供風量 <span class="cr-ref-tag">↑ CR-02</span></span>
+              <span><span class="cr-ref-val" id="cr4-ref-qdesign">—</span> <span class="cr-ref-unit">m³/h</span></span>
+            </div>
             <div class="input-group">
               <label>FFU 規格</label>
               <div class="input-row">
-                <select id="cr4-ffu-size" style="flex:1;background:transparent;border:none;outline:none;font-family:var(--mono);font-size:0.9rem;color:var(--text);padding:0.55rem 0.75rem;cursor:pointer;-webkit-appearance:none;">
-                  <option value="0.72">600 × 1200 mm (0.72 m²)</option>
-                  <option value="0.7442">610 × 1220 mm (0.744 m²)</option>
-                  <option value="0.36">600 × 600 mm (0.36 m²)</option>
+                <select id="cr4-fsize" style="flex:1;background:transparent;border:none;outline:none;font-family:var(--mono);font-size:0.9rem;color:var(--text);padding:0.55rem 0.75rem;cursor:pointer;-webkit-appearance:none;">
+                  <option value="0.72">600×1200 mm (0.72 m²)</option>
+                  <option value="0.7442">610×1220 mm (0.744 m²)</option>
+                  <option value="0.36">600×600 mm (0.36 m²)</option>
                 </select>
               </div>
             </div>
             <div class="input-group">
-              <label>面風速</label>
+              <label>FFU 面風速</label>
               <div class="input-row">
                 <input type="number" id="cr4-vel" placeholder="0.45" step="0.01" min="0.1" max="1.0" value="0.45" />
                 <span class="unit">m/s</span>
@@ -661,19 +724,12 @@
               <div class="hint">ISO 5–6：0.36–0.51 m/s｜ISO 7–8：0.25–0.35 m/s</div>
             </div>
             <div class="input-group">
-              <label>天花板 FFU 覆蓋率</label>
+              <label>天花板覆蓋率</label>
               <div class="input-row">
                 <input type="number" id="cr4-cov" placeholder="50" step="5" min="5" max="100" value="50" />
                 <span class="unit">%</span>
               </div>
               <div class="hint">ISO 5：60–80%｜ISO 6：40–60%｜ISO 7：15–20%</div>
-            </div>
-            <div class="input-group">
-              <label>房間面積</label>
-              <div class="input-row">
-                <input type="number" id="cr4-area" placeholder="0.00" step="1" min="0" />
-                <span class="unit">m²</span>
-              </div>
             </div>
             <div class="input-group">
               <label>房間高度</label>
@@ -686,7 +742,7 @@
             <div class="result-box multi" id="cr4-result">
               <div class="result-item">
                 <span class="result-label">每台風量</span>
-                <span class="result-value" id="cr4-q-each">—</span>
+                <span class="result-value" id="cr4-each">—</span>
                 <span class="result-unit">m³/h</span>
               </div>
               <div class="result-item">
@@ -695,14 +751,107 @@
                 <span class="result-unit">台</span>
               </div>
               <div class="result-item">
-                <span class="result-label">總風量</span>
-                <span class="result-value" id="cr4-q-total">—</span>
+                <span class="result-label">FFU 總風量</span>
+                <span class="result-value" id="cr4-qtotal">—</span>
                 <span class="result-unit">m³/h</span>
               </div>
               <div class="result-item">
                 <span class="result-label">實際 ACH</span>
                 <span class="result-value" id="cr4-ach">—</span>
                 <span class="result-unit">次/h</span>
+              </div>
+            </div>
+            <div id="cr4-compare" class="cr-compare"></div>
+          </div>
+        </div>
+
+        <!-- CR-05 -->
+        <div class="calc-card chart-card">
+          <div class="card-header">
+            <span class="card-num">CR-05</span>
+            <h3>回風道實務核算</h3>
+            <span class="formula-badge">A = Q<sub>ret</sub> / (n·v)</span>
+          </div>
+          <div class="card-body">
+            <div class="cr05-grid">
+              <div>
+                <div class="cr-ref-row">
+                  <span class="cr-ref-label">FFU 供風量 <span class="cr-ref-tag">↑ CR-04</span></span>
+                  <span><span class="cr-ref-val" id="cr5-ref-qffu">—</span> <span class="cr-ref-unit">m³/h</span></span>
+                </div>
+                <div class="cr-ref-row">
+                  <span class="cr-ref-label">製程排氣 <span class="cr-ref-tag">↑ CR-01</span></span>
+                  <span><span class="cr-ref-val" id="cr5-ref-qex">—</span> <span class="cr-ref-unit">m³/h</span></span>
+                </div>
+                <div class="input-group">
+                  <label>回風口數量</label>
+                  <div class="input-row">
+                    <input type="number" id="cr5-ngrille" placeholder="4" step="1" min="1" value="4" />
+                    <span class="unit">個</span>
+                  </div>
+                </div>
+                <div class="input-group">
+                  <label>回風口面風速</label>
+                  <div class="input-row">
+                    <input type="number" id="cr5-vgrille" placeholder="2.0" step="0.1" min="0.5" value="2.0" />
+                    <span class="unit">m/s</span>
+                  </div>
+                  <div class="hint">建議 1.5–3.0 m/s</div>
+                </div>
+              </div>
+              <div>
+                <div class="input-group">
+                  <label>主風管風速</label>
+                  <div class="input-row">
+                    <input type="number" id="cr5-vduct" placeholder="3.0" step="0.5" min="1" value="3.0" />
+                    <span class="unit">m/s</span>
+                  </div>
+                  <div class="hint">建議 3–6 m/s</div>
+                </div>
+                <div class="input-group">
+                  <label>風管型式</label>
+                  <div class="input-row">
+                    <select id="cr5-dtype" onchange="toggleCR5DuctH()" style="flex:1;background:transparent;border:none;outline:none;font-family:var(--mono);font-size:0.9rem;color:var(--text);padding:0.55rem 0.75rem;cursor:pointer;-webkit-appearance:none;">
+                      <option value="rect">矩形風管</option>
+                      <option value="round">圓形風管</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="input-group" id="cr5-H-group">
+                  <label>風管高度</label>
+                  <div class="input-row">
+                    <input type="number" id="cr5-dH" placeholder="0.5" step="0.05" min="0.1" value="0.5" />
+                    <span class="unit">m</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="calc-btn" onclick="calcCR5()">計算</button>
+            <div class="result-box multi" id="cr5-result">
+              <div class="result-item">
+                <span class="result-label">回風量</span>
+                <span class="result-value" id="cr5-qreturn">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">每口回風</span>
+                <span class="result-value" id="cr5-qpergrille">—</span>
+                <span class="result-unit">m³/h</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">每口有效面積</span>
+                <span class="result-value" id="cr5-agrille">—</span>
+                <span class="result-unit">m²</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">主管截面</span>
+                <span class="result-value" id="cr5-aduct">—</span>
+                <span class="result-unit">m²</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">主管尺寸</span>
+                <span class="result-value" id="cr5-dims">—</span>
+                <span class="result-unit">m</span>
               </div>
             </div>
           </div>

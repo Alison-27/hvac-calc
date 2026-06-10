@@ -166,61 +166,167 @@ function dewPoint(T, RH) {
   return (b * g) / (a - g);
 }
 
-// ── CR-01 ISO 換氣需求 ────────────────────────────────────────
+// ── Clean Room 連動狀態 ───────────────────────────────────────
 const ISO_ACH = { 5: [240, 360], 6: [150, 200], 7: [60, 100], 8: [5, 30] };
 
+const crState = {
+  area: null, vol: null, H: null,
+  achLo: null, Qiso: null, Qex: null, QsupMin: null,
+  Qtotal: null, dT: null, Troom: null, Tsupply: null,
+  QsupCool: null, QsupDesign: null,
+  QFFU: null
+};
+
+function syncCR() {
+  const sv = (id, val, dec) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = (val !== null && isFinite(val)) ? fmt(val, dec !== undefined ? dec : 1) : '—';
+  };
+  sv('cr2-ref-area',    crState.area,       1);
+  sv('cr3-ref-qtotal',  crState.Qtotal,     1);
+  sv('cr3-ref-dt',      crState.dT,         1);
+  sv('cr4-ref-area',    crState.area,       1);
+  sv('cr4-ref-qdesign', crState.QsupDesign, 0);
+  sv('cr5-ref-qffu',    crState.QFFU,       0);
+  sv('cr5-ref-qex',     crState.Qex,        0);
+  if (crState.H !== null) {
+    const el = document.getElementById('cr4-rh');
+    if (el && !el.dataset.edited) el.value = crState.H;
+  }
+}
+
+// ── CR-01 空間與排氣參數 ──────────────────────────────────────
 function calcCR1() {
   const iso = parseInt(document.getElementById('cr1-iso').value);
-  const L = getVal('cr1-l'), W = getVal('cr1-w'), H = getVal('cr1-h');
+  const L   = getVal('cr1-L'), W = getVal('cr1-W'), H = getVal('cr1-H');
+  const Qex = getVal('cr1-qex') || 0;
   if (!L || !W || !H || L <= 0 || W <= 0 || H <= 0) return;
-  const V = L * W * H;
-  const [achMin, achMid] = ISO_ACH[iso];
-  setResult('cr1-ach-min', achMin, 0);
-  setResult('cr1-ach-mid', achMid, 0);
-  setResult('cr1-q-min',   V * achMin);
+  const area = L * W, vol = area * H;
+  const [achLo] = ISO_ACH[iso];
+  const Qiso    = vol * achLo;
+  const QsupMin = Math.max(Qiso, Qex * 1.1);
+  setResult('cr1-area',   area,    1);
+  setResult('cr1-vol',    vol,     1);
+  setResult('cr1-ach-lo', achLo,   0);
+  setResult('cr1-qsup',   QsupMin, 0);
+  Object.assign(crState, { area, vol, H, achLo, Qiso, Qex, QsupMin });
+  syncCR();
 }
 
-// ── CR-02 風量分配 ────────────────────────────────────────────
+// ── CR-02 熱負荷與環境參數 ────────────────────────────────────
 function calcCR2() {
-  const Qt = getVal('cr2-qt');
-  const fa = getVal('cr2-fa');
-  if (!Qt || fa == null || Qt <= 0) return;
-  setResult('cr2-fresh',  Qt * (fa / 100));
-  setResult('cr2-recirc', Qt * (1 - fa / 100));
+  const area  = crState.area;
+  const equip = getVal('cr2-equip') || 0;
+  const light = getVal('cr2-light') || 0;
+  const ppl   = getVal('cr2-ppl')   || 0;
+  const Troom = getVal('cr2-troom');
+  const Tsup  = getVal('cr2-tsup');
+  if (!area || area <= 0 || !Troom || !Tsup || Troom <= Tsup) return;
+  const Qtotal    = (area * (equip + light) + ppl * 100) / 1000;
+  const dT        = Troom - Tsup;
+  const QsupCool  = Qtotal * 3600 / (1.2 * 1.006 * dT);
+  const QsupDesign = Math.max(crState.QsupMin || 0, QsupCool);
+  setResult('cr2-qtotal',  Qtotal,     1);
+  setResult('cr2-qcool',   QsupCool,   0);
+  setResult('cr2-qdesign', QsupDesign, 0);
+  Object.assign(crState, { Qtotal, dT, Troom, Tsupply: Tsup, QsupCool, QsupDesign });
+  syncCR();
 }
 
-// ── CR-03 冷卻負荷估算 ────────────────────────────────────────
+// ── CR-03 DCC 選型 ────────────────────────────────────────────
 function calcCR3() {
-  const area   = getVal('cr3-area');
-  const equip  = getVal('cr3-equip') || 0;
-  const light  = getVal('cr3-light') || 0;
-  const people = getVal('cr3-people') || 0;
-  if (!area || area <= 0) return;
-  const qEqp    = area   * equip  / 1000;
-  const qLight  = area   * light  / 1000;
-  const qPeople = people * 100    / 1000; // 100 W/人 sensible
-  setResult('cr3-qeqp',    qEqp);
-  setResult('cr3-qlight',  qLight);
-  setResult('cr3-qpeople', qPeople, 1);
-  setResult('cr3-qtotal',  qEqp + qLight + qPeople);
+  const Q  = crState.Qtotal, dT = crState.dT;
+  if (!Q || !dT || Q <= 0 || dT <= 0) return;
+  const Tchws = getVal('cr3-chws'), Tchwr = getVal('cr3-chwr');
+  const nDCC  = Math.max(1, Math.round(getVal('cr3-ndcc') || 2));
+  const vFace = getVal('cr3-vface') || 2.5;
+  if (!Tchws || !Tchwr || Tchwr <= Tchws) return;
+  const dTchw  = Tchwr - Tchws;
+  const qUnit  = Q / nDCC;
+  const mWater = qUnit * 0.86 / dTchw;
+  const qAir   = qUnit * 3600 / (1.2 * 1.006 * dT);
+  const aFace  = qAir / (vFace * 3600);
+  const fH = Math.sqrt(aFace / 2), fW = 2 * fH;
+  setResult('cr3-qunit',  qUnit,  1);
+  setResult('cr3-mwater', mWater, 2);
+  setResult('cr3-aface',  aFace,  3);
+  const dimsEl = document.getElementById('cr3-dims');
+  if (dimsEl) {
+    dimsEl.textContent = fmt(fH, 2) + '×' + fmt(fW, 2);
+    const box = dimsEl.closest('.result-box');
+    if (box) box.classList.add('has-result');
+  }
 }
 
-// ── CR-04 FFU 台數計算 ────────────────────────────────────────
+// ── CR-04 FFU 送風核算 ────────────────────────────────────────
 function calcCR4() {
-  const ffuArea = parseFloat(document.getElementById('cr4-ffu-size').value);
+  const area    = crState.area;
+  const ffuArea = parseFloat(document.getElementById('cr4-fsize').value);
   const vel  = getVal('cr4-vel');
   const cov  = getVal('cr4-cov');
-  const area = getVal('cr4-area');
   const rh   = getVal('cr4-rh');
-  if (!vel || !cov || !area || !rh || area <= 0 || rh <= 0) return;
+  if (!area || area <= 0 || !vel || !cov || !rh || rh <= 0) return;
   const qEach  = ffuArea * vel * 3600;
   const nFFU   = Math.ceil((area * cov / 100) / ffuArea);
   const qTotal = nFFU * qEach;
   const ach    = qTotal / (area * rh);
-  setResult('cr4-q-each', qEach, 0);
-  setResult('cr4-n',      nFFU,  0);
-  setResult('cr4-q-total', qTotal, 0);
-  setResult('cr4-ach',    ach,   1);
+  setResult('cr4-each',   qEach,  0);
+  setResult('cr4-n',      nFFU,   0);
+  setResult('cr4-qtotal', qTotal, 0);
+  setResult('cr4-ach',    ach,    1);
+  crState.QFFU = qTotal;
+  syncCR();
+  const cmpEl = document.getElementById('cr4-compare');
+  if (cmpEl) {
+    if (crState.QsupDesign && crState.QsupDesign > 0) {
+      const r = qTotal / crState.QsupDesign;
+      if (r >= 1) {
+        cmpEl.className = 'cr-compare ok';
+        cmpEl.textContent = '✓ FFU 供風 ' + fmt(qTotal, 0) + ' m³/h ≥ 設計需求 ' + fmt(crState.QsupDesign, 0) + ' m³/h（+' + fmt((r - 1) * 100, 1) + '%）';
+      } else {
+        cmpEl.className = 'cr-compare warn';
+        cmpEl.textContent = '⚠ FFU 供風不足：' + fmt(qTotal, 0) + ' < 需求 ' + fmt(crState.QsupDesign, 0) + ' m³/h（差 ' + fmt((1 - r) * 100, 1) + '%）';
+      }
+    } else {
+      cmpEl.className = 'cr-compare';
+      cmpEl.textContent = '';
+    }
+  }
+}
+
+// ── CR-05 回風道實務核算 ──────────────────────────────────────
+function calcCR5() {
+  const QFFU  = crState.QFFU || 0;
+  const Qex   = crState.Qex  || 0;
+  if (QFFU <= 0) return;
+  const nGrille = getVal('cr5-ngrille') || 4;
+  const vGrille = getVal('cr5-vgrille') || 2.0;
+  const vDuct   = getVal('cr5-vduct')   || 3.0;
+  const dtype   = document.getElementById('cr5-dtype').value;
+  const dH      = getVal('cr5-dH') || 0.5;
+  const Qreturn    = Math.max(0, QFFU - Qex);
+  const qPerGrille = Qreturn / nGrille;
+  const aGrille    = qPerGrille / (vGrille * 3600);
+  const aDuct      = Qreturn / (vDuct * 3600);
+  setResult('cr5-qreturn',    Qreturn,    0);
+  setResult('cr5-qpergrille', qPerGrille, 0);
+  setResult('cr5-agrille',    aGrille,    4);
+  setResult('cr5-aduct',      aDuct,      4);
+  const dimsEl = document.getElementById('cr5-dims');
+  if (dimsEl) {
+    const dims = dtype === 'round'
+      ? 'Ø' + fmt(Math.sqrt(4 * aDuct / Math.PI) * 1000, 0) + ' mm'
+      : fmt(dH, 2) + '×' + fmt(aDuct / dH, 2) + ' m';
+    dimsEl.textContent = dims;
+    const box = dimsEl.closest('.result-box');
+    if (box) box.classList.add('has-result');
+  }
+}
+
+function toggleCR5DuctH() {
+  const g = document.getElementById('cr5-H-group');
+  if (g) g.style.display = document.getElementById('cr5-dtype').value === 'rect' ? '' : 'none';
 }
 
 // ── DCC-01 顯熱冷卻量 ─────────────────────────────────────────
@@ -660,6 +766,12 @@ document.addEventListener('keydown', e => {
   const card = e.target.closest('.calc-card');
   if (card) card.querySelector('.calc-btn')?.click();
 });
+
+// ── cr4-rh manual edit tracking ─────────────────────────────
+(function () {
+  const el = document.getElementById('cr4-rh');
+  if (el) el.addEventListener('input', function () { this.dataset.edited = '1'; });
+})();
 
 // ── Init ─────────────────────────────────────────────────────
 initPsychroChart();
