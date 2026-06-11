@@ -253,6 +253,8 @@ const T = {           // three.js 執行期物件
   plantSup: [], plantRet: [],
   camTween: null, activeScene: 'white', clock: null, reduced: false,
   airflowGroup: null, _airflow: true, airArrows: [],
+  pipeParticles: [], liveDisplay: null, liveTarget: null, _liveTick: null,
+  _lastTime: 0, _lastDOM: 0,
 };
 
 const PAL = {
@@ -330,6 +332,8 @@ async function initThree() {
   document.getElementById('dt-loading')?.remove();
   compute();
   refreshUI();
+  buildPipeParticles();
+  startLiveSim();
   animate();
 }
 
@@ -762,6 +766,79 @@ function buildAirflowVectors() {
   return g;
 }
 
+/* ── 管路流動粒子 ─────────────────────────────────── */
+function buildPipeParticles() {
+  const old = T.groups.white?.getObjectByName('pipeParticleLayer');
+  if (old) {
+    old.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+    T.groups.white.remove(old);
+  }
+  T.pipeParticles = [];
+  if (!T.groups.white) return;
+
+  const pg = new THREE.Group();
+  pg.name = 'pipeParticleLayer';
+  const rows = [Math.ceil(S.racks / 2), Math.floor(S.racks / 2)];
+  const maxN = Math.max(rows[0], rows[1]);
+
+  rows.forEach((n, r) => {
+    if (!n) return;
+    const z = r === 0 ? -RK.rowZ : RK.rowZ;
+    const x0 = -(n - 1) * RK.pitch / 2;
+    const xFar = x0 + (n - 1) * RK.pitch + 1.15;
+    const cduX = x0 - RK.pitch * 0.9;
+    const cnt = Math.max(8, n + 3);
+
+    for (let i = 0; i < cnt; i++) {
+      const jit = (Math.random() - 0.5) * 0.05;
+      const t0 = i / cnt;
+      // 供水粒子（藍）：CDU → 遠端
+      const sg = new THREE.SphereGeometry(0.048, 7, 5);
+      const sm = new THREE.MeshStandardMaterial({ color: 0x55d4ff, emissive: 0x0077cc, emissiveIntensity: 2.0, transparent: true, opacity: 0.9, depthWrite: false });
+      const smesh = new THREE.Mesh(sg, sm);
+      const ss = new THREE.Vector3(cduX, RK.pipeY + jit, z - 0.18);
+      const se = new THREE.Vector3(xFar, RK.pipeY + jit, z - 0.18);
+      smesh.position.lerpVectors(ss, se, t0);
+      pg.add(smesh);
+      T.pipeParticles.push({ mesh: smesh, s: ss, e: se, t: t0, spd: 0.082 + Math.random() * 0.03 });
+      // 回水粒子（紅）：遠端 → CDU
+      const rg = new THREE.SphereGeometry(0.048, 7, 5);
+      const rm = new THREE.MeshStandardMaterial({ color: 0xff6060, emissive: 0xcc1a20, emissiveIntensity: 1.8, transparent: true, opacity: 0.88, depthWrite: false });
+      const rmesh = new THREE.Mesh(rg, rm);
+      const rs = new THREE.Vector3(xFar, RK.pipeY + 0.3 + jit, z + 0.18);
+      const re = new THREE.Vector3(cduX, RK.pipeY + 0.3 + jit, z + 0.18);
+      rmesh.position.lerpVectors(rs, re, t0);
+      pg.add(rmesh);
+      T.pipeParticles.push({ mesh: rmesh, s: rs, e: re, t: t0, spd: 0.068 + Math.random() * 0.025 });
+    }
+  });
+
+  // 跨排端部聯絡管粒子（z 向）
+  const endX = (maxN - 1) * RK.pitch / 2 + 1.1;
+  for (let i = 0; i < 6; i++) {
+    const t0 = i / 6;
+    const sg2 = new THREE.SphereGeometry(0.048, 7, 5);
+    const sm2 = new THREE.MeshStandardMaterial({ color: 0x55d4ff, emissive: 0x0077cc, emissiveIntensity: 2.0, transparent: true, opacity: 0.9, depthWrite: false });
+    const s2 = new THREE.Mesh(sg2, sm2);
+    const ss2 = new THREE.Vector3(endX - 0.16, RK.pipeY, RK.rowZ + 0.15);
+    const se2 = new THREE.Vector3(endX - 0.16, RK.pipeY, -RK.rowZ - 0.15);
+    s2.position.lerpVectors(ss2, se2, t0);
+    pg.add(s2);
+    T.pipeParticles.push({ mesh: s2, s: ss2, e: se2, t: t0, spd: 0.1 });
+
+    const rg2 = new THREE.SphereGeometry(0.048, 7, 5);
+    const rm2 = new THREE.MeshStandardMaterial({ color: 0xff6060, emissive: 0xcc1a20, emissiveIntensity: 1.8, transparent: true, opacity: 0.88, depthWrite: false });
+    const r2 = new THREE.Mesh(rg2, rm2);
+    const rs2 = new THREE.Vector3(endX + 0.16, RK.pipeY + 0.3, -RK.rowZ - 0.15);
+    const re2 = new THREE.Vector3(endX + 0.16, RK.pipeY + 0.3, RK.rowZ + 0.15);
+    r2.position.lerpVectors(rs2, re2, t0);
+    pg.add(r2);
+    T.pipeParticles.push({ mesh: r2, s: rs2, e: re2, t: t0, spd: 0.086 });
+  }
+
+  T.groups.white.add(pg);
+}
+
 /* ── 點擊選取 → 設備詳情 ────────────────────────── */
 const ray = { caster: null, v: null };
 function onPick(e) {
@@ -788,14 +865,28 @@ function showDetail(d) {
   document.getElementById('dt-sim').hidden = true;
   let html = '';
   if (d.type === 'rack') {
-    title.textContent = `機櫃 R${String(d.id).padStart(2, '0')} · GB200 NVL72`;
+    const rn = d.id <= Math.ceil(S.racks / 2) ? `A${String(d.id).padStart(2,'0')}` : `B${String(d.id - Math.ceil(S.racks/2)).padStart(2,'0')}`;
+    title.textContent = `Rack-${rn} · GB200 NVL72`;
+    const live = T.liveDisplay || { it: S.it, supply: S.supply, ret: S.ret };
+    const kwLive = (live.it / S.racks);
+    const gpuT = Math.min(95, 62 + (kwLive / 140) * 22 + (Math.random() - 0.5) * 2.8);
+    const nvT  = Math.min(88, gpuT - 5.5 + (Math.random() - 0.5) * 1.5);
+    const kwPct = Math.min(100, kwLive / 140 * 100);
+    const gpuPct = Math.min(100, (gpuT - 30) / 65 * 100);
+    const nvPct  = Math.min(100, (nvT  - 28) / 60 * 100);
+    const gpuCls = gpuT > 82 ? 'red' : gpuT > 72 ? 'orange' : 'green';
+    const barRow = (label, val, unit, pct, cls) =>
+      `<div class="dt-bar-row"><div class="dt-bar-head"><span class="dt-k">${label}</span><span class="dt-v ${cls}">${val} <small>${unit}</small></span></div>` +
+      `<div class="dt-bar-track"><div class="dt-bar-fill ${cls}" style="width:${pct.toFixed(1)}%"></div></div></div>`;
     html =
-      specRow('運算配置', '72× B200 + 36× Grace') +
-      specRow('IT 負載', fmt(S.kwRack) + ' kW', 'green') +
+      specRow('運算配置', '72× B200 + 36× Grace CPU') +
+      barRow('機櫃功耗', fmt(kwLive, 1), 'kW', kwPct, 'green') +
+      barRow('GPU 接面溫度', fmt(gpuT, 1), '°C', gpuPct, gpuCls) +
+      barRow('NVSwitch 溫度', fmt(nvT, 1), '°C', nvPct, 'cyan') +
       specRow('液冷捕獲', fmt(S.capture, 0) + ' %') +
-      specRow('冷卻液進水', fmt(S.supply, 2) + ' °C', 'cyan') +
-      specRow('冷卻液出水', fmt(S.ret, 2) + ' °C', 'red') +
-      specRow('機櫃流量', fmt(S.flow / S.racks, 2) + ' m³/h') +
+      specRow('冷卻液進水', fmt(live.supply, 2) + ' °C', 'cyan') +
+      specRow('冷卻液出水', fmt(live.ret, 2) + ' °C', 'red') +
+      specRow('機櫃流量', fmt(live.flow / S.racks, 2) + ' m³/h') +
       specRow('狀態', '✅ 運轉中', 'green');
   } else if (d.type === 'cdu') {
     const rowRacks = d.id === 1 ? Math.ceil(S.racks / 2) : Math.floor(S.racks / 2);
@@ -902,6 +993,11 @@ function animate() {
     });
   });
 
+  // delta time
+  const _now = performance.now() * 0.001;
+  const _dt = T._lastTime ? Math.min(_now - T._lastTime, 0.05) : 0.016;
+  T._lastTime = _now;
+
   // 冷卻液脈動（減少動態偏好時停用）
   if (!T.reduced && T.clock) {
     const t = T.clock.getElapsedTime();
@@ -917,6 +1013,30 @@ function animate() {
         arr.line.material.opacity = op;
         arr.cone.material.opacity = op;
       });
+    }
+
+    // 管路流動粒子
+    if (T.pipeParticles.length) {
+      T.pipeParticles.forEach(p => {
+        p.t = (p.t + p.spd * _dt) % 1.0;
+        p.mesh.position.lerpVectors(p.s, p.e, p.t);
+        p.mesh.material.opacity = 0.48 + 0.44 * Math.sin(p.t * Math.PI * 2.5);
+      });
+    }
+
+    // 即時感測器數據平滑插值（~20fps DOM 更新）
+    if (T.liveDisplay && T.liveTarget) {
+      const alpha = Math.min(1.6 * _dt, 0.1);
+      const ld = T.liveDisplay, lt = T.liveTarget;
+      ld.it     += (lt.it     - ld.it)     * alpha;
+      ld.supply += (lt.supply - ld.supply) * alpha;
+      ld.ret    += (lt.ret    - ld.ret)    * alpha;
+      ld.flow   += (lt.flow   - ld.flow)   * alpha;
+      ld.pue    += (lt.pue    - ld.pue)    * alpha;
+      if (_now - T._lastDOM > 0.05) {
+        T._lastDOM = _now;
+        refreshUILive();
+      }
     }
   }
 
@@ -1025,6 +1145,8 @@ function bindUI(sec) {
         T.airflowGroup = buildAirflowVectors();
         T.airflowGroup.visible = T._airflow;
         T.scene.add(T.airflowGroup);
+        // 重建管路流動粒子
+        buildPipeParticles();
       } else paintThermals();
     };
     r.addEventListener('input', () => apply(r.value));
@@ -1049,6 +1171,53 @@ function refreshUI() {
     const over = S.rtLoad > S.chillerRT;
     grade.textContent = over ? '冷量不足' : S.pue <= 1.35 ? '運轉良好' : '效率偏低';
     grade.classList.toggle('warn', over || S.pue > 1.35);
+  }
+  // 重設即時數據基準（參數變更後同步）
+  if (T.liveDisplay) {
+    T.liveDisplay.it = T.liveTarget.it = S.it;
+    T.liveDisplay.supply = T.liveTarget.supply = S.supply;
+    T.liveDisplay.ret = T.liveTarget.ret = S.ret;
+    T.liveDisplay.flow = T.liveTarget.flow = S.flow;
+    T.liveDisplay.pue = T.liveTarget.pue = S.pue;
+  }
+}
+
+/* ── 即時模擬（感測器雜訊）────────────────────────── */
+function startLiveSim() {
+  compute();
+  T.liveDisplay = { it: S.it, supply: S.supply, ret: S.ret, flow: S.flow, pue: S.pue };
+  T.liveTarget  = { ...T.liveDisplay };
+  if (T._liveTick) clearInterval(T._liveTick);
+  T._liveTick = setInterval(() => {
+    const rng = (base, amp) => base + (Math.random() - 0.5) * amp * 2;
+    T.liveTarget.it     = Math.max(S.it * 0.974, Math.min(S.it * 1.026, rng(S.it, S.it * 0.014)));
+    T.liveTarget.supply = rng(S.supply, 0.22);
+    T.liveTarget.flow   = Math.max(S.flow * 0.97, rng(S.flow, S.flow * 0.018));
+    T.liveTarget.ret    = T.liveTarget.supply + S.dt + rng(0, 0.16);
+    const liveIT = T.liveTarget.it;
+    const coolKW = liveIT * S.capture / 100 / S.copL + liveIT * (1 - S.capture / 100) / S.copA + S.pumpKW;
+    T.liveTarget.pue = (liveIT + coolKW + S.it * S.lossPct / 100 + S.miscKW) / liveIT;
+  }, 1500);
+}
+
+function refreshUILive() {
+  if (!T.liveDisplay) return;
+  const ld = T.liveDisplay;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+  set('dt-s-pue',  fmt(ld.pue, 3));
+  set('dt-s-it',   fmt(ld.it, 0) + ' <small>kW</small>');
+  set('dt-s-sup',  fmt(ld.supply, 1) + ' <small>°C</small>');
+  set('dt-s-flow', fmt(ld.flow, 0) + ' <small>m³/h</small>');
+  set('dt-m-it',   fmt(ld.it, 0) + '<small>kW</small>');
+  set('dt-m-sup',  fmt(ld.supply, 2) + '<small>°C</small>');
+  set('dt-m-ret',  fmt(ld.ret, 2) + '<small>°C</small>');
+  set('dt-m-pue',  fmt(ld.pue, 2));
+  set('dt-m-flow', fmt(ld.flow, 1) + '<small>m³/h</small>');
+  const grade = document.getElementById('dt-s-grade');
+  if (grade) {
+    const over = S.rtLoad > S.chillerRT;
+    grade.textContent = over ? '冷量不足' : ld.pue <= 1.35 ? '運轉良好' : '效率偏低';
+    grade.classList.toggle('warn', over || ld.pue > 1.35);
   }
 }
 
