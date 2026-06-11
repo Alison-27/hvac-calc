@@ -1061,18 +1061,242 @@ setTheme(localStorage.getItem('hvac-theme') || 'dark');
 function _esc(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+const ZH_EN_MAP = {
+  // ── Section h2 text nodes ──
+  '風量計算': 'Air Flow Calc',
+  '水量計算': 'Water Flow Calc',
+  '公式參考': 'References',
+  '潔淨室空調計算': 'Clean Room HVAC',
+  '乾式冷卻盤管 (DCC)': 'Dry Cooling Coil (DCC)',
+  '新風空調箱 (MAU)': 'Make-up Air Unit (MAU)',
+  'AI Data Center計算書': 'AI Data Center Calc',
+  // ── Card h3 titles ──
+  '換氣次數法': 'ACH Method',
+  '顯熱負荷法': 'Sensible Heat Method',
+  '新鮮空氣量': 'Fresh Air Flow',
+  '風管截面積 / 風速': 'Duct Area / Velocity',
+  '冷凍水流量': 'Chilled Water Flow',
+  '冷卻水流量': 'Cooling Water Flow',
+  '管道管徑選定': 'Pipe Sizing',
+  '制冷量單位換算': 'Capacity Unit Conversion',
+  '風量計算公式': 'Airflow Formulas',
+  '水量計算公式': 'Water Flow Formulas',
+  '空氣物理常數': 'Air Physical Constants',
+  '水物理常數': 'Water Physical Constants',
+  '換氣次數建議值(ACH)': 'Recommended ACH Values',
+  '單位換算': 'Unit Conversion',
+  '空間與排氣參數': 'Space & Exhaust Params',
+  '熱負荷與環境參數': 'Heat Load & Environment',
+  'DCC 選型': 'DCC Selection',
+  'FFU 送風核算': 'FFU Airflow Check',
+  '回風道實務核算': 'Return Duct Sizing',
+  '顯熱冷卻量': 'Sensible Cooling',
+  '盤管面積 / 面速度': 'Coil Area / Face Velocity',
+  'CHW 需求 + 露點確認': 'CHW Demand + Dew-point',
+  '設計目標與室外條件': 'Design Target & Outdoor',
+  '盤管處理排列': 'Coil Process Sequence',
+  '除濕量計算': 'Dehumidification Calc',
+  '冷凍水需求': 'Chilled Water Demand',
+  '空氣線圖（焓濕圖）': 'Psychrometric Chart',
+  '設計核算總表': 'Design Summary',
+  'MAU 構造 3D 模型': 'AHU 3D Model',
+  'IT 熱負荷估算': 'IT Load Estimation',
+  '冷卻方式智能選型': 'Cooling Strategy',
+  'PUE / DCiE 計算': 'PUE / DCiE Calc',
+  '液冷 CHW 需求估算': 'Liquid Cooling CHW',
+  // ── Input labels ──
+  '房間體積 V': 'Room Volume V',
+  '換氣次數 n': 'ACH n',
+  '顯熱負荷 Qs': 'Sensible Load Qs',
+  '送回風溫差 ΔT': 'Supply/Return ΔT',
+  '空氣密度 ρ': 'Air Density ρ',
+  '人數 N': 'Occupants N',
+  '每人新鮮空氣量 q': 'Fresh Air/Person q',
+  '風量 Q': 'Airflow Q',
+  '設計風速 v': 'Design Velocity v',
+  '冷卻負荷 Q': 'Cooling Load Q',
+  '蒸發器負荷 Qevap': 'Evaporator Load Qevap',
+  '冰水機 COP': 'Chiller COP',
+  '冷卻水溫差 ΔT': 'Cooling Water ΔT',
+  '水流量 Q': 'Water Flow Q',
+  '設計流速 v': 'Design Velocity v',
+  '輸入數值': 'Input Value',
+  'ISO 潔淨等級': 'ISO Class',
+  '房間長 L': 'Room Length L',
+  '房間寬 W': 'Room Width W',
+  '房間高 H': 'Room Height H',
+  '製程排氣量 Q<sub>ex</sub>': 'Process Exhaust Q<sub>ex</sub>',
+  '設備熱負荷密度': 'Equipment Heat Density',
+  '照明負荷密度': 'Lighting Load Density',
+  '人員數': 'Occupants',
+  '設計室溫 T<sub>room</sub>': 'Room Temp T<sub>room</sub>',
+  '送風溫度 T<sub>sup</sub>': 'Supply Temp T<sub>sup</sub>',
+  '冰水供水溫度': 'CHW Supply Temp',
+  '冰水回水溫度': 'CHW Return Temp',
+  'DCC 台數': 'No. of DCC Units',
+  '盤管面風速': 'Coil Face Velocity',
+  'FFU 規格': 'FFU Size',
+  'FFU 面風速': 'FFU Face Velocity',
+  '天花板覆蓋率': 'Ceiling Coverage',
+  '房間高度': 'Room Height',
+  '回風口數量': 'Return Grilles',
+  '回風口面風速': 'Return Grille Velocity',
+  '主風管風速': 'Main Duct Velocity',
+  '風管型式': 'Duct Type',
+  '風管高度': 'Duct Height',
+  '通過風量': 'Airflow Through Coil',
+  '入口空氣溫度 T₁': 'Inlet Air Temp T₁',
+  '出口空氣溫度 T₂': 'Outlet Air Temp T₂',
+  '設計面速度': 'Design Face Velocity',
+  'DCC 顯熱冷卻量': 'DCC Sensible Cooling',
+  'CHW 供水溫度 Ts': 'CHW Supply Ts',
+  'CHW 回水溫度 Tr': 'CHW Return Tr',
+  '室內溫度 / 相對濕度': 'Indoor Temp / RH',
+  '溫度 / 濕度': 'Temp / Humidity',
+  '設計風量': 'Design Airflow',
+  '溫度目標': 'Temp Target',
+  '濕度目標': 'Humidity Target',
+  '入口 溫度 / RH': 'Inlet Temp / RH',
+  '出口 溫度 / RH': 'Outlet Temp / RH',
+  'MAU 全熱冷卻量': 'MAU Total Cooling',
+  'CHW 供水溫度': 'CHW Supply Temp',
+  'CHW 回水溫度': 'CHW Return Temp',
+  '機架數量': 'No. of Racks',
+  '每架平均功率密度': 'Avg Power Density',
+  'UPS 損失率': 'UPS Loss Rate',
+  'PDU 損失率': 'PDU Loss Rate',
+  '機架功率密度': 'Rack Power Density',
+  'IT 設備功耗': 'IT Equipment Power',
+  '冷卻系統功耗 (冰機+冷卻塔+泵)': 'Cooling System Power',
+  '照明 + 辦公功耗': 'Lighting + Office',
+  '其他雜項': 'Other Misc.',
+  'IT 總熱負荷': 'Total IT Heat Load',
+  '液冷帶走比例': 'Liquid Cooling Ratio',
+  '冷卻水供水溫度 Ts': 'Cooling Water Supply Ts',
+  '冷卻水回水溫度 Tr': 'Cooling Water Return Tr',
+  // ── Result labels ──
+  '所需風量 Q': 'Required Flow Q',
+  '新鮮空氣量 Q': 'Fresh Air Flow Q',
+  '截面積 A': 'Cross-section A',
+  '等效直徑 D': 'Equiv. Dia. D',
+  '流量': 'Flow Rate',
+  '冷凝負荷': 'Condenser Load',
+  '計算管徑 D': 'Calc Pipe Dia. D',
+  '建議 DN': 'Recommended DN',
+  '冷卻量': 'Cooling Capacity',
+  '所需面積': 'Required Area',
+  '等效邊長': 'Equiv. Side',
+  'CHW 流量': 'CHW Flow',
+  '室內露點': 'Indoor Dew Point',
+  '結露風險': 'Condensation Risk',
+  '入口含濕量 ω₁': 'Inlet Humidity ω₁',
+  '出口含濕量 ω₂': 'Outlet Humidity ω₂',
+  '除濕量': 'Dehumidification',
+  '地板面積': 'Floor Area',
+  '房間體積': 'Room Volume',
+  'ISO ACH 下限': 'Min ACH (ISO)',
+  '最低供風量': 'Min Supply Flow',
+  '總顯熱負荷': 'Total Sensible Load',
+  '冷卻需求風量': 'Cooling Airflow Req.',
+  '設計供風量': 'Design Supply Flow',
+  '每台冷量': 'Capacity/Unit',
+  '每台冰水量': 'CHW/Unit',
+  '每台面積': 'Area/Unit',
+  '建議尺寸 H×W': 'Size H×W',
+  '每台風量': 'Airflow/Unit',
+  'FFU 台數': 'No. of FFUs',
+  'FFU 總風量': 'FFU Total Flow',
+  '實際 ACH': 'Actual ACH',
+  '回風量': 'Return Flow',
+  '每口回風': 'Flow/Grille',
+  '每口有效面積': 'Effective Area/Grille',
+  '主管截面': 'Main Duct Area',
+  '主管尺寸': 'Main Duct Size',
+  '純 IT 負荷': 'Net IT Load',
+  'UPS+PDU 損失': 'UPS+PDU Loss',
+  '總 IT 側負荷': 'Total IT-side Load',
+  '設施總功耗': 'Total Facility Power',
+  '效能評級': 'Efficiency Rating',
+  '液冷側熱量': 'Liquid Cooling Heat',
+  '殘餘空冷熱量': 'Residual Air Cooling',
+  // ── Calc buttons ──
+  '計算': 'Calculate',
+  '換算': 'Convert',
+  '計算 IT 負荷': 'Calc IT Load',
+  '選型分析': 'Select Analysis',
+  '計算 PUE': 'Calc PUE',
+  '計算液冷需求': 'Calc Liquid Cooling',
+  // ── MAU UI buttons/labels ──
+  '+ 新增處理段': '+ Add Process Block',
+  '核算結果': 'Summary',
+  '狀態點 Detail': 'State Points',
+  '已選零件順序': 'Selected Components',
+  '加入零件': 'Add Components',
+  '室外設計條件 (OA)': 'Outdoor Design (OA)',
+  '供氣目標 (SA Target)': 'Supply Air Target (SA)',
+  // ── Hints ──
+  '一般辦公室：6–10 次/h｜潔淨室：20–100 次/h': 'Office: 6–10 ACH | Clean room: 20–100 ACH',
+  '一般 AHU：8–12°C｜FCU：5–8°C': 'AHU: 8–12°C | FCU: 5–8°C',
+  '辦公室：25–30｜會議室：30–50｜餐廳：30–40': 'Office: 25–30 | Meeting: 30–50 | Restaurant: 30–40',
+  '主幹管：4–8 m/s｜支管：2–4 m/s｜出風口：2–4 m/s': 'Main: 4–8 m/s | Branch: 2–4 m/s | Diffuser: 2–4 m/s',
+  '一般系統：5–7°C｜大溫差系統：8–12°C': 'Standard: 5–7°C | High ΔT: 8–12°C',
+  '離心式：5.0–6.5｜螺旋式：4.0–5.5｜氣冷式：2.8–3.5': 'Centrifugal: 5.0–6.5 | Screw: 4.0–5.5 | Air-cooled: 2.8–3.5',
+  '主管：1.5–3.0 m/s｜支管：0.9–1.5 m/s': 'Main: 1.5–3.0 m/s | Branch: 0.9–1.5 m/s',
+  'DCC 出口通常 14–18°C（須高於室內露點）': 'DCC outlet: 14–18°C (above indoor dew point)',
+  'DCC 盤管面速度：2.0–3.0 m/s': 'DCC face velocity: 2.0–3.0 m/s',
+  'DCC 建議 14–16°C（須高於室內露點）': 'DCC CHW: 14–16°C (above indoor dew point)',
+  'MAU 標準 CHW：7/12°C': 'MAU standard CHW: 7/12°C',
+  '一般伺服器：5–15 kW｜GPU/AI 訓練：20–80 kW｜液冷 DGX：60–100 kW': 'Server: 5–15 kW | GPU/AI: 20–80 kW | DGX: 60–100 kW',
+  '現代高效 UPS：3–5%｜老舊 UPS：8–12%': 'Modern UPS: 3–5% | Legacy UPS: 8–12%',
+  '背板液冷：60–80%｜直接液冷 DLC：85–95%｜沉浸式：95–100%': 'Rear-door: 60–80% | DLC: 85–95% | Immersion: 95–100%',
+  '直接液冷可用 40–45°C 供水免冷機，節能效益最大': 'DLC: 40–45°C supply without chiller — max energy savings',
+  '製程排氣需補充等量新鮮空氣': 'Process exhaust requires equal fresh air makeup',
+  '一般 FAB：500–2000 W/m²': 'General FAB: 500–2000 W/m²',
+  '建議 2.0–3.0 m/s': 'Recommended: 2.0–3.0 m/s',
+  'ISO 5–6：0.36–0.51 m/s｜ISO 7–8：0.25–0.35 m/s': 'ISO 5–6: 0.36–0.51 m/s | ISO 7–8: 0.25–0.35 m/s',
+  'ISO 5：60–80%｜ISO 6：40–60%｜ISO 7：15–20%': 'ISO 5: 60–80% | ISO 6: 40–60% | ISO 7: 15–20%',
+  '建議 1.5–3.0 m/s': 'Recommended: 1.5–3.0 m/s',
+  '建議 3–6 m/s': 'Recommended: 3–6 m/s',
+  '依此判斷最適冷卻方案，可直接輸入或從 ADC-01 帶入': 'Determines optimal strategy; enter directly or pull from ADC-01',
+};
+
 function initI18n() {
-  // Plain-text bilingual elements
+  // 1. Plain-text bilingual elements with data-zh/data-en attributes
   document.querySelectorAll('[data-zh][data-en]').forEach(el => {
     const zh = el.dataset.zh, en = el.dataset.en;
     el.innerHTML = '<span class="txt-zh">' + _esc(zh) + '</span>' +
                    '<span class="txt-en">' + _esc(en) + '</span>';
   });
-  // HTML bilingual elements (contain <br> etc.)
+  // 2. HTML bilingual elements
   document.querySelectorAll('[data-zh-html]').forEach(el => {
     const zh = el.dataset.zhHtml, en = el.dataset.enHtml || el.dataset.zhHtml;
     el.innerHTML = '<span class="txt-zh">' + zh + '</span>' +
                    '<span class="txt-en">' + en + '</span>';
+  });
+  // 3. Auto-scan tab content by ZH_EN_MAP lookup (innerHTML as key)
+  const AUTO_SEL = 'h3, label, .result-label, .calc-btn, .hint, .tgt-section-lbl, .mau3d-section-title, .mau07-tab, .comp-add-btn';
+  document.querySelectorAll(AUTO_SEL).forEach(el => {
+    if (el.dataset.zh) return;
+    const key = el.innerHTML.trim();
+    const en = ZH_EN_MAP[key];
+    if (en !== undefined) {
+      el.innerHTML = '<span class="txt-zh">' + key + '</span><span class="txt-en">' + en + '</span>';
+    }
+  });
+  // 4. Section h2 text nodes (h2 has child <span class="tag">, so replace text node only)
+  document.querySelectorAll('.section-header h2').forEach(el => {
+    el.childNodes.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+        const txt = node.textContent.trim();
+        const en = ZH_EN_MAP[txt];
+        if (en !== undefined) {
+          const span = document.createElement('span');
+          span.innerHTML = '<span class="txt-zh"> ' + txt + '</span><span class="txt-en"> ' + en + '</span>';
+          node.replaceWith(span);
+        }
+      }
+    });
   });
 }
 function setLang(lang) {
