@@ -79,9 +79,20 @@ let isModalOpen = false;
 let doorAngle  = 0;
 let doorTarget = 0;
 
-// Camera animation
-const CAM_DEF = { px:2.6, py:2.2, pz:5.0, lx:0, ly:0, lz:0 };
+// Camera animation — default: straight front elevation
+const CAM_DEF = { px:0, py:0, pz:9.0, lx:0, ly:0, lz:0 };
 let camTarget = null;  // { px,py,pz,lx,ly,lz } or null
+
+// Preset camera views (for compass click)
+const PRESET_VIEWS = {
+  '前': { px:0,     py:0,    pz:9.0,   lx:0, ly:0, lz:0 },  // Front elevation
+  '後': { px:0,     py:0,    pz:-9.0,  lx:0, ly:0, lz:0 },  // Rear
+  '上': { px:0.01,  py:10.0, pz:0.01,  lx:0, ly:0, lz:0 },  // Plan / top view
+  '下': { px:0.01,  py:-10.0,pz:0.01,  lx:0, ly:0, lz:0 },  // Bottom
+  '右': { px:10.0,  py:0,    pz:0.01,  lx:0, ly:0, lz:0 },  // Right (SA end)
+  '左': { px:-10.0, py:0,    pz:0.01,  lx:0, ly:0, lz:0 },  // Left (OA end)
+  'iso':{ px:4.0,   py:3.0,  pz:6.5,   lx:0, ly:0, lz:0 },  // Isometric
+};
 
 // ── Init ──────────────────────────────────────────────────────────
 function init() {
@@ -545,10 +556,10 @@ function makeLabelSprite(text, hexColor) {
 }
 
 function initCompass(container) {
-  const SIZE = 88;
+  const SIZE = 96;
   compassEl = document.createElement('canvas');
   compassEl.className = 'mau3d-compass';
-  compassEl.style.cssText = `position:absolute;bottom:46px;right:8px;width:${SIZE}px;height:${SIZE}px;pointer-events:none;z-index:10;border-radius:6px;`;
+  compassEl.style.cssText = `position:absolute;top:8px;right:8px;width:${SIZE}px;height:${SIZE}px;pointer-events:auto;cursor:pointer;z-index:10;border-radius:8px;`;
   container.style.position = 'relative';
   container.appendChild(compassEl);
 
@@ -561,7 +572,7 @@ function initCompass(container) {
   compassCam.position.set(0, 0, 2.8);
   compassScene.add(new THREE.AmbientLight(0xffffff, 4.0));
 
-  // Axes: X=右/左 (red), Y=上/下 (green), Z=前/後 (teal)
+  // Axes + clickable labels: X=右/左 (red), Y=上/下 (green), Z=前/後 (teal)
   const AXES = [
     { dir:[1,0,0], col:0xe05050, near:'右', far:'左' },
     { dir:[0,1,0], col:0x40d860, near:'上', far:'下' },
@@ -573,34 +584,70 @@ function initCompass(container) {
     const hexDim  = '#' + dimCol.toString(16).padStart(6,'0');
 
     const posArrow = new THREE.ArrowHelper(
-      new THREE.Vector3(...dir), new THREE.Vector3(0,0,0), 0.74, col, 0.22, 0.10
+      new THREE.Vector3(...dir), new THREE.Vector3(0,0,0), 0.72, col, 0.22, 0.10
     );
     posArrow.line.material.depthTest = false;
     posArrow.cone.material.depthTest = false;
     compassScene.add(posArrow);
 
+    // Positive label — clickable, carries view key
     const posLabel = makeLabelSprite(near, hexFull);
-    posLabel.position.set(dir[0]*1.10, dir[1]*1.10, dir[2]*1.10);
+    posLabel.position.set(dir[0]*1.08, dir[1]*1.08, dir[2]*1.08);
+    posLabel.userData.view = near;
     compassScene.add(posLabel);
 
     const negDir = dir.map(v => -v);
     const negArrow = new THREE.ArrowHelper(
-      new THREE.Vector3(...negDir), new THREE.Vector3(0,0,0), 0.30, dimCol, 0.001, 0.001
+      new THREE.Vector3(...negDir), new THREE.Vector3(0,0,0), 0.28, dimCol, 0.001, 0.001
     );
     negArrow.line.material.depthTest = false;
     compassScene.add(negArrow);
 
+    // Negative label — clickable
     const negLabel = makeLabelSprite(far, hexDim);
-    negLabel.position.set(negDir[0]*0.56, negDir[1]*0.56, negDir[2]*0.56);
+    negLabel.position.set(negDir[0]*0.54, negDir[1]*0.54, negDir[2]*0.54);
+    negLabel.userData.view = far;
     compassScene.add(negLabel);
   });
 
-  // Center sphere
+  // Center sphere — click to return to isometric
   const dot = new THREE.Mesh(
-    new THREE.SphereGeometry(0.07, 12, 8),
+    new THREE.SphereGeometry(0.09, 14, 10),
     new THREE.MeshBasicMaterial({ color: 0xd0d8e0, depthTest: false })
   );
+  dot.userData.view = 'iso';
   compassScene.add(dot);
+
+  // Click → snap camera to preset view
+  const compassRay = new THREE.Raycaster();
+  compassEl.addEventListener('click', (e) => {
+    const rect = compassEl.getBoundingClientRect();
+    const mx = ((e.clientX - rect.left) / compassEl.offsetWidth)  * 2 - 1;
+    const my = -((e.clientY - rect.top)  / compassEl.offsetHeight) * 2 + 1;
+    compassRay.setFromCamera(new THREE.Vector2(mx, my), compassCam);
+    const targets = [];
+    compassScene.traverse(o => { if (o.userData.view) targets.push(o); });
+    const hits = compassRay.intersectObjects(targets, false);
+    if (!hits.length) return;
+    const v = PRESET_VIEWS[hits[0].object.userData.view];
+    if (!v) return;
+    camTarget = { ...v };
+    controls.target.set(v.lx, v.ly, v.lz);
+  });
+
+  // Tooltip: show view name on hover
+  compassEl.addEventListener('mousemove', (e) => {
+    const rect = compassEl.getBoundingClientRect();
+    const mx = ((e.clientX - rect.left) / compassEl.offsetWidth)  * 2 - 1;
+    const my = -((e.clientY - rect.top)  / compassEl.offsetHeight) * 2 + 1;
+    compassRay.setFromCamera(new THREE.Vector2(mx, my), compassCam);
+    const targets = [];
+    compassScene.traverse(o => { if (o.userData.view) targets.push(o); });
+    const hits = compassRay.intersectObjects(targets, false);
+    compassEl.title = hits.length
+      ? ({ '前':'正面', '後':'後面', '上':'俯視', '下':'仰視', '右':'右視', '左':'左視', 'iso':'等角' }[hits[0].object.userData.view] || '')
+      : '';
+  });
 }
 
 // ── Raycasting ────────────────────────────────────────────────────

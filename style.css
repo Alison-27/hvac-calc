@@ -710,7 +710,7 @@ footer {
   display: block;
 }
 #mau3d-container canvas { display: block; width: 100% !important; height: 100% !important; }
-#mau3d-container canvas.mau3d-compass { width: 88px !important; height: 88px !important; }
+#mau3d-container canvas.mau3d-compass { width: 96px !important; height: 96px !important; background: rgba(6,12,22,0.55); border-radius: 8px; }
 
 /* Parameter panel overlay */
 #mau3d-param-panel {
@@ -1084,6 +1084,7 @@ footer {
   width: 100% !important;
   height: 100% !important;
 }
+#mau3d-modal-canvas-wrap canvas.mau3d-compass { width: 96px !important; height: 96px !important; background: rgba(6,12,22,0.55); border-radius: 8px; }
 #mau3d-modal-info {
   width: 240px;
   flex-shrink: 0;
