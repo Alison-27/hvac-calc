@@ -748,7 +748,7 @@ footer {
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--teal);
+  color: #4a88d8;
 }
 .mpanel-close {
   background: none;
@@ -1191,7 +1191,7 @@ footer {
 /* ── MAU Design Target Card ── */
 .tgt-section-lbl {
   font-size: .68rem; font-weight: 700; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--teal); opacity: .7;
+  text-transform: uppercase; color: #4a88d8; opacity: .8;
   margin-bottom: .4rem;
 }
 .tgt-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .55rem; }
@@ -1205,7 +1205,7 @@ footer {
   border-radius: var(--radius); font-size: .78rem;
   display: none;
 }
-.tgt-status.ok   { display: block; background: rgba(0,212,170,.08); color: var(--teal); border: 1px solid rgba(0,212,170,.22); }
+.tgt-status.ok   { display: block; background: rgba(74,136,216,.08); color: #4a88d8; border: 1px solid rgba(74,136,216,.25); }
 .tgt-status.warn { display: block; background: rgba(240,164,48,.08); color: var(--amber); border: 1px solid rgba(240,164,48,.22); }
 
 /* ── MAU-06 Coil Sequence ── */
@@ -1226,10 +1226,10 @@ footer {
   letter-spacing: .1em; margin-bottom: 3px;
 }
 .flow-node-oa .fnode-tag { color: var(--amber); }
-.flow-node-sa .fnode-tag { color: var(--teal); }
+.flow-node-sa .fnode-tag { color: #4a88d8; }
 .fnode-val { font-family: var(--mono); font-size: .72rem; color: var(--text-dim); line-height: 1.35; }
 .cf-sa-badge { font-size: .66rem; margin-top: 3px; }
-.cf-sa-badge.ok   { color: var(--teal); }
+.cf-sa-badge.ok   { color: #4a88d8; }
 .cf-sa-badge.warn { color: var(--amber); }
 .coil-seq-blocks { display: flex; align-items: flex-start; gap: 0; }
 .cf-arrow {
@@ -1321,7 +1321,7 @@ footer {
 .mau-tbl td:nth-child(2) { text-align: left; color: var(--text-dim); font-size: .7rem; }
 .mau-tbl tr:last-child td { border-bottom: none; }
 .mau-tbl .sp-oa td:first-child { color: var(--amber); font-weight: 700; }
-.mau-tbl .sp-sa td:first-child { color: var(--teal); font-weight: 700; }
+.mau-tbl .sp-sa td:first-child { color: #4a88d8; font-weight: 700; }
 .mau-tbl .sp-mid td:first-child { color: #60c8ff; font-weight: 600; }
 .mau-tbl .q-cool { color: #60c8ff; }
 .mau-tbl .q-heat { color: var(--amber); }
@@ -1332,7 +1332,7 @@ footer {
 }
 .stot { font-size: .77rem; display: flex; align-items: baseline; gap: .3rem; }
 .stot-lbl { color: var(--text-muted); font-size: .7rem; }
-.stot-val { font-family: var(--mono); color: var(--teal); font-weight: 700; }
+.stot-val { font-family: var(--mono); color: #4a88d8; font-weight: 700; }
 .stot-val.heat { color: var(--amber); }
 .stot-unit { font-size: .63rem; color: var(--text-muted); }
 
@@ -1351,7 +1351,7 @@ footer {
 }
 .stot-ri.heat { border-color: rgba(240,164,48,.25); background: rgba(240,164,48,.04); }
 .stot-ri-lbl { font-size: .63rem; color: var(--text-muted); margin-bottom: .18rem; letter-spacing: .04em; }
-.stot-ri-val { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--teal); line-height: 1.1; }
+.stot-ri-val { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: #4a88d8; line-height: 1.1; }
 .stot-ri.heat .stot-ri-val { color: var(--amber); }
 .stot-ri-unit { font-size: .6rem; color: var(--text-muted); margin-top: 1px; }
 .stot-stages-lbl {

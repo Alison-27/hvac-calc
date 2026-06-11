@@ -542,14 +542,29 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
     `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f0a430" stroke-width="1.8" stroke-dasharray="7,4" opacity=".9"/>` +
     `<circle cx="${x1}" cy="${y1}" r="6" fill="#f0a430" stroke="#080d18" stroke-width="1.5" onclick="clickPsychroPoint(0)" style="cursor:pointer"/>` +
     `<text x="${lx1}" y="${ly1}" fill="#f0a430" font-size="9.5" font-family="Share Tech Mono,monospace" font-weight="bold">OA</text>` +
-    `<circle cx="${x2}" cy="${y2}" r="6" fill="#00d4aa" stroke="#080d18" stroke-width="1.5" onclick="clickPsychroPoint(1)" style="cursor:pointer"/>` +
-    `<text x="${lx2}" y="${ly2}" fill="#00d4aa" font-size="9.5" font-family="Share Tech Mono,monospace" font-weight="bold">SA</text>`;
+    `<circle cx="${x2}" cy="${y2}" r="6" fill="#4a88d8" stroke="#080d18" stroke-width="1.5" onclick="clickPsychroPoint(1)" style="cursor:pointer"/>` +
+    `<text x="${lx2}" y="${ly2}" fill="#4a88d8" font-size="9.5" font-family="Share Tech Mono,monospace" font-weight="bold">SA</text>`;
   syncPsychroModal();
 }
 
 function updatePsychroTarget() {
   const grp = document.getElementById('psychro-target');
-  if (grp) grp.innerHTML = '';
+  if (!grp) return;
+  const get = id => parseFloat(document.getElementById(id)?.value);
+  const tgtT  = get('tgt-sa-t')  ?? 22;
+  const tgtRH = get('tgt-sa-rh') ?? 50;
+
+  const wg = Math.max(PC.wmin, Math.min(omegaFromTRH(tgtT, Math.max(1, Math.min(100, tgtRH))) * 1000, PC.wmax));
+  const x  = PC.tx(Math.max(PC.Tmin + 0.5, Math.min(PC.Tmax - 0.5, tgtT)));
+  const y  = PC.ty(wg);
+  const R  = 7;
+  const lx = x > PC.ml + PC.cw - 52 ? x - 50 : x + 11;
+  const ly = y > PC.mt + 14 ? y - 6 : y + 14;
+  const diamond = `${x},${y-R} ${x+R},${y} ${x},${y+R} ${x-R},${y}`;
+
+  grp.innerHTML =
+    `<polygon points="${diamond}" fill="rgba(74,136,216,0.18)" stroke="#4a88d8" stroke-width="1.6" clip-path="url(#cc)"/>` +
+    `<text x="${lx}" y="${ly}" fill="#4a88d8" font-size="9" font-family="Share Tech Mono,monospace" opacity=".9">SA 目標</text>`;
   syncPsychroModal();
 }
 
@@ -711,7 +726,7 @@ function drawPsychroTooltip() {
   if (by + TH > PC.mt + PC.ch - 2) by = PC.mt + PC.ch - TH - 2;
 
   const isOA = _tooltipIdx === 0, isSA = _tooltipIdx === _currentPsychroStates.length - 1;
-  const color = isOA ? '#f0a430' : isSA ? '#00d4aa' : '#60c8ff';
+  const color = isOA ? '#f0a430' : isSA ? '#4a88d8' : '#60c8ff';
 
   let h = `<rect x="${bx}" y="${by}" width="${TW}" height="${TH}" rx="2" fill="rgba(4,8,16,.96)" stroke="${color}" stroke-width="0.8"/>`;
   h += `<text x="${bx + TW/2}" y="${by + 12}" text-anchor="middle" fill="${color}" font-size="9" font-family="Share Tech Mono,monospace" font-weight="bold">${s.id}</text>`;
@@ -962,7 +977,7 @@ function updatePsychroProcess(states) {
   const grp = document.getElementById('psychro-process');
   if (!grp || states.length < 2) { if (grp) grp.innerHTML = ''; return; }
 
-  const COLS = ['#f0a430','#60c8ff','#80e060','#e080c0','#c0a040','#80b0ff','#00d4aa','#ff8060'];
+  const COLS = ['#f0a430','#60c8ff','#80e060','#e080c0','#c0a040','#80b0ff','#a080e0','#ff8060'];
   const pts = states.map(s => ({
     ...s,
     px: PC.tx(Math.max(PC.Tmin + 0.5, Math.min(PC.Tmax - 0.5, s.T))),
@@ -976,7 +991,7 @@ function updatePsychroProcess(states) {
 
   pts.forEach((p, i) => {
     const isOA = i === 0, isSA = i === pts.length - 1;
-    const col = isOA ? '#f0a430' : isSA ? '#00d4aa' : COLS[i % COLS.length];
+    const col = isOA ? '#f0a430' : isSA ? '#4a88d8' : COLS[i % COLS.length];
     const num = i + 1;
     const lx = p.px > PC.ml + PC.cw - 28 ? p.px - 16 : p.px + 8;
     const ly = p.py > PC.mt + 14 ? p.py - 7 : p.py + 14;
