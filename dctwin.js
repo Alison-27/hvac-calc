@@ -257,7 +257,7 @@ const T = {           // three.js 執行期物件
 
 const PAL = {
   bg: 0x080d18, floor: 0x0a1322, grid1: 0x16263e, grid2: 0x0f1a2c,
-  rack: 0x10161f, rackEdge: 0x1f2c3f, door: 0x141c28, led: 0x9eff2e,
+  rack: 0x10161f, rackEdge: 0x1f2c3f, door: 0x141c28, led: 0x76b900,
   cdu: 0x14202e, cduFace: 0x35c8ff,
   steel: 0x39465a, tray: 0x222c3a,
 };
@@ -423,14 +423,14 @@ function buildRacks(parent, count) {
   const geoNVSW    = new THREE.BoxGeometry(RK.w - 0.09, 0.058, RK.d - 0.22);  // NVLink Spine Switch
 
   // 內部元件共用材質（一次建立、全機櫃共用）
-  const gpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x0b1a10, roughness: 0.24, metalness: 0.76, emissive: 0x003d18, emissiveIntensity: 1.0 });
-  const cpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x091620, roughness: 0.26, metalness: 0.74, emissive: 0x001845, emissiveIntensity: 0.85 });
-  const plateMat   = new THREE.MeshStandardMaterial({ color: 0x3e5870, roughness: 0.15, metalness: 0.95 });
-  const sledMatA   = new THREE.MeshStandardMaterial({ color: 0x0f1d26, roughness: 0.44, metalness: 0.70 });
-  const sledMatB   = new THREE.MeshStandardMaterial({ color: 0x0d1921, roughness: 0.44, metalness: 0.70 });
-  const railIntMat = new THREE.MeshStandardMaterial({ color: 0x243244, roughness: 0.58, metalness: 0.68 });
-  const busIntMat  = new THREE.MeshStandardMaterial({ color: 0x9c5612, roughness: 0.32, metalness: 0.86, emissive: 0x3c1a00, emissiveIntensity: 0.32 });
-  const nvswMat    = new THREE.MeshStandardMaterial({ color: 0x0a1528, emissive: 0x0046b0, emissiveIntensity: 0.70, roughness: 0.30, metalness: 0.74 });
+  const gpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x0c0e0c, roughness: 0.55, metalness: 0.50, emissive: 0x0a0a00, emissiveIntensity: 0.10 });
+  const cpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x0c0c14, roughness: 0.50, metalness: 0.55, emissive: 0x000410, emissiveIntensity: 0.12 });
+  const plateMat   = new THREE.MeshStandardMaterial({ color: 0xc89840, roughness: 0.08, metalness: 0.92 });
+  const sledMatA   = new THREE.MeshStandardMaterial({ color: 0xb07828, roughness: 0.12, metalness: 0.88 });
+  const sledMatB   = new THREE.MeshStandardMaterial({ color: 0xa87020, roughness: 0.14, metalness: 0.88 });
+  const railIntMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1c, roughness: 0.60, metalness: 0.72 });
+  const busIntMat  = new THREE.MeshStandardMaterial({ color: 0xa05818, roughness: 0.28, metalness: 0.88, emissive: 0x3a1800, emissiveIntensity: 0.28 });
+  const nvswMat    = new THREE.MeshStandardMaterial({ color: 0xb08030, emissive: 0x402800, emissiveIntensity: 0.30, roughness: 0.10, metalness: 0.90 });
   const geoDiv = new THREE.BoxGeometry(RK.w - 0.08, 0.005, 0.016);     // 槽位分隔線
   const geoDot = new THREE.BoxGeometry(0.012, 0.014, 0.010);           // 狀態 LED 點
   const geoMan = new THREE.CylinderGeometry(0.021, 0.021, RK.h - 0.14, 9);  // 後側液冷歧管
