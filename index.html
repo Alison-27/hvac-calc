@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=10" />
+  <link rel="stylesheet" href="style.css?v=11" />
   <script type="importmap">
   {
     "imports": {
@@ -44,8 +44,8 @@
         <button class="theme-btn" id="btn-light" onclick="setTheme('light')" title="亮色模式">☀️</button>
       </div>
       <div class="lang-btns">
-        <button class="lang-btn" id="btn-zh" onclick="setLang('zh')">中</button>
-        <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="btn-zh" onclick="setLang('zh')" title="繁體中文">🇹🇼</button>
+        <button class="lang-btn" id="btn-en" onclick="setLang('en')" title="English">🇺🇸</button>
       </div>
     </div>
   </header>
@@ -79,10 +79,10 @@
           <h3 class="dbc-title" data-zh="風量計算" data-en="Airflow Calc">風量計算</h3>
           <p class="dbc-desc" data-zh="換氣次數法、顯熱負荷法、新鮮空氣量需求、風管截面積選定" data-en="ACH method, sensible load, fresh air req., duct cross-section">換氣次數法、顯熱負荷法、新鮮空氣量需求、風管截面積選定</p>
           <ul class="dbc-list">
-            <li>AF-01 換氣次數法 Q = V × n</li>
-            <li>AF-02 顯熱負荷法</li>
-            <li>AF-03 新鮮空氣量</li>
-            <li>AF-04 風管截面積 / 風速</li>
+            <li data-zh="AF-01 換氣次數法 Q = V × n" data-en="AF-01 ACH Method Q = V × n">AF-01 換氣次數法 Q = V × n</li>
+            <li data-zh="AF-02 顯熱負荷法" data-en="AF-02 Sensible Heat Load">AF-02 顯熱負荷法</li>
+            <li data-zh="AF-03 新鮮空氣量" data-en="AF-03 Fresh Air Requirement">AF-03 新鮮空氣量</li>
+            <li data-zh="AF-04 風管截面積 / 風速" data-en="AF-04 Duct Area / Velocity">AF-04 風管截面積 / 風速</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -95,10 +95,10 @@
           <h3 class="dbc-title" data-zh="水量計算" data-en="Water Flow Calc">水量計算</h3>
           <p class="dbc-desc" data-zh="冷凍水 / 冷卻水流量、管道管徑選定、制冷量單位換算" data-en="CHW / CW flow rate, pipe sizing, refrigeration unit conversion">冷凍水 / 冷卻水流量、管道管徑選定、制冷量單位換算</p>
           <ul class="dbc-list">
-            <li>WF-01 冷凍水流量</li>
-            <li>WF-02 冷卻水流量 + COP</li>
-            <li>WF-03 管道管徑選定</li>
-            <li>WF-04 制冷量換算 (RT/kW/BTU)</li>
+            <li data-zh="WF-01 冷凍水流量" data-en="WF-01 Chilled Water Flow">WF-01 冷凍水流量</li>
+            <li data-zh="WF-02 冷卻水流量 + COP" data-en="WF-02 Cooling Water Flow + COP">WF-02 冷卻水流量 + COP</li>
+            <li data-zh="WF-03 管道管徑選定" data-en="WF-03 Pipe Sizing">WF-03 管道管徑選定</li>
+            <li data-zh="WF-04 制冷量換算 (RT/kW/BTU)" data-en="WF-04 Capacity Conversion (RT/kW/BTU)">WF-04 制冷量換算 (RT/kW/BTU)</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -111,10 +111,10 @@
           <h3 class="dbc-title" data-zh="潔淨室空調" data-en="Clean Room HVAC">潔淨室空調</h3>
           <p class="dbc-desc" data-zh="ISO 等級、熱負荷、DCC 選型、FFU 配置、回風道截面核算" data-en="ISO class, heat load, DCC sizing, FFU layout, return duct sizing">ISO 等級、熱負荷、DCC 選型、FFU 配置、回風道截面核算</p>
           <ul class="dbc-list">
-            <li>CR-01 空間 / 排氣參數</li>
-            <li>CR-02 熱負荷分析</li>
-            <li>CR-03 DCC 選型</li>
-            <li>CR-04 FFU 核算 · CR-05 回風道</li>
+            <li data-zh="CR-01 空間 / 排氣參數" data-en="CR-01 Space / Exhaust Params">CR-01 空間 / 排氣參數</li>
+            <li data-zh="CR-02 熱負荷分析" data-en="CR-02 Heat Load Analysis">CR-02 熱負荷分析</li>
+            <li data-zh="CR-03 DCC 選型" data-en="CR-03 DCC Selection">CR-03 DCC 選型</li>
+            <li data-zh="CR-04 FFU 核算 · CR-05 回風道" data-en="CR-04 FFU Calc · CR-05 Return Duct">CR-04 FFU 核算 · CR-05 回風道</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -127,9 +127,9 @@
           <h3 class="dbc-title" data-zh="乾式盤管 DCC" data-en="Dry Coil DCC">乾式盤管 DCC</h3>
           <p class="dbc-desc" data-zh="顯熱冷卻量計算、盤管面積與面速度、CHW 需求 + 結露風險確認" data-en="Sensible cooling, coil face area/velocity, CHW demand + dew-point risk">顯熱冷卻量計算、盤管面積與面速度、CHW 需求 + 結露風險確認</p>
           <ul class="dbc-list">
-            <li>DCC-01 顯熱冷卻量</li>
-            <li>DCC-02 盤管面積 / 面速度</li>
-            <li>DCC-03 CHW 需求 + 露點確認</li>
+            <li data-zh="DCC-01 顯熱冷卻量" data-en="DCC-01 Sensible Cooling">DCC-01 顯熱冷卻量</li>
+            <li data-zh="DCC-02 盤管面積 / 面速度" data-en="DCC-02 Coil Area / Face Velocity">DCC-02 盤管面積 / 面速度</li>
+            <li data-zh="DCC-03 CHW 需求 + 露點確認" data-en="DCC-03 CHW Demand + Dew-point Check">DCC-03 CHW 需求 + 露點確認</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -142,10 +142,10 @@
           <h3 class="dbc-title" data-zh="空調箱" data-en="AHU / MAU">空調箱</h3>
           <p class="dbc-desc" data-zh="設計目標設定、盤管處理排列、除濕量、冷凍水需求、焓濕圖、3D 模型" data-en="Design targets, coil sequence, dehumid load, CHW demand, psychro chart, 3D model">設計目標設定、盤管處理排列、除濕量、冷凍水需求、焓濕圖、3D 模型</p>
           <ul class="dbc-list">
-            <li>MAU-D 設計目標 + 容差設定</li>
-            <li>MAU-06 盤管處理排列</li>
-            <li>MAU-02/03 除濕量 / 冷凍水</li>
-            <li>MAU-04 焓濕圖 · MAU-05 3D 模型</li>
+            <li data-zh="MAU-D 設計目標 + 容差設定" data-en="MAU-D Design Target + Tolerance">MAU-D 設計目標 + 容差設定</li>
+            <li data-zh="MAU-06 盤管處理排列" data-en="MAU-06 Coil Process Sequence">MAU-06 盤管處理排列</li>
+            <li data-zh="MAU-02/03 除濕量 / 冷凍水" data-en="MAU-02/03 Dehumid Load / CHW">MAU-02/03 除濕量 / 冷凍水</li>
+            <li data-zh="MAU-04 焓濕圖 · MAU-05 3D 模型" data-en="MAU-04 Psychro Chart · MAU-05 3D Model">MAU-04 焓濕圖 · MAU-05 3D 模型</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -158,10 +158,10 @@
           <h3 class="dbc-title" data-zh="公式參考" data-en="References">公式參考</h3>
           <p class="dbc-desc" data-zh="風量 / 水量公式、空氣 / 水物理常數、換氣次數建議值、單位換算" data-en="Airflow / water formulas, air / water constants, ACH guide values, unit conversion">風量 / 水量公式、空氣 / 水物理常數、換氣次數建議值、單位換算</p>
           <ul class="dbc-list">
-            <li>風量 · 水量計算公式</li>
-            <li>空氣 · 水物理常數</li>
-            <li>換氣次數建議值 (ACH)</li>
-            <li>制冷 · 流量 · 壓力換算表</li>
+            <li data-zh="風量 · 水量計算公式" data-en="Airflow · Water Flow Formulas">風量 · 水量計算公式</li>
+            <li data-zh="空氣 · 水物理常數" data-en="Air · Water Physical Constants">空氣 · 水物理常數</li>
+            <li data-zh="換氣次數建議值 (ACH)" data-en="Recommended ACH Values">換氣次數建議值 (ACH)</li>
+            <li data-zh="制冷 · 流量 · 壓力換算表" data-en="Cooling · Flow · Pressure Conversion">制冷 · 流量 · 壓力換算表</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -173,13 +173,13 @@
           <div class="dbc-icon">🤖</div>
           <div class="dbc-badge dbc-badge-ai" data-zh="NEW · 4 工具" data-en="NEW · 4 Tools">NEW · 4 工具</div>
           <div class="dbc-num">07</div>
-          <h3 class="dbc-title">AI Data Center計算書</h3>
-          <p class="dbc-desc">GPU 機架熱密度分析、冷卻方式智能選型、PUE 效率計算、液冷 CHW 需求估算</p>
+          <h3 class="dbc-title" data-zh="AI Data Center 計算書" data-en="AI Data Center Calc">AI Data Center計算書</h3>
+          <p class="dbc-desc" data-zh="GPU 機架熱密度分析、冷卻方式智能選型、PUE 效率計算、液冷 CHW 需求估算" data-en="GPU rack heat density, intelligent cooling selection, PUE calculation, liquid CHW demand">GPU 機架熱密度分析、冷卻方式智能選型、PUE 效率計算、液冷 CHW 需求估算</p>
           <ul class="dbc-list">
-            <li>ADC-01 IT 熱負荷估算</li>
-            <li>ADC-02 冷卻方式智能選型</li>
-            <li>ADC-03 PUE / DCiE 計算</li>
-            <li>ADC-04 液冷 CHW 需求</li>
+            <li data-zh="ADC-01 IT 熱負荷估算" data-en="ADC-01 IT Load Estimation">ADC-01 IT 熱負荷估算</li>
+            <li data-zh="ADC-02 冷卻方式智能選型" data-en="ADC-02 Intelligent Cooling Selection">ADC-02 冷卻方式智能選型</li>
+            <li data-zh="ADC-03 PUE / DCiE 計算" data-en="ADC-03 PUE / DCiE Calculation">ADC-03 PUE / DCiE 計算</li>
+            <li data-zh="ADC-04 液冷 CHW 需求" data-en="ADC-04 Liquid Cooling CHW Demand">ADC-04 液冷 CHW 需求</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>

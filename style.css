@@ -222,22 +222,25 @@ nav {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  padding: 4px 10px;
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  letter-spacing: 0;
+  line-height: 1;
+  padding: 3px 7px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  filter: grayscale(0.4);
 }
 .lang-btn:hover:not(.active) {
   border-color: var(--border2);
-  color: var(--text-dim);
+  filter: grayscale(0);
+  transform: scale(1.1);
 }
 .lang-btn.active {
-  background: var(--amber);
   border-color: var(--amber);
-  color: #000;
+  background: rgba(240,164,48,0.12);
+  filter: grayscale(0);
+  box-shadow: 0 0 0 1px var(--amber);
 }
 
 /* ── Main ── */
