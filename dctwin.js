@@ -793,18 +793,20 @@ function buildPipeParticles() {
       const jit = (Math.random() - 0.5) * 0.05;
       const t0 = i / cnt;
       // 供水粒子（藍）：CDU → 遠端
-      const sg = new THREE.SphereGeometry(0.048, 7, 5);
-      const sm = new THREE.MeshStandardMaterial({ color: 0x55d4ff, emissive: 0x0077cc, emissiveIntensity: 2.0, transparent: true, opacity: 0.9, depthWrite: false });
+      const sg = new THREE.SphereGeometry(0.055, 7, 5);
+      const sm = new THREE.MeshStandardMaterial({ color: 0x55d4ff, emissive: 0x00aaff, emissiveIntensity: 2.4, transparent: true, opacity: 0.92, depthTest: false, depthWrite: false });
       const smesh = new THREE.Mesh(sg, sm);
+      smesh.renderOrder = 10;
       const ss = new THREE.Vector3(cduX, RK.pipeY + jit, z - 0.18);
       const se = new THREE.Vector3(xFar, RK.pipeY + jit, z - 0.18);
       smesh.position.lerpVectors(ss, se, t0);
       pg.add(smesh);
       T.pipeParticles.push({ mesh: smesh, s: ss, e: se, t: t0, spd: 0.082 + Math.random() * 0.03 });
       // 回水粒子（紅）：遠端 → CDU
-      const rg = new THREE.SphereGeometry(0.048, 7, 5);
-      const rm = new THREE.MeshStandardMaterial({ color: 0xff6060, emissive: 0xcc1a20, emissiveIntensity: 1.8, transparent: true, opacity: 0.88, depthWrite: false });
+      const rg = new THREE.SphereGeometry(0.055, 7, 5);
+      const rm = new THREE.MeshStandardMaterial({ color: 0xff6060, emissive: 0xff2200, emissiveIntensity: 2.2, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false });
       const rmesh = new THREE.Mesh(rg, rm);
+      rmesh.renderOrder = 10;
       const rs = new THREE.Vector3(xFar, RK.pipeY + 0.3 + jit, z + 0.18);
       const re = new THREE.Vector3(cduX, RK.pipeY + 0.3 + jit, z + 0.18);
       rmesh.position.lerpVectors(rs, re, t0);
@@ -817,18 +819,20 @@ function buildPipeParticles() {
   const endX = (maxN - 1) * RK.pitch / 2 + 1.1;
   for (let i = 0; i < 6; i++) {
     const t0 = i / 6;
-    const sg2 = new THREE.SphereGeometry(0.048, 7, 5);
-    const sm2 = new THREE.MeshStandardMaterial({ color: 0x55d4ff, emissive: 0x0077cc, emissiveIntensity: 2.0, transparent: true, opacity: 0.9, depthWrite: false });
+    const sg2 = new THREE.SphereGeometry(0.055, 7, 5);
+    const sm2 = new THREE.MeshStandardMaterial({ color: 0x55d4ff, emissive: 0x00aaff, emissiveIntensity: 2.4, transparent: true, opacity: 0.92, depthTest: false, depthWrite: false });
     const s2 = new THREE.Mesh(sg2, sm2);
+    s2.renderOrder = 10;
     const ss2 = new THREE.Vector3(endX - 0.16, RK.pipeY, RK.rowZ + 0.15);
     const se2 = new THREE.Vector3(endX - 0.16, RK.pipeY, -RK.rowZ - 0.15);
     s2.position.lerpVectors(ss2, se2, t0);
     pg.add(s2);
     T.pipeParticles.push({ mesh: s2, s: ss2, e: se2, t: t0, spd: 0.1 });
 
-    const rg2 = new THREE.SphereGeometry(0.048, 7, 5);
-    const rm2 = new THREE.MeshStandardMaterial({ color: 0xff6060, emissive: 0xcc1a20, emissiveIntensity: 1.8, transparent: true, opacity: 0.88, depthWrite: false });
+    const rg2 = new THREE.SphereGeometry(0.055, 7, 5);
+    const rm2 = new THREE.MeshStandardMaterial({ color: 0xff6060, emissive: 0xff2200, emissiveIntensity: 2.2, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false });
     const r2 = new THREE.Mesh(rg2, rm2);
+    r2.renderOrder = 10;
     const rs2 = new THREE.Vector3(endX + 0.16, RK.pipeY + 0.3, -RK.rowZ - 0.15);
     const re2 = new THREE.Vector3(endX + 0.16, RK.pipeY + 0.3, RK.rowZ + 0.15);
     r2.position.lerpVectors(rs2, re2, t0);
