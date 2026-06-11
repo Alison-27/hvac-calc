@@ -409,65 +409,124 @@ function buildRacks(parent, count) {
   T.supplyMats = []; T.returnMats = []; T.rackHeatMats = [];
 
   const rows = [Math.ceil(count / 2), Math.floor(count / 2)];
-  const geoBody = new THREE.BoxGeometry(RK.w, RK.h, RK.d);
-  const geoDoor = new THREE.BoxGeometry(RK.w - 0.04, RK.h - 0.08, 0.035);
-  const geoLed = new THREE.BoxGeometry(0.03, RK.h - 0.4, 0.012);
-  const geoTray = new THREE.BoxGeometry(RK.w - 0.12, 0.135, RK.d - 0.22);
+
+  // ── 共用幾何體（GB200 NVL72 設計語言）────────────
+  const geoBody   = new THREE.BoxGeometry(RK.w, RK.h, RK.d);
+  const geoFace   = new THREE.BoxGeometry(RK.w - 0.03, RK.h - 0.06, 0.030);
+  const geoLedBar = new THREE.BoxGeometry(0.026, RK.h - 0.14, 0.013);  // 全高 NVIDIA 綠條
+  const geoTray   = new THREE.BoxGeometry(RK.w - 0.10, 0.110, RK.d - 0.22);
+  const geoAccent = new THREE.BoxGeometry(RK.w - 0.04, 0.014, 0.022);  // 頂/底 綠色邊框
+  const MODS = 18;                                    // 代表 36 個 NVL2 sled（每格=2U）
+  const modH  = (RK.h - 0.12) / MODS;
+  const geoDiv = new THREE.BoxGeometry(RK.w - 0.08, 0.005, 0.016);     // 槽位分隔線
+  const geoDot = new THREE.BoxGeometry(0.012, 0.014, 0.010);           // 狀態 LED 點
+  const geoMan = new THREE.CylinderGeometry(0.021, 0.021, RK.h - 0.14, 9);  // 後側液冷歧管
+  const geoFit = new THREE.CylinderGeometry(0.015, 0.015, 0.046, 8);        // 快接頭
+
+  // 共用材質（非熱敏感，建立一次）
+  const ledBarMat = new THREE.MeshStandardMaterial({ color: 0x061006, emissive: PAL.led, emissiveIntensity: 2.6 });
+  const accentMat = new THREE.MeshStandardMaterial({ color: 0x061006, emissive: PAL.led, emissiveIntensity: 1.5 });
+  const dotMat    = new THREE.MeshStandardMaterial({ color: 0x061006, emissive: PAL.led, emissiveIntensity: 1.8 });
+  const divMat    = new THREE.MeshStandardMaterial({ color: 0x1a2840, roughness: 0.55, metalness: 0.45 });
 
   let id = 0;
   rows.forEach((n, r) => {
     if (!n) return;
-    const z = r === 0 ? -RK.rowZ : RK.rowZ;
-    const face = r === 0 ? -1 : 1;            // 前門朝外，熱通道在中間
-    const x0 = -(n - 1) * RK.pitch / 2;
+    const z        = r === 0 ? -RK.rowZ : RK.rowZ;
+    const face     = r === 0 ? -1 : 1;      // 前門朝外，熱通道在中間
+    const backFace = -face;
+    const x0       = -(n - 1) * RK.pitch / 2;
 
     for (let i = 0; i < n; i++) {
       id++;
       const rack = new THREE.Group();
       rack.position.set(x0 + i * RK.pitch, RK.h / 2, z);
 
-      const bodyMat = new THREE.MeshStandardMaterial({ color: PAL.rack, roughness: 0.55, metalness: 0.55 });
-      const body = new THREE.Mesh(geoBody, bodyMat);
+      // ── 機箱本體（深炭黑，GB200 NVL72 色調）
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x090d14, roughness: 0.40, metalness: 0.74 });
+      const body    = new THREE.Mesh(geoBody, bodyMat);
       body.userData = { pick: true, type: 'rack', id };
       rack.add(body);
 
-      // 內部 8 層運算抽屜（爆炸視圖用）
+      // ── 頂 / 底 NVIDIA 綠色邊框
+      [-1, 1].forEach(side => {
+        const acc = new THREE.Mesh(geoAccent, accentMat);
+        acc.position.set(0, side * (RK.h / 2 - 0.01), face * (RK.d / 2 + 0.004));
+        rack.add(acc);
+      });
+
+      // ── 8 塊 Grace Blackwell 計算板（爆炸視圖用）
       const trays = new THREE.Group();
       for (let t = 0; t < 8; t++) {
         const tm = new THREE.MeshStandardMaterial({
-          color: PAL.tray, roughness: 0.5, metalness: 0.6,
-          emissive: 0x103010, emissiveIntensity: 0.55,
+          color: 0x0d1a1e, roughness: 0.40, metalness: 0.68,
+          emissive: 0x002d10, emissiveIntensity: 0.70,
         });
         const tray = new THREE.Mesh(geoTray, tm);
-        tray.position.y = -RK.h / 2 + 0.32 + t * 0.225;
-        tray.userData.baseY = tray.position.y;
-        tray.userData.spread = (t - 3.5) * 0.16;
+        tray.position.y = -RK.h / 2 + 0.28 + t * 0.22;
+        tray.userData.baseY  = tray.position.y;
+        tray.userData.spread = (t - 3.5) * 0.18;
         trays.add(tray);
       }
       rack.add(trays);
       rack.userData.trays = trays;
 
-      // 前門（鉸鏈樞軸在側邊）
+      // ── 前面板（鉸鏈可開門）— GB200 NVL72 sled 面板設計
       const hinge = new THREE.Group();
       hinge.position.set(-RK.w / 2 + 0.02, 0, face * RK.d / 2);
+
       const doorMat = new THREE.MeshStandardMaterial({
-        color: PAL.door, roughness: 0.4, metalness: 0.7,
+        color: 0x0c1622, roughness: 0.38, metalness: 0.74,
         emissive: 0x000000, emissiveIntensity: 1,
       });
-      const door = new THREE.Mesh(geoDoor, doorMat);
-      door.position.set(RK.w / 2 - 0.02, 0, face * 0.02);
+      const door = new THREE.Mesh(geoFace, doorMat);
+      door.position.set(RK.w / 2 - 0.015, 0, face * 0.020);
       door.userData = { pick: true, type: 'rack', id };
       hinge.add(door);
-      const led = new THREE.Mesh(geoLed, new THREE.MeshStandardMaterial({
-        color: 0x0a140a, emissive: PAL.led, emissiveIntensity: 1.6,
-      }));
-      led.position.set(0.06, 0, face * 0.045);
-      hinge.add(led);
+
+      // 全高 NVIDIA 綠色 LED 邊條（左緣）
+      const ledBar = new THREE.Mesh(geoLedBar, ledBarMat);
+      ledBar.position.set(0.032, 0, face * 0.040);
+      hinge.add(ledBar);
+
+      // 18 槽位分隔線（代表 36 個 NVL2 sled）
+      for (let m = 0; m <= MODS; m++) {
+        const div = new THREE.Mesh(geoDiv, divMat);
+        div.position.set(RK.w / 2 - 0.015, -RK.h / 2 + 0.06 + m * modH, face * 0.033);
+        hinge.add(div);
+      }
+      // 每槽狀態 LED 點（左側，仿 NVL72 模組燈）
+      for (let m = 0; m < MODS; m++) {
+        const dot = new THREE.Mesh(geoDot, dotMat);
+        dot.position.set(0.068, -RK.h / 2 + 0.06 + m * modH + modH / 2, face * 0.036);
+        hinge.add(dot);
+      }
+
       rack.add(hinge);
       rack.userData.hinge = hinge;
-      rack.userData.face = face;
-      rack.userData.id = id;
+      rack.userData.face  = face;
+      rack.userData.id    = id;
       T.rackHeatMats.push(doorMat, bodyMat);
+
+      // ── 後側液冷歧管（供水藍／回水紅，per-rack）
+      [[-0.14, 0x2a8cff], [0.14, 0xff4242]].forEach(([xOff, col]) => {
+        const mMat = new THREE.MeshStandardMaterial({
+          color: col, emissive: col, emissiveIntensity: 0.55,
+          roughness: 0.26, metalness: 0.80,
+        });
+        const mMesh = new THREE.Mesh(geoMan, mMat);
+        mMesh.position.set(xOff, 0, backFace * (RK.d / 2 - 0.055));
+        rack.add(mMesh);
+        // 快接頭（每 3 個 sled 一組，共 6 個）
+        for (let q = 0; q < 6; q++) {
+          const qy  = -(RK.h - 0.14) / 2 + (q + 0.5) * ((RK.h - 0.14) / 6);
+          const qFit = new THREE.Mesh(geoFit,
+            new THREE.MeshStandardMaterial({ color: col, roughness: 0.26, metalness: 0.84 }));
+          qFit.rotation.x = Math.PI / 2;
+          qFit.position.set(xOff, qy, backFace * (RK.d / 2 - 0.012));
+          rack.add(qFit);
+        }
+      });
 
       layer.add(rack);
       T.racks.push(rack);
