@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=9" />
+  <link rel="stylesheet" href="style.css?v=10" />
   <script type="importmap">
   {
     "imports": {
@@ -23,25 +23,29 @@
     <div class="header-inner">
       <div class="logo" onclick="showDashboard()" style="cursor:pointer">
         <span class="logo-icon">⟨ HVAC ⟩</span>
-        <span class="logo-text">空調計算資料庫</span>
+        <span class="logo-text" data-zh="空調計算資料庫" data-en="HVAC Calc DB">空調計算資料庫</span>
       </div>
       <nav id="main-nav">
-        <button class="nav-back" id="nav-back" onclick="showDashboard()">← 返回儀表板</button>
-        <button class="nav-btn" data-tab="airflow">風量計算</button>
-        <button class="nav-btn" data-tab="waterflow">水量計算</button>
-        <button class="nav-btn" data-tab="reference">公式參考</button>
-        <button class="nav-btn" data-tab="cleanroom">潔淨室</button>
-        <button class="nav-btn" data-tab="dcc">乾式盤管</button>
+        <button class="nav-back" id="nav-back" onclick="showDashboard()" data-zh="← 返回儀表板" data-en="← Dashboard">← 返回儀表板</button>
+        <button class="nav-btn" data-tab="airflow"    data-zh="風量計算" data-en="Air Flow">風量計算</button>
+        <button class="nav-btn" data-tab="waterflow"  data-zh="水量計算" data-en="Water Flow">水量計算</button>
+        <button class="nav-btn" data-tab="reference"  data-zh="公式參考" data-en="References">公式參考</button>
+        <button class="nav-btn" data-tab="cleanroom"  data-zh="潔淨室"   data-en="Clean Room">潔淨室</button>
+        <button class="nav-btn" data-tab="dcc"        data-zh="乾式盤管" data-en="Dry Coil">乾式盤管</button>
         <button class="nav-btn" data-tab="mau">MAU</button>
-        <button class="nav-btn" data-tab="datacenter">AI 資料中心</button>
+        <button class="nav-btn" data-tab="datacenter" data-zh="AI 資料中心" data-en="AI Data Center">AI 資料中心</button>
       </nav>
       <div class="status-bar">
         <span class="status-dot"></span>
-        <span class="status-text">系統就緒</span>
+        <span class="status-text" data-zh="系統就緒" data-en="System Ready">系統就緒</span>
       </div>
       <div class="theme-btns">
-        <button class="theme-btn" id="btn-dark"  onclick="setTheme('dark')">暗</button>
-        <button class="theme-btn" id="btn-light" onclick="setTheme('light')">亮</button>
+        <button class="theme-btn" id="btn-dark"  onclick="setTheme('dark')"  title="暗色模式">🌙</button>
+        <button class="theme-btn" id="btn-light" onclick="setTheme('light')" title="亮色模式">☀️</button>
+      </div>
+      <div class="lang-btns">
+        <button class="lang-btn" id="btn-zh" onclick="setLang('zh')">中</button>
+        <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
       </div>
     </div>
   </header>
@@ -51,14 +55,17 @@
     <section id="tab-dashboard" class="tab-section active">
       <div class="dashboard-hero">
         <div class="dh-eyebrow">HVAC · CLEANROOM · AI DATA CENTER</div>
-        <h1 class="dh-title">工程計算平台</h1>
-        <p class="dh-desc">整合傳統 HVAC 與新世代 AI 資料中心冷卻工具<br>從風量估算、潔淨室設計到 GPU 機房液冷模擬，一站完成</p>
+        <h1 class="dh-title" data-zh="工程計算平台" data-en="Engineering Calc Platform">工程計算平台</h1>
+        <p class="dh-desc"
+           data-zh-html="整合傳統 HVAC 與新世代 AI 資料中心冷卻工具<br>從風量估算、潔淨室設計到 GPU 機房液冷模擬，一站完成"
+           data-en-html="Integrated HVAC &amp; next-gen AI data center cooling tools<br>From airflow estimation to GPU room liquid cooling — all in one">
+          整合傳統 HVAC 與新世代 AI 資料中心冷卻工具<br>從風量估算、潔淨室設計到 GPU 機房液冷模擬，一站完成</p>
         <div class="dh-stats">
-          <div class="dh-stat"><span class="ds-num">7</span><span class="ds-lbl">計算分類</span></div>
+          <div class="dh-stat"><span class="ds-num">7</span><span class="ds-lbl" data-zh="計算分類" data-en="Categories">計算分類</span></div>
           <div class="dh-stat dh-divider"></div>
-          <div class="dh-stat"><span class="ds-num">25+</span><span class="ds-lbl">計算工具</span></div>
+          <div class="dh-stat"><span class="ds-num">25+</span><span class="ds-lbl" data-zh="計算工具" data-en="Tools">計算工具</span></div>
           <div class="dh-stat dh-divider"></div>
-          <div class="dh-stat"><span class="ds-num">3D</span><span class="ds-lbl">互動視覺化</span></div>
+          <div class="dh-stat"><span class="ds-num">3D</span><span class="ds-lbl" data-zh="互動視覺化" data-en="Interactive 3D">互動視覺化</span></div>
         </div>
       </div>
 
@@ -67,10 +74,10 @@
         <div class="db-card" onclick="showTab('airflow')" data-color="teal">
           <div class="dbc-topbar"></div>
           <div class="dbc-icon">💨</div>
-          <div class="dbc-badge">4 工具</div>
+          <div class="dbc-badge" data-zh="4 工具" data-en="4 Tools">4 工具</div>
           <div class="dbc-num">01</div>
-          <h3 class="dbc-title">風量計算</h3>
-          <p class="dbc-desc">換氣次數法、顯熱負荷法、新鮮空氣量需求、風管截面積選定</p>
+          <h3 class="dbc-title" data-zh="風量計算" data-en="Airflow Calc">風量計算</h3>
+          <p class="dbc-desc" data-zh="換氣次數法、顯熱負荷法、新鮮空氣量需求、風管截面積選定" data-en="ACH method, sensible load, fresh air req., duct cross-section">換氣次數法、顯熱負荷法、新鮮空氣量需求、風管截面積選定</p>
           <ul class="dbc-list">
             <li>AF-01 換氣次數法 Q = V × n</li>
             <li>AF-02 顯熱負荷法</li>
@@ -83,10 +90,10 @@
         <div class="db-card" onclick="showTab('waterflow')" data-color="blue">
           <div class="dbc-topbar"></div>
           <div class="dbc-icon">💧</div>
-          <div class="dbc-badge">4 工具</div>
+          <div class="dbc-badge" data-zh="4 工具" data-en="4 Tools">4 工具</div>
           <div class="dbc-num">02</div>
-          <h3 class="dbc-title">水量計算</h3>
-          <p class="dbc-desc">冷凍水 / 冷卻水流量、管道管徑選定、制冷量單位換算</p>
+          <h3 class="dbc-title" data-zh="水量計算" data-en="Water Flow Calc">水量計算</h3>
+          <p class="dbc-desc" data-zh="冷凍水 / 冷卻水流量、管道管徑選定、制冷量單位換算" data-en="CHW / CW flow rate, pipe sizing, refrigeration unit conversion">冷凍水 / 冷卻水流量、管道管徑選定、制冷量單位換算</p>
           <ul class="dbc-list">
             <li>WF-01 冷凍水流量</li>
             <li>WF-02 冷卻水流量 + COP</li>
@@ -99,10 +106,10 @@
         <div class="db-card" onclick="showTab('cleanroom')" data-color="purple">
           <div class="dbc-topbar"></div>
           <div class="dbc-icon">🏭</div>
-          <div class="dbc-badge">5 工具</div>
+          <div class="dbc-badge" data-zh="5 工具" data-en="5 Tools">5 工具</div>
           <div class="dbc-num">03</div>
-          <h3 class="dbc-title">潔淨室空調</h3>
-          <p class="dbc-desc">ISO 等級、熱負荷、DCC 選型、FFU 配置、回風道截面核算</p>
+          <h3 class="dbc-title" data-zh="潔淨室空調" data-en="Clean Room HVAC">潔淨室空調</h3>
+          <p class="dbc-desc" data-zh="ISO 等級、熱負荷、DCC 選型、FFU 配置、回風道截面核算" data-en="ISO class, heat load, DCC sizing, FFU layout, return duct sizing">ISO 等級、熱負荷、DCC 選型、FFU 配置、回風道截面核算</p>
           <ul class="dbc-list">
             <li>CR-01 空間 / 排氣參數</li>
             <li>CR-02 熱負荷分析</li>
@@ -115,10 +122,10 @@
         <div class="db-card" onclick="showTab('dcc')" data-color="amber">
           <div class="dbc-topbar"></div>
           <div class="dbc-icon">❄️</div>
-          <div class="dbc-badge">3 工具</div>
+          <div class="dbc-badge" data-zh="3 工具" data-en="3 Tools">3 工具</div>
           <div class="dbc-num">04</div>
-          <h3 class="dbc-title">乾式盤管 DCC</h3>
-          <p class="dbc-desc">顯熱冷卻量計算、盤管面積與面速度、CHW 需求 + 結露風險確認</p>
+          <h3 class="dbc-title" data-zh="乾式盤管 DCC" data-en="Dry Coil DCC">乾式盤管 DCC</h3>
+          <p class="dbc-desc" data-zh="顯熱冷卻量計算、盤管面積與面速度、CHW 需求 + 結露風險確認" data-en="Sensible cooling, coil face area/velocity, CHW demand + dew-point risk">顯熱冷卻量計算、盤管面積與面速度、CHW 需求 + 結露風險確認</p>
           <ul class="dbc-list">
             <li>DCC-01 顯熱冷卻量</li>
             <li>DCC-02 盤管面積 / 面速度</li>
@@ -130,10 +137,10 @@
         <div class="db-card" onclick="showTab('mau')" data-color="green">
           <div class="dbc-topbar"></div>
           <div class="dbc-icon">🌡️</div>
-          <div class="dbc-badge">7 工具</div>
+          <div class="dbc-badge" data-zh="7 工具" data-en="7 Tools">7 工具</div>
           <div class="dbc-num">05</div>
-          <h3 class="dbc-title">MAU 外調機</h3>
-          <p class="dbc-desc">設計目標設定、盤管處理排列、除濕量、冷凍水需求、焓濕圖、3D 模型</p>
+          <h3 class="dbc-title" data-zh="空調箱" data-en="AHU / MAU">空調箱</h3>
+          <p class="dbc-desc" data-zh="設計目標設定、盤管處理排列、除濕量、冷凍水需求、焓濕圖、3D 模型" data-en="Design targets, coil sequence, dehumid load, CHW demand, psychro chart, 3D model">設計目標設定、盤管處理排列、除濕量、冷凍水需求、焓濕圖、3D 模型</p>
           <ul class="dbc-list">
             <li>MAU-D 設計目標 + 容差設定</li>
             <li>MAU-06 盤管處理排列</li>
@@ -146,10 +153,10 @@
         <div class="db-card" onclick="showTab('reference')" data-color="gray">
           <div class="dbc-topbar"></div>
           <div class="dbc-icon">📋</div>
-          <div class="dbc-badge">6 表格</div>
+          <div class="dbc-badge" data-zh="6 表格" data-en="6 Tables">6 表格</div>
           <div class="dbc-num">06</div>
-          <h3 class="dbc-title">公式參考</h3>
-          <p class="dbc-desc">風量 / 水量公式、空氣 / 水物理常數、換氣次數建議值、單位換算</p>
+          <h3 class="dbc-title" data-zh="公式參考" data-en="References">公式參考</h3>
+          <p class="dbc-desc" data-zh="風量 / 水量公式、空氣 / 水物理常數、換氣次數建議值、單位換算" data-en="Airflow / water formulas, air / water constants, ACH guide values, unit conversion">風量 / 水量公式、空氣 / 水物理常數、換氣次數建議值、單位換算</p>
           <ul class="dbc-list">
             <li>風量 · 水量計算公式</li>
             <li>空氣 · 水物理常數</li>
@@ -164,7 +171,7 @@
           <div class="dbc-topbar"></div>
           <div class="dbc-ai-glow"></div>
           <div class="dbc-icon">🤖</div>
-          <div class="dbc-badge dbc-badge-ai">NEW · 4 工具</div>
+          <div class="dbc-badge dbc-badge-ai" data-zh="NEW · 4 工具" data-en="NEW · 4 Tools">NEW · 4 工具</div>
           <div class="dbc-num">07</div>
           <h3 class="dbc-title">AI Data Center計算書</h3>
           <p class="dbc-desc">GPU 機架熱密度分析、冷卻方式智能選型、PUE 效率計算、液冷 CHW 需求估算</p>
@@ -1722,7 +1729,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
   <script type="module" src="mau3d.js?v=4"></script>
 </body>
 </html>

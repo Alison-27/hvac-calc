@@ -1057,6 +1057,23 @@ document.addEventListener('keydown', e => {
 window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
 setTheme(localStorage.getItem('hvac-theme') || 'dark');
 
+// ── i18n Language Toggle ──────────────────────────────────────────
+function setLang(lang) {
+  document.documentElement.setAttribute('data-lang', lang);
+  document.querySelectorAll('[data-zh]').forEach(el => {
+    el.textContent = lang === 'zh' ? el.dataset.zh : (el.dataset.en || el.dataset.zh);
+  });
+  document.querySelectorAll('[data-zh-html]').forEach(el => {
+    el.innerHTML = lang === 'zh' ? el.dataset.zhHtml : (el.dataset.enHtml || el.dataset.zhHtml);
+  });
+  const btnZh = document.getElementById('btn-zh');
+  const btnEn = document.getElementById('btn-en');
+  if (btnZh) btnZh.classList.toggle('active', lang === 'zh');
+  if (btnEn) btnEn.classList.toggle('active', lang === 'en');
+  localStorage.setItem('hvac-lang', lang);
+}
+setLang(localStorage.getItem('hvac-lang') || 'zh');
+
 // ── AI Data Center Simulator ─────────────────────────────────
 
 // ADC-01: IT Load Estimation

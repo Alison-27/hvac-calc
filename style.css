@@ -211,6 +211,35 @@ nav {
   color: #000;
 }
 
+/* ── Lang Toggle ── */
+.lang-btns {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.lang-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.lang-btn:hover:not(.active) {
+  border-color: var(--border2);
+  color: var(--text-dim);
+}
+.lang-btn.active {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #000;
+}
+
 /* ── Main ── */
 main {
   max-width: 1600px;
