@@ -710,6 +710,7 @@ footer {
   display: block;
 }
 #mau3d-container canvas { display: block; width: 100% !important; height: 100% !important; }
+#mau3d-container canvas.mau3d-compass { width: 88px !important; height: 88px !important; }
 
 /* Parameter panel overlay */
 #mau3d-param-panel {

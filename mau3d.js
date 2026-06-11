@@ -547,6 +547,7 @@ function makeLabelSprite(text, hexColor) {
 function initCompass(container) {
   const SIZE = 88;
   compassEl = document.createElement('canvas');
+  compassEl.className = 'mau3d-compass';
   compassEl.style.cssText = `position:absolute;bottom:46px;right:8px;width:${SIZE}px;height:${SIZE}px;pointer-events:none;z-index:10;border-radius:6px;`;
   container.style.position = 'relative';
   container.appendChild(compassEl);
