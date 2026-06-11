@@ -1058,20 +1058,30 @@ window.addEventListener('mau3d-ready', () => window.mau3dRefresh?.(mauComps));
 setTheme(localStorage.getItem('hvac-theme') || 'dark');
 
 // ── i18n Language Toggle ──────────────────────────────────────────
+function _esc(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function initI18n() {
+  // Plain-text bilingual elements
+  document.querySelectorAll('[data-zh][data-en]').forEach(el => {
+    const zh = el.dataset.zh, en = el.dataset.en;
+    el.innerHTML = '<span class="txt-zh">' + _esc(zh) + '</span>' +
+                   '<span class="txt-en">' + _esc(en) + '</span>';
+  });
+  // HTML bilingual elements (contain <br> etc.)
+  document.querySelectorAll('[data-zh-html]').forEach(el => {
+    const zh = el.dataset.zhHtml, en = el.dataset.enHtml || el.dataset.zhHtml;
+    el.innerHTML = '<span class="txt-zh">' + zh + '</span>' +
+                   '<span class="txt-en">' + en + '</span>';
+  });
+}
 function setLang(lang) {
   document.documentElement.setAttribute('data-lang', lang);
-  document.querySelectorAll('[data-zh]').forEach(el => {
-    el.textContent = lang === 'zh' ? el.dataset.zh : (el.dataset.en || el.dataset.zh);
-  });
-  document.querySelectorAll('[data-zh-html]').forEach(el => {
-    el.innerHTML = lang === 'zh' ? el.dataset.zhHtml : (el.dataset.enHtml || el.dataset.zhHtml);
-  });
-  const btnZh = document.getElementById('btn-zh');
-  const btnEn = document.getElementById('btn-en');
-  if (btnZh) btnZh.classList.toggle('active', lang === 'zh');
-  if (btnEn) btnEn.classList.toggle('active', lang === 'en');
+  document.getElementById('btn-zh')?.classList.toggle('active', lang === 'zh');
+  document.getElementById('btn-en')?.classList.toggle('active', lang === 'en');
   localStorage.setItem('hvac-lang', lang);
 }
+initI18n();
 setLang(localStorage.getItem('hvac-lang') || 'zh');
 
 // ── AI Data Center Simulator ─────────────────────────────────

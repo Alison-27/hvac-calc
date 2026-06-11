@@ -211,6 +211,11 @@ nav {
   color: #000;
 }
 
+/* ── i18n visibility ── */
+.txt-en { display: none; }
+html[data-lang="en"] .txt-zh { display: none; }
+html[data-lang="en"] .txt-en { display: inline; }
+
 /* ── Lang Toggle ── */
 .lang-btns {
   display: flex;
