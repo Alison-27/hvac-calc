@@ -507,7 +507,7 @@ function initPsychroChart() {
     const x = PC.tx(T), y = PC.ty(w);
     sat += (T===0 ? `M${x},${y}` : ` L${x},${y}`);
   }
-  h += `<path d="${sat}" stroke="#00a882" stroke-width="2" fill="none" clip-path="url(#cc)"/>`;
+  h += `<path d="${sat}" stroke="#2a4a68" stroke-width="1.2" fill="none" clip-path="url(#cc)"/>`;
   h += `<rect x="${ml}" y="${mt}" width="${cw}" height="${ch}" fill="none" stroke="#243d5c" stroke-width="1"/>`;
   h += `<text x="${ml+cw/2}" y="${vh-5}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600">乾球溫度 (°C)</text>`;
   h += `<text x="${ml-48}" y="${mt+ch/2}" text-anchor="middle" fill="#6a8aa8" font-size="12" font-family="Rajdhani,sans-serif" font-weight="600" transform="rotate(-90,${ml-48},${mt+ch/2})">含濕量 ω (g/kg)</text>`;
@@ -549,29 +549,7 @@ function updatePsychroPoints(T1, RH1, T2, RH2) {
 
 function updatePsychroTarget() {
   const grp = document.getElementById('psychro-target');
-  if (!grp) return;
-  const get = id => parseFloat(document.getElementById(id)?.value);
-  const tgtT    = get('tgt-sa-t')     ?? 22;
-  const tgtTtol = get('tgt-sa-t-tol') ?? 1;
-  const tgtRH   = get('tgt-sa-rh')    ?? 50;
-  const tgtRHtol= get('tgt-sa-rh-tol')?? 5;
-
-  const corners = [
-    [tgtT - tgtTtol, tgtRH - tgtRHtol],
-    [tgtT + tgtTtol, tgtRH - tgtRHtol],
-    [tgtT + tgtTtol, tgtRH + tgtRHtol],
-    [tgtT - tgtTtol, tgtRH + tgtRHtol],
-  ].map(([T, RH]) => {
-    const wg = Math.max(0, Math.min(omegaFromTRH(T, Math.max(1, Math.min(100, RH))) * 1000, PC.wmax));
-    return { x: PC.tx(T), y: PC.ty(wg) };
-  });
-
-  const pts = corners.map(c => `${c.x},${c.y}`).join(' ');
-  const lx = corners[3].x + 3;
-  const ly = corners[2].y - 4;
-  grp.innerHTML =
-    `<polygon points="${pts}" fill="rgba(0,212,170,.05)" stroke="#00d4aa" stroke-width="1.2" stroke-dasharray="4,3" clip-path="url(#cc)"/>` +
-    `<text x="${lx}" y="${ly}" fill="#00d4aa" font-size="9" font-family="Share Tech Mono,monospace" opacity=".7">SA Target</text>`;
+  if (grp) grp.innerHTML = '';
   syncPsychroModal();
 }
 
@@ -999,10 +977,11 @@ function updatePsychroProcess(states) {
   pts.forEach((p, i) => {
     const isOA = i === 0, isSA = i === pts.length - 1;
     const col = isOA ? '#f0a430' : isSA ? '#00d4aa' : COLS[i % COLS.length];
-    const lx = p.px > PC.ml + PC.cw - 28 ? p.px - 22 : p.px + 8;
+    const num = i + 1;
+    const lx = p.px > PC.ml + PC.cw - 28 ? p.px - 16 : p.px + 8;
     const ly = p.py > PC.mt + 14 ? p.py - 7 : p.py + 14;
     h += `<circle cx="${p.px}" cy="${p.py}" r="${isOA||isSA ? 6 : 5}" fill="${col}" stroke="#080d18" stroke-width="1.5" clip-path="url(#cc)" onclick="clickPsychroPoint(${i})" style="cursor:pointer"/>`;
-    h += `<text x="${lx}" y="${ly}" fill="${col}" font-size="9.5" font-family="Share Tech Mono,monospace" font-weight="bold">${p.id}</text>`;
+    h += `<text x="${lx}" y="${ly}" fill="${col}" font-size="10" font-family="Share Tech Mono,monospace" font-weight="bold">${num}</text>`;
   });
 
   grp.innerHTML = h;
