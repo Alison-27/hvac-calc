@@ -752,7 +752,6 @@ function drawPsychroTooltip() {
 const COIL_TYPES = [
   { key:'chw',   label:'CHW 冰水盤管' },
   { key:'hhw',   label:'HHW 熱水盤管' },
-  { key:'dx',    label:'DX 直膨' },
   { key:'pre',   label:'預冷盤管' },
   { key:'rh',    label:'後熱盤管 (RH)' },
   { key:'humid', label:'加濕段' },

@@ -66,6 +66,7 @@ function put(g,geo,mat,x,y,z){
 // ── Scene state ───────────────────────────────────────────────────
 let scene, camera, renderer, controls, raycaster;
 let ductGroup=null, extraGroup=null;
+let compassRenderer=null, compassScene=null, compassCam=null, compassEl=null;
 const compGroups = [];   // { group, id, key, cx }
 const paramStore  = {};
 const doorHinges  = [];  // hinges for door animation
@@ -173,8 +174,15 @@ function init() {
 
     controls.update();
     renderer.render(scene, camera);
+
+    // Compass gizmo
+    if (compassRenderer && compassScene && compassCam) {
+      compassCam.quaternion.copy(camera.quaternion);
+      compassRenderer.render(compassScene, compassCam);
+    }
   })();
 
+  initCompass(container);
   window.dispatchEvent(new Event('mau3d-ready'));
 }
 
@@ -521,6 +529,79 @@ function addLabel(group, text, x, y, z, hexColor) {
   spr.position.set(x,y,z); spr.scale.set(0.9,0.22,1); group.add(spr);
 }
 
+// ── Orientation Compass ───────────────────────────────────────────
+function makeLabelSprite(text, hexColor) {
+  const cv = document.createElement('canvas'); cv.width = 72; cv.height = 44;
+  const ctx = cv.getContext('2d');
+  ctx.font = 'bold 24px Arial, sans-serif';
+  ctx.fillStyle = hexColor;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, 36, 22);
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(cv), transparent: true, depthTest: false
+  }));
+  spr.scale.set(0.50, 0.31, 1);
+  return spr;
+}
+
+function initCompass(container) {
+  const SIZE = 88;
+  compassEl = document.createElement('canvas');
+  compassEl.style.cssText = `position:absolute;bottom:46px;right:8px;width:${SIZE}px;height:${SIZE}px;pointer-events:none;z-index:10;border-radius:6px;`;
+  container.style.position = 'relative';
+  container.appendChild(compassEl);
+
+  compassRenderer = new THREE.WebGLRenderer({ canvas: compassEl, antialias: true, alpha: true });
+  compassRenderer.setSize(SIZE, SIZE);
+  compassRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  compassScene = new THREE.Scene();
+  compassCam = new THREE.PerspectiveCamera(50, 1, 0.1, 10);
+  compassCam.position.set(0, 0, 2.8);
+  compassScene.add(new THREE.AmbientLight(0xffffff, 4.0));
+
+  // Axes: X=右/左 (red), Y=上/下 (green), Z=前/後 (teal)
+  const AXES = [
+    { dir:[1,0,0], col:0xe05050, near:'右', far:'左' },
+    { dir:[0,1,0], col:0x40d860, near:'上', far:'下' },
+    { dir:[0,0,1], col:0x30a8e0, near:'前', far:'後' },
+  ];
+  AXES.forEach(({ dir, col, near, far }) => {
+    const hexFull = '#' + col.toString(16).padStart(6,'0');
+    const dimCol  = (col >> 1) & 0x7f7f7f;
+    const hexDim  = '#' + dimCol.toString(16).padStart(6,'0');
+
+    const posArrow = new THREE.ArrowHelper(
+      new THREE.Vector3(...dir), new THREE.Vector3(0,0,0), 0.74, col, 0.22, 0.10
+    );
+    posArrow.line.material.depthTest = false;
+    posArrow.cone.material.depthTest = false;
+    compassScene.add(posArrow);
+
+    const posLabel = makeLabelSprite(near, hexFull);
+    posLabel.position.set(dir[0]*1.10, dir[1]*1.10, dir[2]*1.10);
+    compassScene.add(posLabel);
+
+    const negDir = dir.map(v => -v);
+    const negArrow = new THREE.ArrowHelper(
+      new THREE.Vector3(...negDir), new THREE.Vector3(0,0,0), 0.30, dimCol, 0.001, 0.001
+    );
+    negArrow.line.material.depthTest = false;
+    compassScene.add(negArrow);
+
+    const negLabel = makeLabelSprite(far, hexDim);
+    negLabel.position.set(negDir[0]*0.56, negDir[1]*0.56, negDir[2]*0.56);
+    compassScene.add(negLabel);
+  });
+
+  // Center sphere
+  const dot = new THREE.Mesh(
+    new THREE.SphereGeometry(0.07, 12, 8),
+    new THREE.MeshBasicMaterial({ color: 0xd0d8e0, depthTest: false })
+  );
+  compassScene.add(dot);
+}
+
 // ── Raycasting ────────────────────────────────────────────────────
 function onCanvasClick(event) {
   const rect=renderer.domElement.getBoundingClientRect();
@@ -681,7 +762,9 @@ window.mau3dExpand = function() {
   if (!modal||!wrap) return;
   modal.classList.add('active');
   isModalOpen = true;
+  wrap.style.position = 'relative';
   wrap.appendChild(renderer.domElement);
+  if (compassEl) wrap.appendChild(compassEl);
   if (info) info.innerHTML = selectedId!==null
     ? buildPanelHTML(selectedId)
     : '<div class="m3d-info-empty">點選零件查看參數</div>';
@@ -699,6 +782,7 @@ window.mau3dCollapse = function() {
   modal.classList.remove('active');
   isModalOpen = false;
   container.appendChild(renderer.domElement);
+  if (compassEl) container.appendChild(compassEl);
   requestAnimationFrame(()=>{
     const rw=container.clientWidth, rh=container.clientHeight;
     if (!rw||!rh) return;
