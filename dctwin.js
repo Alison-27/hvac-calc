@@ -408,10 +408,29 @@ function buildRacks(parent, count) {
   const geoBody   = new THREE.BoxGeometry(RK.w, RK.h, RK.d);
   const geoFace   = new THREE.BoxGeometry(RK.w - 0.03, RK.h - 0.06, 0.030);
   const geoLedBar = new THREE.BoxGeometry(0.026, RK.h - 0.14, 0.013);  // 全高 NVIDIA 綠條
-  const geoTray   = new THREE.BoxGeometry(RK.w - 0.10, 0.110, RK.d - 0.22);
   const geoAccent = new THREE.BoxGeometry(RK.w - 0.04, 0.014, 0.022);  // 頂/底 綠色邊框
-  const MODS = 18;                                    // 代表 36 個 NVL2 sled（每格=2U）
+  const MODS  = 18;                                   // 18 NVL2 模組（每格代表 2× NVL2）
   const modH  = (RK.h - 0.12) / MODS;
+
+  // ── 內部構造共用幾何體 ─────────────────────────────
+  const sledH  = modH;
+  const geoSled    = new THREE.BoxGeometry(RK.w - 0.082, sledH - 0.014, RK.d - 0.18);
+  const geoGPUblk  = new THREE.BoxGeometry(0.162, sledH - 0.028, 0.220);  // B200 GPU 晶片塊
+  const geoCPUblk  = new THREE.BoxGeometry(0.086, sledH - 0.028, 0.132);  // Grace CPU 晶片
+  const geoPlate   = new THREE.BoxGeometry(RK.w - 0.11, 0.007, RK.d - 0.22);  // 液冷冷板
+  const geoRailInt = new THREE.BoxGeometry(0.022, RK.h - 0.08, 0.022);   // 垂直導軌
+  const geoBusBar  = new THREE.BoxGeometry(0.015, RK.h - 0.12, 0.010);   // 電源匯流排
+  const geoNVSW    = new THREE.BoxGeometry(RK.w - 0.09, 0.058, RK.d - 0.22);  // NVLink Spine Switch
+
+  // 內部元件共用材質（一次建立、全機櫃共用）
+  const gpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x0b1a10, roughness: 0.24, metalness: 0.76, emissive: 0x003d18, emissiveIntensity: 1.0 });
+  const cpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x091620, roughness: 0.26, metalness: 0.74, emissive: 0x001845, emissiveIntensity: 0.85 });
+  const plateMat   = new THREE.MeshStandardMaterial({ color: 0x3e5870, roughness: 0.15, metalness: 0.95 });
+  const sledMatA   = new THREE.MeshStandardMaterial({ color: 0x0f1d26, roughness: 0.44, metalness: 0.70 });
+  const sledMatB   = new THREE.MeshStandardMaterial({ color: 0x0d1921, roughness: 0.44, metalness: 0.70 });
+  const railIntMat = new THREE.MeshStandardMaterial({ color: 0x243244, roughness: 0.58, metalness: 0.68 });
+  const busIntMat  = new THREE.MeshStandardMaterial({ color: 0x9c5612, roughness: 0.32, metalness: 0.86, emissive: 0x3c1a00, emissiveIntensity: 0.32 });
+  const nvswMat    = new THREE.MeshStandardMaterial({ color: 0x0a1528, emissive: 0x0046b0, emissiveIntensity: 0.70, roughness: 0.30, metalness: 0.74 });
   const geoDiv = new THREE.BoxGeometry(RK.w - 0.08, 0.005, 0.016);     // 槽位分隔線
   const geoDot = new THREE.BoxGeometry(0.012, 0.014, 0.010);           // 狀態 LED 點
   const geoMan = new THREE.CylinderGeometry(0.021, 0.021, RK.h - 0.14, 9);  // 後側液冷歧管
@@ -449,19 +468,55 @@ function buildRacks(parent, count) {
         rack.add(acc);
       });
 
-      // ── 8 塊 Grace Blackwell 計算板（爆炸視圖用）
+      // ── 固定內部骨架（不隨爆炸移動）
+      // 左右垂直導軌
+      [-RK.w / 2 + 0.038, RK.w / 2 - 0.038].forEach(xR => {
+        const rail = new THREE.Mesh(geoRailInt, railIntMat);
+        rail.position.set(xR, 0, 0);
+        rack.add(rail);
+      });
+      // 銅製電源匯流排（左內側，縱向）
+      const bus = new THREE.Mesh(geoBusBar, busIntMat);
+      bus.position.set(-RK.w / 2 + 0.055, 0, -RK.d / 4);
+      rack.add(bus);
+      // NVLink Spine Switch（頂部，藍色發光）
+      const nvsw = new THREE.Mesh(geoNVSW, nvswMat);
+      nvsw.position.y = RK.h / 2 - 0.046;
+      rack.add(nvsw);
+
+      // ── 18 × NVL2 計算模組（爆炸視圖展開）
       const trays = new THREE.Group();
-      for (let t = 0; t < 8; t++) {
-        const tm = new THREE.MeshStandardMaterial({
-          color: 0x0d1a1e, roughness: 0.40, metalness: 0.68,
-          emissive: 0x002d10, emissiveIntensity: 0.70,
+      for (let s = 0; s < MODS; s++) {
+        const sled = new THREE.Group();
+        const yC = -RK.h / 2 + 0.06 + s * sledH + sledH / 2;
+        sled.position.y = yC;
+        sled.userData.baseY  = yC;
+        sled.userData.spread = (s - (MODS - 1) / 2) * 0.148;
+
+        // 計算板底座（奇偶色交替，增加視覺層次）
+        sled.add(new THREE.Mesh(geoSled, s % 2 === 0 ? sledMatA : sledMatB));
+
+        // 2× B200 GPU 晶片塊（綠色發光）
+        [-0.148, 0.148].forEach(xG => {
+          const gpu = new THREE.Mesh(geoGPUblk, gpuBlkMat);
+          gpu.position.set(xG, 0, 0.025);
+          sled.add(gpu);
         });
-        const tray = new THREE.Mesh(geoTray, tm);
-        tray.position.y = -RK.h / 2 + 0.28 + t * 0.22;
-        tray.userData.baseY  = tray.position.y;
-        tray.userData.spread = (t - 3.5) * 0.18;
-        trays.add(tray);
+
+        // 1× Grace CPU 晶片（藍色發光，偏後）
+        const cpu = new THREE.Mesh(geoCPUblk, cpuBlkMat);
+        cpu.position.set(0, 0, -0.11);
+        sled.add(cpu);
+
+        // 液冷冷板（銀色金屬，平鋪蓋在晶片上方）
+        const plate = new THREE.Mesh(geoPlate, plateMat);
+        plate.position.y = sledH / 2 - 0.008;
+        sled.add(plate);
+
+        trays.add(sled);
       }
+      // 讓 GPU 晶片材質隨熱模式變色
+      T.rackHeatMats.push(gpuBlkMat);
       rack.add(trays);
       rack.userData.trays = trays;
 
