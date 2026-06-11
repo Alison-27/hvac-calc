@@ -180,6 +180,7 @@ function injectDOM() {
         <button class="dt-tool" data-act="cdu" data-view><span class="ico">🌀</span>CDU 特寫</button>
         <button class="dt-tool" data-act="pipes" data-view><span class="ico">🛠️</span>頂部管路</button>
         <button class="dt-tool" data-act="sim"><span class="ico">🧮</span>模擬計算</button>
+        <button class="dt-tool" data-act="airflow"><span class="ico">🌬️</span>氣流向量</button>
         <button class="dt-tool" data-act="doors"><span class="ico">🚪</span>機櫃開門</button>
         <button class="dt-tool" data-act="explode"><span class="ico">💥</span>爆炸視圖</button>
       </div>
@@ -251,6 +252,7 @@ const T = {           // three.js 執行期物件
   supplyMats: [], returnMats: [], rackHeatMats: [],
   plantSup: [], plantRet: [],
   camTween: null, activeScene: 'white', clock: null, reduced: false,
+  airflowGroup: null, _airflow: false, airArrows: [],
 };
 
 const PAL = {
@@ -313,6 +315,10 @@ async function initThree() {
   T.groups.grey.visible = false;
   T.groups.plant.visible = false;
   T.scene.add(T.groups.white, T.groups.grey, T.groups.plant);
+
+  T.airflowGroup = buildAirflowVectors();
+  T.airflowGroup.visible = false;
+  T.scene.add(T.airflowGroup);
 
   T.clock = new THREE.Clock();
   new ResizeObserver(onResize).observe(wrap);
@@ -682,6 +688,80 @@ function paintThermals() {
   });
 }
 
+/* ── 氣流向量場 ──────────────────────────────────── */
+function buildAirflowVectors() {
+  const g = new THREE.Group();
+  T.airArrows = [];
+
+  const rows = [Math.ceil(S.racks / 2), Math.floor(S.racks / 2)];
+  const maxN = Math.max(rows[0], rows[1]);
+  const xSpan = (maxN - 1) * RK.pitch;
+
+  // ── 供冷（冷通道）：藍色向下箭頭 (FFU 出風口) ──
+  const coldDir = new THREE.Vector3(0, -1, 0);
+  const coldCol = new THREE.Color('#35c8ff');
+  const xStep = RK.pitch;
+  for (let xi = 0; xi < maxN; xi++) {
+    const x = -(maxN - 1) * RK.pitch / 2 + xi * xStep;
+    for (let yi = 0; yi < 3; yi++) {
+      const y = RK.pipeY + 0.5 - yi * 0.55;  // 從高到低三層
+      const len = 0.38 - yi * 0.06;
+      const arr = new THREE.ArrowHelper(coldDir, new THREE.Vector3(x, y, 0), len, coldCol, len * 0.38, len * 0.22);
+      arr.userData.baseOpacity = 0.55 + yi * 0.1;
+      arr.userData.phase = xi * 0.42 + yi * 0.9;
+      arr.line.material.transparent = true;
+      arr.cone.material.transparent = true;
+      g.add(arr);
+      T.airArrows.push(arr);
+    }
+  }
+
+  // ── 熱排氣（熱通道）：紅橙色向上箭頭，兩側機背 ──
+  const hotCol  = new THREE.Color('#ff6a2e');
+  const hotCol2 = new THREE.Color('#ff5a64');
+  [-RK.rowZ, RK.rowZ].forEach((z, ri) => {
+    const hotDir = new THREE.Vector3(0, 1, ri === 0 ? -0.18 : 0.18).normalize();
+    const zOff   = ri === 0 ? -0.55 : 0.55;
+    for (let xi = 0; xi < rows[ri]; xi++) {
+      const x = -(rows[ri] - 1) * RK.pitch / 2 + xi * xStep;
+      for (let yi = 0; yi < 3; yi++) {
+        const y = 0.4 + yi * 0.68;
+        const len = 0.32 + yi * 0.05;
+        const col = yi === 2 ? hotCol2 : hotCol;
+        const arr = new THREE.ArrowHelper(hotDir, new THREE.Vector3(x, y, z + zOff), len, col, len * 0.42, len * 0.26);
+        arr.userData.baseOpacity = 0.5 + yi * 0.08;
+        arr.userData.phase = xi * 0.55 + yi * 0.7 + ri * 1.3;
+        arr.line.material.transparent = true;
+        arr.cone.material.transparent = true;
+        g.add(arr);
+        T.airArrows.push(arr);
+      }
+    }
+  });
+
+  // ── 冷通道側向引流：淺藍，水平射入機架前門 ──
+  const intakeCol = new THREE.Color('#82d8ff');
+  [-1, 1].forEach(side => {
+    const intakeDir = new THREE.Vector3(0, 0, side * 1).normalize();
+    for (let xi = 0; xi < maxN; xi++) {
+      const x = -(maxN - 1) * RK.pitch / 2 + xi * xStep;
+      const arr = new THREE.ArrowHelper(
+        intakeDir,
+        new THREE.Vector3(x, 1.1, side * -0.55),
+        0.5, intakeCol, 0.2, 0.13
+      );
+      arr.userData.baseOpacity = 0.4;
+      arr.userData.phase = xi * 0.35 + side;
+      arr.line.material.transparent = true;
+      arr.cone.material.transparent = true;
+      g.add(arr);
+      T.airArrows.push(arr);
+    }
+  });
+
+  return g;
+}
+
 /* ── 點擊選取 → 設備詳情 ────────────────────────── */
 const ray = { caster: null, v: null };
 function onPick(e) {
@@ -824,9 +904,20 @@ function animate() {
 
   // 冷卻液脈動（減少動態偏好時停用）
   if (!T.reduced && T.clock) {
-    const s = 0.35 + Math.sin(T.clock.getElapsedTime() * 2.2) * 0.12;
+    const t = T.clock.getElapsedTime();
+    const s = 0.35 + Math.sin(t * 2.2) * 0.12;
     [...T.supplyMats, ...T.plantSup].forEach(m => m.emissiveIntensity = s);
     [...T.returnMats, ...T.plantRet].forEach(m => m.emissiveIntensity = s + 0.08);
+
+    // 氣流向量脈動
+    if (T._airflow && T.airArrows.length) {
+      T.airArrows.forEach(arr => {
+        const op = arr.userData.baseOpacity *
+          (0.55 + 0.45 * Math.sin(t * 2.8 + arr.userData.phase));
+        arr.line.material.opacity = op;
+        arr.cone.material.opacity = op;
+      });
+    }
   }
 
   T.controls.update();
@@ -888,6 +979,10 @@ function bindUI(sec) {
       p.hidden = !p.hidden;
       document.getElementById('dt-detail').hidden = true;
       b.classList.toggle('active', !p.hidden);
+    } else if (act === 'airflow') {
+      T._airflow = !T._airflow;
+      b.classList.toggle('active', T._airflow);
+      if (T.airflowGroup) T.airflowGroup.visible = T._airflow;
     } else if (act === 'doors') {
       T._doors = !T._doors;
       b.classList.toggle('active', T._doors);
@@ -919,8 +1014,17 @@ function bindUI(sec) {
       r.value = n.value = get();
       compute();
       refreshUI();
-      if (rebuild && T.groups.white) buildRacks(T.groups.white, S.racks);
-      else paintThermals();
+      if (rebuild && T.groups.white) {
+        buildRacks(T.groups.white, S.racks);
+        // 重建氣流向量以匹配新機櫃數
+        if (T.airflowGroup) {
+          T.scene.remove(T.airflowGroup);
+          T.airflowGroup.traverse(o => { o.geometry?.dispose(); });
+        }
+        T.airflowGroup = buildAirflowVectors();
+        T.airflowGroup.visible = T._airflow;
+        T.scene.add(T.airflowGroup);
+      } else paintThermals();
     };
     r.addEventListener('input', () => apply(r.value));
     n.addEventListener('change', () => apply(n.value));
