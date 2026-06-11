@@ -252,7 +252,7 @@ const T = {           // three.js 執行期物件
   supplyMats: [], returnMats: [], rackHeatMats: [],
   plantSup: [], plantRet: [],
   camTween: null, activeScene: 'white', clock: null, reduced: false,
-  airflowGroup: null, _airflow: false, airArrows: [],
+  airflowGroup: null, _airflow: true, airArrows: [],
 };
 
 const PAL = {
@@ -317,7 +317,7 @@ async function initThree() {
   T.scene.add(T.groups.white, T.groups.grey, T.groups.plant);
 
   T.airflowGroup = buildAirflowVectors();
-  T.airflowGroup.visible = false;
+  T.airflowGroup.visible = true;
   T.scene.add(T.airflowGroup);
 
   T.clock = new THREE.Clock();
@@ -960,6 +960,7 @@ function bindUI(sec) {
     if (b.dataset.close === 'dt-sim') sec.querySelector('[data-act="sim"]').classList.remove('active');
   }));
   sec.querySelector('[data-act="metrics"]').classList.add('active');
+  sec.querySelector('[data-act="airflow"]').classList.add('active');
 
   // 工具列
   sec.querySelectorAll('.dt-tool').forEach(b => b.addEventListener('click', () => {
