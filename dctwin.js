@@ -289,7 +289,7 @@ async function initThree() {
   T.scene.fog = new THREE.Fog(PAL.bg, 20, 52);
 
   T.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
-  T.camera.position.set(11, 8, 12);
+  T.camera.position.set(8.5, 5, 10.5);
 
   T.controls = new OrbitControls(T.camera, T.renderer.domElement);
   T.controls.target.set(0, 1.2, 0);
@@ -300,13 +300,19 @@ async function initThree() {
   T.controls.maxDistance = 40;
 
   // 燈光
-  T.scene.add(new THREE.AmbientLight(0x90aacd, 0.55));
-  const key = new THREE.DirectionalLight(0xcfe4ff, 0.9);
+  T.scene.add(new THREE.AmbientLight(0x9fb2cd, 0.70));
+  const key = new THREE.DirectionalLight(0xcfe4ff, 1.0);
   key.position.set(8, 14, 6);
   T.scene.add(key);
-  const fillG = new THREE.PointLight(0x76b900, 0.5, 30);
+  const fillG = new THREE.PointLight(0x76b900, 0.4, 30);
   fillG.position.set(0, 5, 0);
   T.scene.add(fillG);
+  // 暖色補光：打亮機櫃正面（前門朝外，冷通道側 ±z）
+  [-5.5, 5.5].forEach(zL => {
+    const warm = new THREE.PointLight(0xffe2ae, 0.85, 26);
+    warm.position.set(0, 2.6, zL);
+    T.scene.add(warm);
+  });
 
   // 三個場景群組
   T.groups.white = buildWhiteSpace();
