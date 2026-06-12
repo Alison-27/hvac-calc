@@ -61,7 +61,7 @@
            data-en-html="Integrated HVAC &amp; next-gen AI data center cooling tools<br>From airflow estimation to GPU room liquid cooling — all in one">
           整合傳統 HVAC 與新世代 AI 資料中心冷卻工具<br>從風量估算、潔淨室設計到 GPU 機房液冷模擬，一站完成</p>
         <div class="dh-stats">
-          <div class="dh-stat"><span class="ds-num">7</span><span class="ds-lbl" data-zh="計算分類" data-en="Categories">計算分類</span></div>
+          <div class="dh-stat"><span class="ds-num">8</span><span class="ds-lbl" data-zh="計算分類" data-en="Categories">計算分類</span></div>
           <div class="dh-stat dh-divider"></div>
           <div class="dh-stat"><span class="ds-num">25+</span><span class="ds-lbl" data-zh="計算工具" data-en="Tools">計算工具</span></div>
           <div class="dh-stat dh-divider"></div>
@@ -166,14 +166,32 @@
           <div class="dbc-arrow">→</div>
         </div>
 
-        <!-- AI DATA CENTER CARD -->
+        <!-- AI DATA CENTER CARD — dctwin 3D 數位孿生入口 -->
+        <div class="db-card db-card-ai dt-dash-entry" onclick="showTab('dctwin')" data-color="ai">
+          <div class="dbc-topbar"></div>
+          <div class="dbc-ai-glow"></div>
+          <div class="dbc-icon">🟩</div>
+          <div class="dbc-badge dbc-badge-ai" data-zh="3D LIVE · 數位孿生" data-en="3D LIVE · Digital Twin">3D LIVE · 數位孿生</div>
+          <div class="dbc-num">07</div>
+          <h3 class="dbc-title" data-zh="AI Data Center 數位孿生" data-en="AI Data Center Digital Twin">AI Data Center 數位孿生</h3>
+          <p class="dbc-desc" data-zh="NVIDIA GB200 NVL72 液冷機房即時 3D 模擬，含灰區供電與冰水動力中心場景" data-en="NVIDIA GB200 NVL72 liquid-cooled 3D live simulation with grey space and chiller plant">NVIDIA GB200 NVL72 液冷機房即時 3D 模擬，含灰區供電與冰水動力中心場景</p>
+          <ul class="dbc-list">
+            <li data-zh="GB200 液冷機房（White Space）3D 場景" data-en="GB200 Liquid-Cooled White Space 3D">GB200 液冷機房（White Space）3D 場景</li>
+            <li data-zh="2N 關鍵機電灰區（UPS · MSB）" data-en="2N Grey Space (UPS · MSB)">2N 關鍵機電灰區（UPS · MSB）</li>
+            <li data-zh="冰水動力中心（冰機 · 泵組）" data-en="Chiller Plant (Chiller · Pumps)">冰水動力中心（冰機 · 泵組）</li>
+            <li data-zh="What-if 模擬：PUE · 管路熱度即時連動" data-en="What-if: PUE · pipe thermals live sync">What-if 模擬：PUE · 管路熱度即時連動</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+        <!-- AI DATA CENTER 計算書 CARD -->
         <div class="db-card db-card-ai" onclick="showTab('datacenter')" data-color="ai">
           <div class="dbc-topbar"></div>
           <div class="dbc-ai-glow"></div>
           <div class="dbc-icon">🤖</div>
-          <div class="dbc-badge dbc-badge-ai" data-zh="NEW · 5 工具" data-en="NEW · 5 Tools">NEW · 5 工具</div>
-          <div class="dbc-num">07</div>
-          <h3 class="dbc-title" data-zh="AI Data Center 計算書" data-en="AI Data Center Calc">AI Data Center計算書</h3>
+          <div class="dbc-badge dbc-badge-ai" data-zh="5 工具" data-en="5 Tools">5 工具</div>
+          <div class="dbc-num">08</div>
+          <h3 class="dbc-title" data-zh="AI Data Center 計算書" data-en="AI DC Calc Report">AI Data Center 計算書</h3>
           <p class="dbc-desc" data-zh="GPU 機架熱密度分析、冷卻方式智能選型、PUE 效率計算、液冷 CHW 需求估算" data-en="GPU rack heat density, intelligent cooling selection, PUE calculation, liquid CHW demand">GPU 機架熱密度分析、冷卻方式智能選型、PUE 效率計算、液冷 CHW 需求估算</p>
           <ul class="dbc-list">
             <li data-zh="ADC-01 IT 熱負荷估算" data-en="ADC-01 IT Load Estimation">ADC-01 IT 熱負荷估算</li>
@@ -1757,5 +1775,7 @@
 
   <script src="app.js?v=17"></script>
   <script type="module" src="mau3d.js?v=6"></script>
+  <link rel="stylesheet" href="dctwin.css?v=6">
+  <script type="module" src="dctwin.js?v=6"></script>
 </body>
 </html>
