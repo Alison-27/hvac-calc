@@ -435,9 +435,9 @@ function buildRacks(parent, count) {
   // 內部元件共用材質（一次建立、全機櫃共用）
   const gpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x0c0e0c, roughness: 0.55, metalness: 0.50, emissive: 0x0a0a00, emissiveIntensity: 0.10 });
   const cpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x0c0c14, roughness: 0.50, metalness: 0.55, emissive: 0x000410, emissiveIntensity: 0.12 });
-  const plateMat   = new THREE.MeshStandardMaterial({ color: 0xc89840, roughness: 0.08, metalness: 0.92 });
-  const sledMatA   = new THREE.MeshStandardMaterial({ color: 0xb07828, roughness: 0.12, metalness: 0.88 });
-  const sledMatB   = new THREE.MeshStandardMaterial({ color: 0xa87020, roughness: 0.14, metalness: 0.88 });
+  const plateMat   = new THREE.MeshStandardMaterial({ color: 0xc89840, roughness: 0.08, metalness: 0.92, emissive: 0x6b5326, emissiveIntensity: 0.50 });
+  const sledMatA   = new THREE.MeshStandardMaterial({ color: 0xb07828, roughness: 0.12, metalness: 0.88, emissive: 0x593c14, emissiveIntensity: 0.50 });
+  const sledMatB   = new THREE.MeshStandardMaterial({ color: 0xa87020, roughness: 0.14, metalness: 0.88, emissive: 0x523810, emissiveIntensity: 0.50 });
   const railIntMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1c, roughness: 0.60, metalness: 0.72 });
   const busIntMat  = new THREE.MeshStandardMaterial({ color: 0xa05818, roughness: 0.28, metalness: 0.88, emissive: 0x3a1800, emissiveIntensity: 0.28 });
   const nvswMat    = new THREE.MeshStandardMaterial({ color: 0xb08030, emissive: 0x402800, emissiveIntensity: 0.30, roughness: 0.10, metalness: 0.90 });
@@ -445,9 +445,9 @@ function buildRacks(parent, count) {
   const geoFit = new THREE.CylinderGeometry(0.015, 0.015, 0.046, 8);        // 快接頭
 
   // 共用材質（非熱敏感，建立一次）— 香檳金 / 近黑，比照官網照片
-  const goldA        = new THREE.MeshStandardMaterial({ color: 0xc9a55a, roughness: 0.22, metalness: 0.92 });
-  const goldB        = new THREE.MeshStandardMaterial({ color: 0xb8934a, roughness: 0.26, metalness: 0.92 });
-  const goldShelfMat = new THREE.MeshStandardMaterial({ color: 0xcfa95e, roughness: 0.18, metalness: 0.95 });
+  const goldA        = new THREE.MeshStandardMaterial({ color: 0xc9a55a, roughness: 0.22, metalness: 0.92, emissive: 0x6b5326, emissiveIntensity: 0.55 });
+  const goldB        = new THREE.MeshStandardMaterial({ color: 0xb8934a, roughness: 0.26, metalness: 0.92, emissive: 0x5c4720, emissiveIntensity: 0.55 });
+  const goldShelfMat = new THREE.MeshStandardMaterial({ color: 0xcfa95e, roughness: 0.18, metalness: 0.95, emissive: 0x70582a, emissiveIntensity: 0.60 });
   const fanSqMat     = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.78, metalness: 0.35 });
   const connMat      = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.55, metalness: 0.45 });
 
