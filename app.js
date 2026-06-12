@@ -1,4 +1,4 @@
-// ── Dashboard Navigation ─────────────────────────────────────
+﻿// ── Dashboard Navigation ─────────────────────────────────────
 function showDashboard() {
   document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
   const dash = document.getElementById('tab-dashboard');
@@ -1536,3 +1536,347 @@ function printADCReport() {
   genADCReport();
   setTimeout(() => window.print(), 200);
 }
+
+// ════════════════════════════════════════════════════════════
+// 公式換算器 (Unit Converter) — 卡片 06
+// ════════════════════════════════════════════════════════════
+const CONV = [
+  { icon: '🧊', name: '負荷/流量換算', special: 'loadflow',
+    units: [['kW', 1], ['RT (冷凍噸)', 3.517], ['m³/h (CHW ΔT5°C)', 5.8139], ['L/min (CHW ΔT5°C)', 0.096898], ['GPM (CHW ΔT5°C)', 0.36673]],
+    rot: ['1 RT ≈ 2.4 GPM (ΔT 5.56°C)', '1 kW ≈ 0.172 m³/h CHW (ΔT5°C)'] },
+  { icon: '❄️', name: '冷凍噸/功率',
+    units: [['kW', 1], ['RT (冷凍噸)', 3.517], ['kcal/h', 0.001163], ['BTU/h', 0.00029307], ['HP (馬力)', 0.7457]],
+    rot: ['1 RT = 3.517 kW = 12,000 BTU/h', '1 RT = 3,024 kcal/h'] },
+  { icon: '💨', name: '風量/流量',
+    units: [['m³/h (CMH)', 1], ['m³/min (CMM)', 60], ['m³/s', 3600], ['L/s', 3.6], ['CFM', 1.699]],
+    rot: ['1 CMH = 0.589 CFM', '1 CFM = 1.699 CMH', '1 m³/s = 3600 CMH'] },
+  { icon: '⬛', name: '面積',
+    units: [['m²', 1], ['cm²', 0.0001], ['mm²', 0.000001], ['ft²', 0.092903], ['in²', 0.00064516], ['坪', 3.30579]],
+    rot: ['1 坪 = 3.306 m²', '1 m² = 10.764 ft²'] },
+  { icon: '🌡️', name: '溫度', special: 'temp',
+    units: [['°C', 0], ['°F', 1], ['K', 2]],
+    rot: ['°F = °C × 9/5 + 32', 'K = °C + 273.15'] },
+  { icon: '⏲️', name: '壓力',
+    units: [['Pa', 1], ['kPa', 1000], ['bar', 100000], ['psi', 6894.76], ['mmH₂O (mmAq)', 9.80665], ['mH₂O', 9806.65], ['mmHg', 133.322], ['atm', 101325]],
+    rot: ['1 bar = 100 kPa ≈ 10.2 mH₂O ≈ 14.5 psi', '1 mmAq = 9.807 Pa'] },
+  { icon: '🚀', name: '速度',
+    units: [['m/s', 1], ['m/min', 1/60], ['km/h', 1/3.6], ['ft/min (FPM)', 0.00508], ['ft/s', 0.3048]],
+    rot: ['1 m/s = 196.85 FPM', '1 m/s = 3.6 km/h'] },
+  { icon: '📏', name: '長度',
+    units: [['m', 1], ['mm', 0.001], ['cm', 0.01], ['km', 1000], ['in (吋)', 0.0254], ['ft (呎)', 0.3048]],
+    rot: ['1 in = 25.4 mm', '1 ft = 304.8 mm'] },
+  { icon: '🧱', name: '熱傳透率(U值)',
+    units: [['W/(m²·K)', 1], ['kcal/(h·m²·°C)', 1.163], ['BTU/(h·ft²·°F)', 5.67826]],
+    rot: ['1 kcal/(h·m²·°C) = 1.163 W/(m²·K)', '1 BTU/(h·ft²·°F) = 5.678 W/(m²·K)'] },
+  { icon: '⚖️', name: '質量流量',
+    units: [['kg/s', 1], ['kg/h', 1/3600], ['kg/min', 1/60], ['lb/h', 0.000125998], ['lb/s', 0.453592], ['t/h', 1000/3600]],
+    rot: ['1 kg/s = 3600 kg/h', '1 lb ≈ 0.454 kg'] },
+];
+let convCat = 0;
+
+function convInit() {
+  const cats = document.getElementById('conv-cats');
+  if (!cats) return;
+  cats.innerHTML = CONV.map((c, i) =>
+    `<button class="conv-cat${i === 0 ? ' active' : ''}" onclick="convSelect(${i})"><span class="ci">${c.icon}</span>${c.name}</button>`).join('');
+  convSelect(0);
+  document.getElementById('conv-from-val').addEventListener('input', convCalc);
+  document.getElementById('conv-from-unit').addEventListener('change', convCalc);
+  document.getElementById('conv-to-unit').addEventListener('change', convCalc);
+  document.getElementById('conv-swap').addEventListener('click', () => {
+    const f = document.getElementById('conv-from-unit');
+    const t = document.getElementById('conv-to-unit');
+    [f.value, t.value] = [t.value, f.value];
+    convCalc();
+  });
+}
+
+function convSelect(i) {
+  convCat = i;
+  const c = CONV[i];
+  document.querySelectorAll('.conv-cat').forEach((b, k) => b.classList.toggle('active', k === i));
+  const opts = c.units.map((u, k) => `<option value="${k}">${u[0]}</option>`).join('');
+  document.getElementById('conv-from-unit').innerHTML = opts;
+  document.getElementById('conv-to-unit').innerHTML = opts;
+  document.getElementById('conv-to-unit').value = Math.min(1, c.units.length - 1);
+  document.getElementById('conv-rot-chips').innerHTML =
+    c.rot.map(r => `<span class="conv-rot-chip">${r}</span>`).join('');
+  convCalc();
+}
+
+function convCalc() {
+  const c = CONV[convCat];
+  const v = parseFloat(document.getElementById('conv-from-val').value);
+  const fi = +document.getElementById('conv-from-unit').value;
+  const ti = +document.getElementById('conv-to-unit').value;
+  const out = document.getElementById('conv-to-val');
+  if (isNaN(v)) { out.textContent = '—'; return; }
+  let res;
+  if (c.special === 'temp') {
+    let cdeg = fi === 0 ? v : fi === 1 ? (v - 32) * 5 / 9 : v - 273.15;
+    res = ti === 0 ? cdeg : ti === 1 ? cdeg * 9 / 5 + 32 : cdeg + 273.15;
+  } else {
+    res = v * c.units[fi][1] / c.units[ti][1];
+  }
+  const abs = Math.abs(res);
+  out.textContent = abs !== 0 && (abs >= 1e9 || abs < 1e-6)
+    ? res.toExponential(5)
+    : (+res.toFixed(abs >= 100 ? 3 : abs >= 1 ? 5 : 8)).toLocaleString('en-US', { maximumFractionDigits: 8 });
+}
+
+// ════════════════════════════════════════════════════════════
+// 風管尺寸計算 (Duct Sizing · Equal Friction) — 卡片 09
+// ════════════════════════════════════════════════════════════
+const DS = {
+  shape: 'round',
+  rough: { galv: 0.00015, ss: 0.00005, pvc: 0.00001, flex: 0.003 },   // 絕對粗糙度 m
+  velMax: { mau: [12, 15], sa: [6, 9], ra: [5, 7], ea: [8, 11] },     // 建議流速範圍 m/s
+  stdD: [100, 125, 150, 175, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 1000, 1100, 1200, 1300, 1400, 1600, 1800, 2000],
+  records: [],
+};
+
+function dsSetShape(s) {
+  DS.shape = s;
+  document.getElementById('ds-shape-round').classList.toggle('active', s === 'round');
+  document.getElementById('ds-shape-rect').classList.toggle('active', s === 'rect');
+  document.getElementById('ds-recth-group').style.display = s === 'rect' ? '' : 'none';
+  dsCalc();
+}
+
+// Swamee-Jain 近似 Colebrook 摩擦係數
+function dsFriction(D, v, eps) {
+  if (v <= 0 || D <= 0) return 0;
+  const nu = 1.51e-5;                       // 空氣動黏度 m²/s
+  const Re = v * D / nu;
+  if (Re < 2300) return 64 / Re;
+  const f = 0.25 / Math.pow(Math.log10(eps / (3.7 * D) + 5.74 / Math.pow(Re, 0.9)), 2);
+  return f;
+}
+
+function dsDP(D, Q, eps) {                  // Pa/m（圓管）
+  const A = Math.PI * D * D / 4;
+  const v = Q / A;
+  return dsFriction(D, v, eps) / D * 1.2 * v * v / 2;
+}
+
+function dsCalc() {
+  const flowRaw = parseFloat(document.getElementById('ds-flow').value) || 0;
+  const unit  = document.getElementById('ds-flow-unit').value;
+  const Qcmh  = unit === 'cfm' ? flowRaw * 1.699 : flowRaw;
+  const Q     = Qcmh / 3600;                                  // m³/s
+  const eps   = DS.rough[document.getElementById('ds-mat').value];
+  const limit = parseFloat(document.getElementById('ds-fric').value) || 1.0;
+  const app   = document.getElementById('ds-app').value;
+  const szEl  = document.getElementById('ds-size');
+  const vEl   = document.getElementById('ds-vel');
+  const dpEl  = document.getElementById('ds-dp');
+  const chk   = document.getElementById('ds-check');
+  if (Q <= 0) { szEl.textContent = vEl.textContent = dpEl.textContent = '—'; chk.className = 'ds-check'; return; }
+
+  let sizeTxt = '—', v = 0, dp = 0;
+  if (DS.shape === 'round') {
+    let chosen = DS.stdD[DS.stdD.length - 1];
+    for (const Dmm of DS.stdD) {
+      if (dsDP(Dmm / 1000, Q, eps) <= limit) { chosen = Dmm; break; }
+    }
+    const D = chosen / 1000;
+    v  = Q / (Math.PI * D * D / 4);
+    dp = dsDP(D, Q, eps);
+    sizeTxt = 'Ø ' + chosen + ' mm';
+  } else {
+    const H = (parseFloat(document.getElementById('ds-recth').value) || 400) / 1000;
+    // 求等效圓管徑（等摩擦），再反推寬度 W（50mm 級距）
+    let De = 0.1;
+    for (const Dmm of DS.stdD) { if (dsDP(Dmm / 1000, Q, eps) <= limit) { De = Dmm / 1000; break; } De = Dmm / 1000; }
+    let W = H;
+    for (let Wmm = 100; Wmm <= 3000; Wmm += 50) {
+      const a = Wmm / 1000, b = H;
+      const Deq = 1.30 * Math.pow(a * b, 0.625) / Math.pow(a + b, 0.25);
+      if (Deq >= De) { W = a; break; }
+      W = a;
+    }
+    const A = W * H;
+    v = Q / A;
+    // 矩形管壓損：以水力直徑近似
+    const Dh = 4 * A / (2 * (W + H));
+    dp = dsFriction(Dh, v, eps) / Dh * 1.2 * v * v / 2;
+    sizeTxt = Math.round(W * 1000) + ' × ' + Math.round(H * 1000) + ' mm';
+  }
+  szEl.textContent = sizeTxt;
+  vEl.textContent  = v.toFixed(2) + ' m/s';
+  dpEl.textContent = dp.toFixed(2) + ' Pa/m';
+
+  const [vLo, vHi] = DS.velMax[app];
+  const pass = dp <= limit * 1.05 && v <= vHi * 1.15;
+  chk.className = 'ds-check ' + (pass ? 'pass' : 'fail');
+  chk.innerHTML = pass
+    ? `✅ <b>工程校核：通過 (${app.toUpperCase()})</b> — 此配置完全符合 Darcy-Colebrook 物理模型，壓損保持在 ±5% 內，流速與壓損平衡良好（建議範圍 ${vLo}~${vHi} m/s）。`
+    : `⚠️ <b>工程校核：注意 (${app.toUpperCase()})</b> — 流速 ${v.toFixed(1)} m/s 或壓損 ${dp.toFixed(2)} Pa/m 超出建議範圍（流速 ${vLo}~${vHi} m/s、壓損 ≤ ${limit} Pa/m），請放大尺寸或調整摩擦限制。`;
+}
+
+function dsAddRecord() {
+  const name = document.getElementById('ds-name').value || '段落';
+  const size = document.getElementById('ds-size').textContent;
+  if (size === '—') return;
+  DS.records.push({
+    name,
+    flow: document.getElementById('ds-flow').value + ' ' + document.getElementById('ds-flow-unit').value.toUpperCase(),
+    size,
+    vel: document.getElementById('ds-vel').textContent,
+    dp:  document.getElementById('ds-dp').textContent,
+  });
+  const tb = document.querySelector('#ds-records tbody');
+  tb.innerHTML = DS.records.map((r, i) =>
+    `<tr><td>${r.name}</td><td class="mono">${r.flow}</td><td class="mono">${r.size}</td><td class="mono">${r.vel}</td><td class="mono">${r.dp}</td>
+     <td><button class="bom-del" onclick="dsDelRecord(${i})">✕</button></td></tr>`).join('');
+}
+function dsDelRecord(i) {
+  DS.records.splice(i, 1);
+  const tb = document.querySelector('#ds-records tbody');
+  tb.innerHTML = DS.records.length
+    ? DS.records.map((r, k) =>
+      `<tr><td>${r.name}</td><td class="mono">${r.flow}</td><td class="mono">${r.size}</td><td class="mono">${r.vel}</td><td class="mono">${r.dp}</td>
+       <td><button class="bom-del" onclick="dsDelRecord(${k})">✕</button></td></tr>`).join('')
+    : '<tr class="ds-empty"><td colspan="6" style="text-align:center;color:var(--text-muted)">尚無記錄</td></tr>';
+}
+
+// ════════════════════════════════════════════════════════════
+// 風管鐵皮計算 (Duct Material Estimator) — 卡片 10
+// ════════════════════════════════════════════════════════════
+const BOM = {
+  rows: [],
+  // SMACNA 低壓矩形鍍鋅：最大邊 → 板厚分級
+  gaugeOf(maxSide, cls) {
+    const shift = cls === 'mid' ? 1 : cls === 'high' ? 2 : 0;
+    const order = ['26#', '24#', '22#', '20#', '18#'];
+    let g;
+    if (maxSide <= 300) g = 0;
+    else if (maxSide <= 750) g = 1;
+    else if (maxSide <= 1350) g = 2;
+    else if (maxSide <= 2100) g = 3;
+    else g = 4;
+    return order[Math.min(g + shift, 4)];
+  },
+  // kg/m²（鍍鋅）；不鏽鋼以 1.02 比重微調
+  kgm2: { '26#': 4.46, '24#': 5.66, '22#': 6.86, '20#': 8.08, '18#': 10.52 },
+  colors: { '18#': '#ff5a64', '20#': '#f0a430', '22#': '#e8d44d', '24#': '#5ad97b', '26#': '#35c8ff' },
+  sheet37: 0.9144 * 2.1336,   // 3'×7' m²
+  sheet48: 1.2192 * 2.4384,   // 4'×8' m²
+};
+
+function bomPreset(w, h) {
+  document.getElementById('bom-shape').value = 'rect';
+  document.getElementById('bom-w').value = w;
+  document.getElementById('bom-h').value = h;
+  bomShapeSync();
+}
+
+function bomShapeSync() {
+  const s = document.getElementById('bom-shape').value;
+  document.getElementById('bom-h-group').style.display = s === 'round' ? 'none' : '';
+  document.getElementById('bom-w-lbl').textContent = s === 'round' ? '直徑 Ø (mm)' : '寬度 W (mm)';
+}
+
+function bomAdd() {
+  const shape = document.getElementById('bom-shape').value;
+  const w = parseFloat(document.getElementById('bom-w').value) || 0;
+  const h = shape === 'round' ? 0 : (parseFloat(document.getElementById('bom-h').value) || 0);
+  const l = parseFloat(document.getElementById('bom-l').value) || 0;
+  const q = parseInt(document.getElementById('bom-qty').value) || 1;
+  const ins = document.getElementById('bom-ins-chk').checked;
+  if (!w || !l || (shape === 'rect' && !h)) return;
+  BOM.rows.push({ shape, w, h, l, q, ins });
+  bomRender();
+}
+
+function bomDel(i) { BOM.rows.splice(i, 1); bomRender(); }
+function bomClear() { BOM.rows = []; bomRender(); }
+
+function bomRowCalc(r, cls, flange) {
+  const perim = r.shape === 'round' ? Math.PI * r.w / 1000 : 2 * (r.w + r.h) / 1000;  // m
+  const lenEff = r.l + (flange ? 0.075 : 0);   // 法蘭摺接每支補 75mm
+  const area = perim * lenEff * r.q;           // m²（不含損耗）
+  const gauge = BOM.gaugeOf(r.shape === 'round' ? r.w : Math.max(r.w, r.h), cls);
+  return { perim, area, gauge };
+}
+
+function bomRender() {
+  const cls    = document.getElementById('bom-class').value;
+  const mat    = document.getElementById('bom-mat').value;
+  const waste  = parseFloat(document.getElementById('bom-waste').value) || 1.15;
+  const flange = document.getElementById('bom-flange-chk').checked;
+  const tb = document.querySelector('#bom-table tbody');
+
+  if (!BOM.rows.length) {
+    tb.innerHTML = '<tr class="bom-empty"><td colspan="10" style="text-align:center;color:var(--text-muted)">目前無資料，請由上方輸入</td></tr>';
+  } else {
+    tb.innerHTML = BOM.rows.map((r, i) => {
+      const c = bomRowCalc(r, cls, flange);
+      return `<tr><td class="mono">${i + 1}</td><td>${r.shape === 'round' ? '圓' : '矩'}</td>
+        <td class="mono">${r.w}</td><td class="mono">${r.shape === 'round' ? '—' : r.h}</td>
+        <td class="mono">${r.l}</td><td class="mono">${r.q}</td><td class="mono">${c.gauge}</td>
+        <td class="mono">${c.area.toFixed(2)}</td><td>${r.ins ? '✓' : ''}</td>
+        <td><button class="bom-del" onclick="bomDel(${i})">✕</button></td></tr>`;
+    }).join('');
+  }
+
+  // 分級彙總
+  const sums = {};
+  let totArea = 0, totIns = 0, totW = 0;
+  BOM.rows.forEach(r => {
+    const c = bomRowCalc(r, cls, flange);
+    totArea += c.area;
+    if (r.ins) totIns += c.area;
+    sums[c.gauge] = (sums[c.gauge] || 0) + c.area;
+  });
+  const matFactor = mat === 'ss' ? 1.02 : 1;
+  document.getElementById('bom-total-area').textContent = totArea.toFixed(2);
+  document.getElementById('bom-total-ins').textContent  = BOM.rows.filter(r => r.ins).length;
+
+  const gEl = document.getElementById('bom-gauges');
+  gEl.innerHTML = ['18#', '20#', '22#', '24#', '26#'].map(g => {
+    const a = (sums[g] || 0) * waste;
+    const s37 = a / BOM.sheet37, s48 = a / BOM.sheet48;
+    const wkg = a * BOM.kgm2[g] * matFactor;
+    totW += wkg;
+    return `<div class="bom-gauge" style="--g-color:${BOM.colors[g]}">
+      <span class="g-tag">${g}</span>
+      <span class="g-area">${a.toFixed(2)} m²</span>
+      <span class="g-detail">3'×7'：${Math.ceil(s37)} (${s37.toFixed(1)}) 張 ｜ 4'×8'：${Math.ceil(s48)} (${s48.toFixed(1)}) 張 ｜ ${wkg.toFixed(1)} kg</span>
+    </div>`;
+  }).join('');
+  document.getElementById('bom-weight').textContent  = totW.toFixed(0);
+  document.getElementById('bom-insarea').textContent = (totIns * waste).toFixed(2);
+}
+
+function bomExportCSV() {
+  if (!BOM.rows.length) return;
+  const cls    = document.getElementById('bom-class').value;
+  const flange = document.getElementById('bom-flange-chk').checked;
+  const proj   = document.getElementById('bom-proj').value || 'duct-bom';
+  let csv = '#,形狀,W(mm),H(mm),L(m),數量,板厚,面積(m2),保溫\n';
+  BOM.rows.forEach((r, i) => {
+    const c = bomRowCalc(r, cls, flange);
+    csv += `${i + 1},${r.shape},${r.w},${r.shape === 'round' ? '' : r.h},${r.l},${r.q},${c.gauge},${c.area.toFixed(2)},${r.ins ? 'Y' : ''}\n`;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+  a.download = proj + '.csv';
+  a.click();
+}
+
+// ── 初始化（公式換算 + 風管工具） ──
+document.addEventListener('DOMContentLoaded', () => {
+  convInit();
+  ['ds-flow', 'ds-fric', 'ds-recth'].forEach(id =>
+    document.getElementById(id)?.addEventListener('input', dsCalc));
+  ['ds-flow-unit', 'ds-app', 'ds-mat'].forEach(id =>
+    document.getElementById(id)?.addEventListener('change', dsCalc));
+  dsCalc();
+  document.getElementById('bom-shape')?.addEventListener('change', bomShapeSync);
+  ['bom-class', 'bom-mat'].forEach(id =>
+    document.getElementById(id)?.addEventListener('change', bomRender));
+  ['bom-waste'].forEach(id =>
+    document.getElementById(id)?.addEventListener('input', bomRender));
+  document.getElementById('bom-flange-chk')?.addEventListener('change', bomRender);
+});

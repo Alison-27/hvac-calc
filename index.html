@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
   <script type="importmap">
   {
     "imports": {
@@ -29,7 +29,9 @@
         <button class="nav-back" id="nav-back" onclick="showDashboard()" data-zh="← 返回儀表板" data-en="← Dashboard">← 返回儀表板</button>
         <button class="nav-btn" data-tab="airflow"    data-zh="風量計算" data-en="Air Flow">風量計算</button>
         <button class="nav-btn" data-tab="waterflow"  data-zh="水量計算" data-en="Water Flow">水量計算</button>
-        <button class="nav-btn" data-tab="reference"  data-zh="公式參考" data-en="References">公式參考</button>
+        <button class="nav-btn" data-tab="reference"  data-zh="公式換算" data-en="Unit Convert">公式換算</button>
+        <button class="nav-btn" data-tab="ductsize"   data-zh="風管尺寸" data-en="Duct Sizing">風管尺寸</button>
+        <button class="nav-btn" data-tab="ductbom"    data-zh="風管鐵皮" data-en="Duct BOM">風管鐵皮</button>
         <button class="nav-btn" data-tab="cleanroom"  data-zh="潔淨室"   data-en="Clean Room">潔淨室</button>
         <button class="nav-btn" data-tab="dcc"        data-zh="乾式盤管" data-en="Dry Coil">乾式盤管</button>
         <button class="nav-btn" data-tab="mau">MAU</button>
@@ -61,9 +63,9 @@
            data-en-html="Integrated HVAC &amp; next-gen AI data center cooling tools<br>From airflow estimation to GPU room liquid cooling — all in one">
           整合傳統 HVAC 與新世代 AI 資料中心冷卻工具<br>從風量估算、潔淨室設計到 GPU 機房液冷模擬，一站完成</p>
         <div class="dh-stats">
-          <div class="dh-stat"><span class="ds-num">8</span><span class="ds-lbl" data-zh="計算分類" data-en="Categories">計算分類</span></div>
+          <div class="dh-stat"><span class="ds-num">10</span><span class="ds-lbl" data-zh="計算分類" data-en="Categories">計算分類</span></div>
           <div class="dh-stat dh-divider"></div>
-          <div class="dh-stat"><span class="ds-num">25+</span><span class="ds-lbl" data-zh="計算工具" data-en="Tools">計算工具</span></div>
+          <div class="dh-stat"><span class="ds-num">30+</span><span class="ds-lbl" data-zh="計算工具" data-en="Tools">計算工具</span></div>
           <div class="dh-stat dh-divider"></div>
           <div class="dh-stat"><span class="ds-num">3D</span><span class="ds-lbl" data-zh="互動視覺化" data-en="Interactive 3D">互動視覺化</span></div>
         </div>
@@ -152,16 +154,16 @@
 
         <div class="db-card" onclick="showTab('reference')" data-color="gray">
           <div class="dbc-topbar"></div>
-          <div class="dbc-icon">📋</div>
-          <div class="dbc-badge" data-zh="6 表格" data-en="6 Tables">6 表格</div>
+          <div class="dbc-icon">⚖️</div>
+          <div class="dbc-badge" data-zh="10 分類" data-en="10 Categories">10 分類</div>
           <div class="dbc-num">06</div>
-          <h3 class="dbc-title" data-zh="公式參考" data-en="References">公式參考</h3>
-          <p class="dbc-desc" data-zh="風量 / 水量公式、空氣 / 水物理常數、換氣次數建議值、單位換算" data-en="Airflow / water formulas, air / water constants, ACH guide values, unit conversion">風量 / 水量公式、空氣 / 水物理常數、換氣次數建議值、單位換算</p>
+          <h3 class="dbc-title" data-zh="公式換算" data-en="Unit Converter">公式換算</h3>
+          <p class="dbc-desc" data-zh="十大類工程單位即時換算：輸入數字立即得到結果，附工程設計參考值" data-en="10-category live unit converter with engineering rules of thumb">十大類工程單位即時換算：輸入數字立即得到結果，附工程設計參考值</p>
           <ul class="dbc-list">
-            <li data-zh="風量 · 水量計算公式" data-en="Airflow · Water Flow Formulas">風量 · 水量計算公式</li>
-            <li data-zh="空氣 · 水物理常數" data-en="Air · Water Physical Constants">空氣 · 水物理常數</li>
-            <li data-zh="換氣次數建議值 (ACH)" data-en="Recommended ACH Values">換氣次數建議值 (ACH)</li>
-            <li data-zh="制冷 · 流量 · 壓力換算表" data-en="Cooling · Flow · Pressure Conversion">制冷 · 流量 · 壓力換算表</li>
+            <li data-zh="負荷/流量 · 冷凍噸/功率 · 風量/流量" data-en="Load/Flow · RT/Power · Airflow">負荷/流量 · 冷凍噸/功率 · 風量/流量</li>
+            <li data-zh="面積 · 溫度 · 壓力 · 速度 · 長度" data-en="Area · Temp · Pressure · Velocity · Length">面積 · 溫度 · 壓力 · 速度 · 長度</li>
+            <li data-zh="熱傳透率 (U值) · 質量流量" data-en="U-Value · Mass Flow">熱傳透率 (U值) · 質量流量</li>
+            <li data-zh="工程設計參考 (Rule of Thumb)" data-en="Engineering Rules of Thumb">工程設計參考 (Rule of Thumb)</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -199,6 +201,38 @@
             <li data-zh="ADC-03 PUE / DCiE 計算" data-en="ADC-03 PUE / DCiE Calculation">ADC-03 PUE / DCiE 計算</li>
             <li data-zh="ADC-04 液冷 CHW 需求" data-en="ADC-04 Liquid Cooling CHW Demand">ADC-04 液冷 CHW 需求</li>
             <li data-zh="ADC-05 AI DC 計算書" data-en="ADC-05 AI DC Calc Report">ADC-05 AI DC 計算書</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+        <div class="db-card" onclick="showTab('ductsize')" data-color="teal">
+          <div class="dbc-topbar"></div>
+          <div class="dbc-icon">🌀</div>
+          <div class="dbc-badge" data-zh="等摩擦法" data-en="Equal Friction">等摩擦法</div>
+          <div class="dbc-num">09</div>
+          <h3 class="dbc-title" data-zh="風管尺寸計算" data-en="Duct Sizing">風管尺寸計算</h3>
+          <p class="dbc-desc" data-zh="輸入風量與摩擦損失限制，Darcy-Colebrook 物理模型自動選定風管尺寸與流速校核" data-en="Enter airflow and friction limit — Darcy-Colebrook model auto-sizes duct with velocity check">輸入風量與摩擦損失限制，Darcy-Colebrook 物理模型自動選定風管尺寸與流速校核</p>
+          <ul class="dbc-list">
+            <li data-zh="圓管 / 矩形管 自動選定" data-en="Round / Rect auto sizing">圓管 / 矩形管 自動選定</li>
+            <li data-zh="實際流速 + 實際壓損計算" data-en="Actual velocity + friction">實際流速 + 實際壓損計算</li>
+            <li data-zh="MAU / SA / RA / EA 用途校核" data-en="MAU / SA / RA / EA validation">MAU / SA / RA / EA 用途校核</li>
+            <li data-zh="設計記錄表 + 專業提示" data-en="Design records + pro tips">設計記錄表 + 專業提示</li>
+          </ul>
+          <div class="dbc-arrow">→</div>
+        </div>
+
+        <div class="db-card" onclick="showTab('ductbom')" data-color="blue">
+          <div class="dbc-topbar"></div>
+          <div class="dbc-icon">🔩</div>
+          <div class="dbc-badge" data-zh="SMACNA 料單" data-en="SMACNA BOM">SMACNA 料單</div>
+          <div class="dbc-num">10</div>
+          <h3 class="dbc-title" data-zh="風管鐵皮計算" data-en="Duct Material Estimator">風管鐵皮計算</h3>
+          <p class="dbc-desc" data-zh="風管清單輸入 → SMACNA 板厚自動分級，鐵皮面積、標準板數、重量與保溫面積料單" data-en="Duct list input → SMACNA gauge auto-grading with sheet area, sheet count, weight and insulation BOM">風管清單輸入 → SMACNA 板厚自動分級，鐵皮面積、標準板數、重量與保溫面積料單</p>
+          <ul class="dbc-list">
+            <li data-zh="矩形 / 圓形風管清單輸入" data-en="Rect / Round duct list input">矩形 / 圓形風管清單輸入</li>
+            <li data-zh="SMACNA 壓力等級 → 板厚分級 (18#~26#)" data-en="SMACNA class → gauge 18#~26#">SMACNA 壓力等級 → 板厚分級 (18#~26#)</li>
+            <li data-zh="3'×7' / 4'×8' 標準板數估算" data-en="3'x7' / 4'x8' sheet estimation">3'×7' / 4'×8' 標準板數估算</li>
+            <li data-zh="總重量 · 保溫面積 · CSV 匯出" data-en="Weight · insulation area · CSV export">總重量 · 保溫面積 · CSV 匯出</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -550,11 +584,37 @@
     <!-- ── 公式參考 ── -->
     <section id="tab-reference" class="tab-section">
       <div class="section-header">
-        <h2><span class="tag">03</span> 公式參考</h2>
-        <p class="section-desc">Engineering Reference · Formulas & Constants</p>
+        <h2><span class="tag">03</span> 公式換算</h2>
+        <p class="section-desc">Engineering Unit Converter · 輸入數字即時換算</p>
       </div>
 
-      <div class="ref-grid">
+      <!-- ── 公式換算器：左欄分類 / 右欄換算 + 工程參考 ── -->
+      <div class="conv-layout">
+        <aside class="conv-cats" id="conv-cats"><!-- JS 動態產生分類按鈕 --></aside>
+
+        <div class="conv-main">
+          <div class="conv-panel">
+            <div class="conv-side">
+              <div class="conv-side-head"><span class="conv-side-lbl">原始數值</span><span class="conv-pill conv-pill-from">FROM</span></div>
+              <input type="number" id="conv-from-val" class="conv-input" value="1" step="any" />
+              <select id="conv-from-unit" class="conv-select"></select>
+            </div>
+            <button class="conv-swap" id="conv-swap" title="交換單位">⇄</button>
+            <div class="conv-side">
+              <div class="conv-side-head"><span class="conv-side-lbl">換算結果</span><span class="conv-pill conv-pill-to">TO</span></div>
+              <div id="conv-to-val" class="conv-result">—</div>
+              <select id="conv-to-unit" class="conv-select"></select>
+            </div>
+          </div>
+
+          <div class="conv-rot">
+            <h3 class="conv-rot-title">工程設計參考 (Rule of Thumb)</h3>
+            <div class="conv-rot-chips" id="conv-rot-chips"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ref-grid" style="margin-top:2rem">
         <div class="ref-card">
           <h3>風量計算公式</h3>
           <table class="ref-table">
@@ -636,6 +696,225 @@
               <tr><td>溫度</td><td class="mono">°C = (°F − 32) × 5/9</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 風管尺寸計算（Duct Master）── -->
+    <section id="tab-ductsize" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">09</span> 風管尺寸計算</h2>
+        <p class="section-desc">Duct Sizing · Equal Friction · Darcy-Colebrook · Std. Air 1.2 kg/m³</p>
+      </div>
+
+      <div class="ds-layout">
+        <!-- 左：設計參數 -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">DS-01</span>
+            <h3>設計參數設定 INPUTS</h3>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>段落名稱 SECTION NAME</label>
+              <div class="input-row"><input type="text" id="ds-name" value="段落 1" /></div>
+            </div>
+            <div class="input-group">
+              <label>設計風量 AIRFLOW</label>
+              <div class="input-row">
+                <input type="number" id="ds-flow" value="15000" min="0" step="100" />
+                <select id="ds-flow-unit" class="inline-select"><option value="cmh">CMH</option><option value="cfm">CFM</option></select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>用途 APPLICATION</label>
+              <div class="input-row">
+                <select id="ds-app" class="inline-select" style="flex:1">
+                  <option value="mau">MAU (外氣系統)</option>
+                  <option value="sa">SA 送風主管</option>
+                  <option value="ra">RA 回風管</option>
+                  <option value="ea">EA 排氣管</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>材質 MATERIAL</label>
+              <div class="input-row">
+                <select id="ds-mat" class="inline-select" style="flex:1">
+                  <option value="galv">鍍鋅鋼板 (Galv)</option>
+                  <option value="ss">不鏽鋼 (SS304)</option>
+                  <option value="pvc">PVC / FRP</option>
+                  <option value="flex">軟管 (Flexible)</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>設計法 DESIGN METHOD</label>
+              <div class="input-row">
+                <select class="inline-select" style="flex:1" disabled><option>Equal Friction (等摩擦法)</option></select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>摩擦損失限制 FRICTION LIMIT</label>
+              <div class="input-row">
+                <input type="number" id="ds-fric" value="1.0" min="0.1" max="5" step="0.1" />
+                <span class="unit">Pa/m</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>風管形式 DUCT SHAPE</label>
+              <div class="ds-shape-row">
+                <button class="ds-shape-btn active" id="ds-shape-round" onclick="dsSetShape('round')">圓形管 Round</button>
+                <button class="ds-shape-btn" id="ds-shape-rect" onclick="dsSetShape('rect')">矩形管 Rect</button>
+              </div>
+            </div>
+            <div class="input-group" id="ds-recth-group" style="display:none">
+              <label>矩形管高度 H（固定邊）</label>
+              <div class="input-row">
+                <input type="number" id="ds-recth" value="400" min="100" step="50" />
+                <span class="unit">mm</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右：結果 -->
+        <div class="ds-right">
+          <div class="ds-result-card">
+            <div class="ds-result-head">主要計算結果 MAIN RESULT</div>
+            <div class="ds-result-grid">
+              <div class="ds-res"><span class="ds-res-lbl">選定尺寸 SIZE</span><span class="ds-res-val" id="ds-size">—</span></div>
+              <div class="ds-res"><span class="ds-res-lbl">實際流速 VELOCITY</span><span class="ds-res-val" id="ds-vel">—</span></div>
+              <div class="ds-res"><span class="ds-res-lbl">實際壓損 FRICTION</span><span class="ds-res-val" id="ds-dp">—</span></div>
+            </div>
+            <div class="ds-result-foot">
+              <span class="hint">確認尺寸後，可儲存至下方設計記錄列表。</span>
+              <button class="calc-btn" onclick="dsAddRecord()">＋ 加入設計記錄</button>
+            </div>
+          </div>
+
+          <div class="ds-check" id="ds-check"><!-- JS 校核結果 --></div>
+
+          <div class="calc-card">
+            <div class="card-header"><span class="card-num">DS-02</span><h3>設計記錄 DESIGN RECORDS</h3></div>
+            <div class="card-body">
+              <table class="ref-table" id="ds-records">
+                <thead><tr><th>段落</th><th>風量</th><th>尺寸</th><th>流速</th><th>壓損</th><th></th></tr></thead>
+                <tbody><tr class="ds-empty"><td colspan="6" style="text-align:center;color:var(--text-muted)">尚無記錄</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ds-tips">
+        <h3>■ MAU 設計專業提示 (CLEANROOM DESIGN TIPS)</h3>
+        <div class="ds-tips-grid">
+          <p><b>■ 高風速建議：</b>在無塵室 MAU 系統中，主幹線風速設定在 12 ~ 15 m/s 是常見的，可縮短管線並減少風管佔用的空間，但必須確保機殼與風管側的消音與減振措施。</p>
+          <p><b>■ 不鏽鋼管校核：</b>MAU 送風側若為 Class 100 等級，常使用不鏽鋼管 (SS304)。請將「材質」切換至不鏽鋼，系統會自動考量較低的壁面摩擦。</p>
+          <p><b>■ 等摩擦法建議：</b>MAU 的總壓力損失通常較大，建議將等摩擦損失控制在 1.2 ~ 1.5 Pa/m 之間以優化風機功率需求。</p>
+          <p><b>■ 大風量考量：</b>當風量超過 20,000 CMH 時，務必注意風管加強筋 (Stiffener) 的佈置，以防止高壓下的風管震動（Booming Effect）。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 風管鐵皮計算（Duct Material Estimator）── -->
+    <section id="tab-ductbom" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">10</span> 風管鐵皮計算</h2>
+        <p class="section-desc">Duct Material Estimator · SMACNA Gauge · BOM Builder</p>
+      </div>
+
+      <div class="bom-layout">
+        <div class="bom-left">
+          <!-- 專案設定 -->
+          <div class="calc-card">
+            <div class="card-header"><span class="card-num">DB-01</span><h3>專案設定與計算基礎</h3></div>
+            <div class="card-body bom-proj-row">
+              <div class="input-group" style="flex:2">
+                <label>工程名稱</label>
+                <div class="input-row"><input type="text" id="bom-proj" placeholder="輸入專案名稱" /></div>
+              </div>
+              <div class="input-group">
+                <label>壓力等級 (SMACNA)</label>
+                <div class="input-row">
+                  <select id="bom-class" class="inline-select" style="flex:1">
+                    <option value="low">低壓 (Low)</option>
+                    <option value="mid">中壓 (Mid)</option>
+                    <option value="high">高壓 (High)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>材質 (摺縫比重)</label>
+                <div class="input-row">
+                  <select id="bom-mat" class="inline-select" style="flex:1">
+                    <option value="galv">鍍鋅 (Galv)</option>
+                    <option value="ss">不鏽鋼 (SS304)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>損耗係數 (WASTE)</label>
+                <div class="input-row"><input type="number" id="bom-waste" value="1.15" min="1" max="1.5" step="0.01" /></div>
+              </div>
+              <div class="input-group bom-flange">
+                <label><input type="checkbox" id="bom-flange-chk" /> 法蘭摺接補正</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 快速輸入 -->
+          <div class="calc-card">
+            <div class="card-header"><span class="card-num">DB-02</span><h3>快速輸入區</h3>
+              <span style="margin-left:auto;display:flex;gap:6px">
+                <button class="bom-preset" onclick="bomPreset(300,300)">300×300</button>
+                <button class="bom-preset" onclick="bomPreset(600,300)">600×300</button>
+                <button class="bom-preset" onclick="bomPreset(1200,600)">1200×600</button>
+              </span>
+            </div>
+            <div class="card-body bom-input-row">
+              <div class="input-group"><label>形狀</label>
+                <select id="bom-shape" class="inline-select"><option value="rect">矩形 (Rect)</option><option value="round">圓形 (Round)</option></select>
+              </div>
+              <div class="input-group"><label id="bom-w-lbl">寬度 W (mm)</label><div class="input-row"><input type="number" id="bom-w" placeholder="mm" min="0" step="50" /></div></div>
+              <div class="input-group" id="bom-h-group"><label>高度 H (mm)</label><div class="input-row"><input type="number" id="bom-h" placeholder="mm" min="0" step="50" /></div></div>
+              <div class="input-group"><label>長度 L (m)</label><div class="input-row"><input type="number" id="bom-l" value="1.2" min="0" step="0.1" /></div></div>
+              <div class="input-group"><label>數量 QTY</label><div class="input-row"><input type="number" id="bom-qty" value="1" min="1" step="1" /></div></div>
+              <div class="input-group bom-ins"><label><input type="checkbox" id="bom-ins-chk" /> 保溫</label></div>
+              <button class="calc-btn bom-add" onclick="bomAdd()">＋</button>
+            </div>
+          </div>
+
+          <!-- 風管清單 -->
+          <div class="calc-card">
+            <div class="card-header"><span class="card-num">DB-03</span><h3>風管清單</h3>
+              <span style="margin-left:auto;display:flex;gap:6px">
+                <button class="bom-preset" onclick="bomExportCSV()">📄 匯出料單 CSV</button>
+                <button class="bom-preset" onclick="bomClear()">🗑 清空</button>
+              </span>
+            </div>
+            <div class="card-body">
+              <table class="ref-table" id="bom-table">
+                <thead><tr><th>#</th><th>形狀</th><th>W(mm)</th><th>H(mm)</th><th>L(m)</th><th>數量</th><th>板厚</th><th>面積(m²)</th><th>保溫</th><th></th></tr></thead>
+                <tbody><tr class="bom-empty"><td colspan="10" style="text-align:center;color:var(--text-muted)">目前無資料，請由上方輸入</td></tr></tbody>
+                <tfoot><tr><td colspan="7" style="text-align:right"><b>合計 (Totals)：</b></td><td class="mono" id="bom-total-area">0.00</td><td class="mono" id="bom-total-ins">0</td><td></td></tr></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右：BOM 料單總表 -->
+        <div class="bom-right">
+          <div class="bom-summary">
+            <h3>📋 料單總表 (BOM)</h3>
+            <div class="bom-kpis">
+              <div class="bom-kpi"><span class="bom-kpi-lbl">總重量 (含損)</span><span class="bom-kpi-val"><span id="bom-weight">0</span> kg</span></div>
+              <div class="bom-kpi"><span class="bom-kpi-lbl">保溫面積 (含損)</span><span class="bom-kpi-val"><span id="bom-insarea">0</span> m²</span></div>
+            </div>
+            <p class="hint" style="margin:0.4rem 0 0.8rem">板厚分級統計（板數為無條件進位，括號內為實際需求值）</p>
+            <div id="bom-gauges"><!-- JS 產生 18#~26# 分級卡 --></div>
+          </div>
         </div>
       </div>
     </section>
@@ -1773,7 +2052,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
   <script type="module" src="mau3d.js?v=6"></script>
   <link rel="stylesheet" href="dctwin.css?v=10">
   <script type="module" src="dctwin.js?v=10"></script>
