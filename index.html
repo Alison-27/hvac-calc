@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=16" />
   <script type="importmap">
   {
     "imports": {
@@ -171,7 +171,7 @@
           <div class="dbc-topbar"></div>
           <div class="dbc-ai-glow"></div>
           <div class="dbc-icon">🤖</div>
-          <div class="dbc-badge dbc-badge-ai" data-zh="NEW · 4 工具" data-en="NEW · 4 Tools">NEW · 4 工具</div>
+          <div class="dbc-badge dbc-badge-ai" data-zh="NEW · 5 工具" data-en="NEW · 5 Tools">NEW · 5 工具</div>
           <div class="dbc-num">07</div>
           <h3 class="dbc-title" data-zh="AI Data Center 計算書" data-en="AI Data Center Calc">AI Data Center計算書</h3>
           <p class="dbc-desc" data-zh="GPU 機架熱密度分析、冷卻方式智能選型、PUE 效率計算、液冷 CHW 需求估算" data-en="GPU rack heat density, intelligent cooling selection, PUE calculation, liquid CHW demand">GPU 機架熱密度分析、冷卻方式智能選型、PUE 效率計算、液冷 CHW 需求估算</p>
@@ -180,6 +180,7 @@
             <li data-zh="ADC-02 冷卻方式智能選型" data-en="ADC-02 Intelligent Cooling Selection">ADC-02 冷卻方式智能選型</li>
             <li data-zh="ADC-03 PUE / DCiE 計算" data-en="ADC-03 PUE / DCiE Calculation">ADC-03 PUE / DCiE 計算</li>
             <li data-zh="ADC-04 液冷 CHW 需求" data-en="ADC-04 Liquid Cooling CHW Demand">ADC-04 液冷 CHW 需求</li>
+            <li data-zh="ADC-05 AI DC 計算書" data-en="ADC-05 AI DC Calc Report">ADC-05 AI DC 計算書</li>
           </ul>
           <div class="dbc-arrow">→</div>
         </div>
@@ -1678,6 +1679,31 @@
           </div>
         </div>
 
+        <!-- ADC-05 計算書 -->
+        <div class="calc-card adc-card adc-card-full">
+          <div class="card-header">
+            <span class="card-num card-num-ai">ADC-05</span>
+            <h3>AI DC 計算書</h3>
+            <span class="formula-badge">Calculation Report</span>
+          </div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+              <div class="input-group" style="margin-bottom:0">
+                <label>專案名稱</label>
+                <div class="input-row"><input type="text" id="adc5-project" placeholder="請輸入專案名稱" style="width:100%"/></div>
+              </div>
+              <div class="input-group" style="margin-bottom:0">
+                <label>機房 / 建築物</label>
+                <div class="input-row"><input type="text" id="adc5-room" placeholder="例：B2F 資料中心" style="width:100%"/></div>
+              </div>
+            </div>
+            <button class="calc-btn calc-btn-ai" style="margin-top:.9rem" onclick="genADCReport()">生成計算書</button>
+            <div id="adc5-report" class="adc-report-wrap">
+              <div class="adc-report-empty">請先完成 ADC-01 ～ ADC-04 的計算，再按「生成計算書」</div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -1729,7 +1755,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
   <script type="module" src="mau3d.js?v=6"></script>
 </body>
 </html>

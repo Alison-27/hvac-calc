@@ -1394,13 +1394,145 @@ function calcADC4() {
   const ts      = parseFloat(document.getElementById('adc4-ts').value);
   const tr      = parseFloat(document.getElementById('adc4-tr').value);
   if (!itLoad || !ratio || !ts || !tr || tr <= ts) return;
-  const liquidLoad = itLoad * ratio;                        // kW
-  const airLoad    = itLoad - liquidLoad;                   // kW
+  const liquidLoad = itLoad * ratio;
+  const airLoad    = itLoad - liquidLoad;
   const dt         = tr - ts;
-  const flow_m3h   = (liquidLoad * 3600) / (4186 * dt);    // m³/h
+  const flow_m3h   = (liquidLoad * 3600) / (4186 * dt);
   const flow_lmin  = flow_m3h * 1000 / 60;
   setResult('adc4-liquid', liquidLoad, 1);
   setResult('adc4-air',    airLoad,    1);
   setResult('adc4-flow',   flow_m3h,   2);
   setResult('adc4-lmin',   flow_lmin,  1);
+}
+
+// ADC-05: Calculation Report
+function genADCReport() {
+  const wrap = document.getElementById('adc5-report');
+  if (!wrap) return;
+
+  const gv  = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const gvs = id => document.getElementById(id)?.value?.trim() || '';
+
+  // ADC-01 inputs
+  const racks   = gv('adc1-racks');
+  const density = gv('adc1-density');
+  const upsPct  = gv('adc1-ups') / 100;
+  const pduPct  = gv('adc1-pdu') / 100;
+  if (!racks || !density) {
+    wrap.innerHTML = '<div class="adc-report-empty">請先完成 ADC-01（填入機架數量與功率密度）再生成計算書</div>';
+    return;
+  }
+  const itLoad  = racks * density;
+  const upsLoss = itLoad * upsPct;
+  const pduLoss = itLoad * pduPct;
+  const totalIT = itLoad + upsLoss + pduLoss;
+
+  // ADC-02 cooling strategy
+  const d2 = gv('adc2-density') || density;
+  let method = '', coolColor = '', pueRange = '', note2 = '';
+  if      (d2 < 5)  { method = '傳統空調 (CRAC/CRAH)';               coolColor = '#34d399'; pueRange = '1.6 – 2.0'; note2 = '低密度，一般空調即可'; }
+  else if (d2 < 15) { method = '精密空調 + 熱走道封閉';               coolColor = '#3b9eff'; pueRange = '1.4 – 1.7'; note2 = '中密度，建議熱冷走道隔離'; }
+  else if (d2 < 30) { method = '背板液冷 (Rear-door HX)';            coolColor = '#a78bfa'; pueRange = '1.2 – 1.5'; note2 = '高密度，背板液冷可帶走 70-100% 熱量'; }
+  else if (d2 < 60) { method = '直接液冷 DLC (Warm Water Cooling)';  coolColor = '#f0a430'; pueRange = '1.1 – 1.3'; note2 = '超高密度，40-45°C 供水可免冷機'; }
+  else              { method = '沉浸式液冷 (Immersion Cooling)';      coolColor = '#ff6b8a'; pueRange = '1.03 – 1.15'; note2 = '極端密度 AI/GPU，近零空氣散熱'; }
+
+  // ADC-03 PUE
+  const it3    = gv('adc3-it')    || totalIT;
+  const cool3  = gv('adc3-cool');
+  const light3 = gv('adc3-light') || 20;
+  const other3 = gv('adc3-other') || 10;
+  const hasP3  = cool3 > 0;
+  const totalFac = it3 + cool3 + light3 + other3;
+  const pue  = hasP3 ? totalFac / it3 : null;
+  const dcie = pue ? (1 / pue * 100) : null;
+  let grade = '尚未計算', gradeColor = 'var(--text-muted)', gradeCls = '';
+  if (pue !== null) {
+    if      (pue < 1.2) { grade = 'Platinum — 世界頂級'; gradeColor = '#34d399'; gradeCls = 'hi'; }
+    else if (pue < 1.4) { grade = 'Gold — 業界領先';     gradeColor = '#3b9eff'; gradeCls = 'hi'; }
+    else if (pue < 1.6) { grade = 'Silver — 良好';       gradeColor = '#a78bfa'; gradeCls = ''; }
+    else if (pue < 2.0) { grade = 'Bronze — 一般水準';   gradeColor = '#f0a430'; gradeCls = 'warn'; }
+    else                { grade = '待改善 — 效率偏低';   gradeColor = '#ff6b8a'; gradeCls = 'bad'; }
+  }
+
+  // ADC-04 liquid cooling
+  const it4     = gv('adc4-it')    || totalIT;
+  const ratio4  = (gv('adc4-ratio') || 70) / 100;
+  const ts4     = gv('adc4-ts')    || 20;
+  const tr4     = gv('adc4-tr')    || 30;
+  const hasL4   = tr4 > ts4;
+  const liquidQ = it4 * ratio4;
+  const airQ    = it4 - liquidQ;
+  const dt4     = tr4 - ts4;
+  const flowM3h = hasL4 ? (liquidQ * 3600) / (4186 * dt4) : null;
+  const flowLm  = flowM3h ? flowM3h * 1000 / 60 : null;
+
+  // Project info
+  const projName = gvs('adc5-project') || '（未填寫）';
+  const roomName = gvs('adc5-room')    || '（未填寫）';
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+  const row = (lbl, val, unit, cls='') =>
+    `<div class="adc-rpt-row">
+      <span class="adc-rpt-lbl">${lbl}</span>
+      <span><span class="adc-rpt-val ${cls}">${val}</span><span class="adc-rpt-unit">${unit}</span></span>
+    </div>`;
+
+  wrap.innerHTML = `
+    <div class="adc-rpt-header">
+      <div class="adc-rpt-title">AI DATA CENTER 工程計算書</div>
+      <div class="adc-rpt-meta">專案：${projName}　機房：${roomName}　計算日期：${dateStr}</div>
+    </div>
+    <div class="adc-rpt-grid">
+      <div class="adc-rpt-sec">
+        <div class="adc-rpt-sec-title">ADC-01 · IT 熱負荷估算</div>
+        ${row('機架數量',       racks,              '架')}
+        ${row('功率密度',       density,            'kW/架')}
+        ${row('UPS 損失率',     (upsPct*100).toFixed(1), '%')}
+        ${row('PDU 損失率',     (pduPct*100).toFixed(1), '%')}
+        ${row('純 IT 負荷',     itLoad.toFixed(1),  'kW')}
+        ${row('UPS+PDU 損失',   (upsLoss+pduLoss).toFixed(1), 'kW')}
+        ${row('總 IT 側負荷',   totalIT.toFixed(1), 'kW', 'hi')}
+      </div>
+      <div class="adc-rpt-sec">
+        <div class="adc-rpt-sec-title">ADC-02 · 冷卻方式建議</div>
+        ${row('分析功率密度', d2, 'kW/架')}
+        <div class="adc-rpt-row"><span class="adc-rpt-lbl">建議冷卻方式</span></div>
+        <div class="adc-rpt-method" style="color:${coolColor}">${method}</div>
+        ${row('預期 PUE 範圍',  pueRange, '')}
+        <div class="adc-rpt-note">${note2}</div>
+      </div>
+      <div class="adc-rpt-sec">
+        <div class="adc-rpt-sec-title">ADC-03 · PUE / DCiE</div>
+        ${row('IT 設備功耗',   it3.toFixed(1),       'kW')}
+        ${row('冷卻系統功耗',  cool3.toFixed(1),     'kW')}
+        ${row('照明+辦公',     light3.toFixed(1),    'kW')}
+        ${row('其他雜項',      other3.toFixed(1),    'kW')}
+        ${row('設施總功耗',    totalFac.toFixed(1),  'kW')}
+        ${row('PUE',          pue  ? pue.toFixed(3)  : '未計算', '', gradeCls)}
+        ${row('DCiE',         dcie ? dcie.toFixed(1) : '未計算', '%', gradeCls)}
+        <div class="adc-rpt-row"><span class="adc-rpt-lbl">效能評級</span>
+          <span class="adc-rpt-val ${gradeCls}" style="color:${gradeColor};font-size:.78rem">${grade}</span>
+        </div>
+      </div>
+      <div class="adc-rpt-sec">
+        <div class="adc-rpt-sec-title">ADC-04 · 液冷 CHW 需求</div>
+        ${row('IT 總熱負荷',   it4.toFixed(1),      'kW')}
+        ${row('液冷帶走比例',  (ratio4*100).toFixed(0), '%')}
+        ${row('供水溫度 Ts',   ts4,                 '°C')}
+        ${row('回水溫度 Tr',   tr4,                 '°C')}
+        ${row('液冷側熱量',    liquidQ.toFixed(1),  'kW')}
+        ${row('殘餘空冷熱量',  airQ.toFixed(1),     'kW')}
+        ${row('冷卻水流量',    flowM3h ? flowM3h.toFixed(2) : '—', 'm³/h', 'hi')}
+        ${row('冷卻水流量',    flowLm  ? flowLm.toFixed(1)  : '—', 'L/min', 'hi')}
+      </div>
+    </div>
+    <div class="adc-rpt-print-bar">
+      <button class="adc-rpt-print-btn" onclick="window.print()">🖨 列印 / 匯出 PDF</button>
+    </div>`;
+}
+
+function printADCReport() {
+  genADCReport();
+  setTimeout(() => window.print(), 200);
 }
