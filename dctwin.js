@@ -6,16 +6,18 @@
      <script type="module" src="dctwin.js"></script>
    ============================================================ */
 
-let THREE = null, OrbitControls = null;
+let THREE = null, OrbitControls = null, RoomEnvironment = null;
 
 async function loadThree() {
   try {
     THREE = await import('three');
     ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
+    ({ RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js'));
   } catch (e) {
     // 後備：頁面缺少 import map 時改走 esm.sh（會自動改寫相依）
     THREE = await import('https://esm.sh/three@0.163.0');
     ({ OrbitControls } = await import('https://esm.sh/three@0.163.0/examples/jsm/controls/OrbitControls.js'));
+    ({ RoomEnvironment } = await import('https://esm.sh/three@0.163.0/examples/jsm/environments/RoomEnvironment.js'));
   }
 }
 
@@ -281,12 +283,21 @@ async function initThree() {
 
   T.renderer = new THREE.WebGLRenderer({ antialias: true });
   T.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  T.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  T.renderer.toneMappingExposure = 1.2;
   T.renderer.domElement.classList.add('dt-canvas');
   wrap.appendChild(T.renderer.domElement);
 
   T.scene = new THREE.Scene();
   T.scene.background = new THREE.Color(PAL.bg);
-  T.scene.fog = new THREE.Fog(PAL.bg, 20, 52);
+  T.scene.fog = new THREE.Fog(PAL.bg, 26, 70);
+
+  // 環境貼圖：給所有金屬材質真實反射（質感關鍵）
+  if (RoomEnvironment) {
+    const pmrem = new THREE.PMREMGenerator(T.renderer);
+    T.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    T.scene.environmentIntensity = 0.55;
+  }
 
   T.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
   T.camera.position.set(8.5, 5, 10.5);
@@ -299,17 +310,18 @@ async function initThree() {
   T.controls.minDistance = 1.5;
   T.controls.maxDistance = 40;
 
-  // 燈光
-  T.scene.add(new THREE.AmbientLight(0x9fb2cd, 0.70));
-  const key = new THREE.DirectionalLight(0xcfe4ff, 1.0);
+  // 燈光（冷藍主調 + 熱通道紅光，比照實景渲染）
+  T.scene.add(new THREE.AmbientLight(0x9fb2cd, 0.45));
+  const key = new THREE.DirectionalLight(0xdce9ff, 1.1);
   key.position.set(8, 14, 6);
   T.scene.add(key);
-  const fillG = new THREE.PointLight(0x76b900, 0.4, 30);
-  fillG.position.set(0, 5, 0);
-  T.scene.add(fillG);
+  // 熱通道內部紅色光暈
+  const hotGlow = new THREE.PointLight(0xff4455, 1.1, 9);
+  hotGlow.position.set(0, 1.4, 0);
+  T.scene.add(hotGlow);
   // 暖色補光：打亮機櫃正面（前門朝外，冷通道側 ±z）
   [-5.5, 5.5].forEach(zL => {
-    const warm = new THREE.PointLight(0xffe2ae, 0.85, 26);
+    const warm = new THREE.PointLight(0xffe2ae, 0.6, 26);
     warm.position.set(0, 2.6, zL);
     T.scene.add(warm);
   });
@@ -373,7 +385,7 @@ function makeLabel(text, color = '#9eff2e', scale = 1) {
 function floorAndGrid(g, w = 34, d = 22) {
   const f = new THREE.Mesh(
     new THREE.PlaneGeometry(w, d),
-    new THREE.MeshStandardMaterial({ color: PAL.floor, roughness: 0.92, metalness: 0.1 })
+    new THREE.MeshStandardMaterial({ color: 0x0b1020, roughness: 0.28, metalness: 0.72 })
   );
   f.rotation.x = -Math.PI / 2;
   g.add(f);
@@ -470,8 +482,8 @@ function buildRacks(parent, count) {
       const rack = new THREE.Group();
       rack.position.set(x0 + i * RK.pitch, RK.h / 2, z);
 
-      // ── 機箱本體（近黑機架框，GB200 NVL72 色調）
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.46, metalness: 0.70 });
+      // ── 機箱本體（亮面深藍黑金屬，環境反射）
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0e1219, roughness: 0.16, metalness: 0.92 });
       const body    = new THREE.Mesh(geoBody, bodyMat);
       body.userData = { pick: true, type: 'rack', id };
       rack.add(body);
@@ -533,7 +545,7 @@ function buildRacks(parent, count) {
       hinge.position.set(-RK.w / 2 + 0.02, 0, face * RK.d / 2);
 
       const doorMat = new THREE.MeshStandardMaterial({
-        color: 0x0b0b0d, roughness: 0.50, metalness: 0.60,
+        color: 0x0c0e13, roughness: 0.20, metalness: 0.88,
         emissive: 0x000000, emissiveIntensity: 1,
       });
       const door = new THREE.Mesh(geoFace, doorMat);
@@ -626,6 +638,44 @@ function buildRacks(parent, count) {
     layer.add(lab);
   });
 
+  // ── 熱通道封閉走廊（透明圍蔽 + 紅色發光地板，比照實景）──
+  const maxN  = Math.max(rows[0], rows[1]);
+  const corrL = (maxN - 1) * RK.pitch + 1.6;                  // 走廊長（x 向）
+  const corrZ = RK.rowZ - RK.d / 2 - 0.02;                    // 內牆 z 位置
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color: 0xcfe0ee, transparent: true, opacity: 0.10,
+    roughness: 0.06, metalness: 0.0, side: THREE.DoubleSide, depthWrite: false,
+  });
+  const frameMatC = new THREE.MeshStandardMaterial({ color: 0xb9c4d0, roughness: 0.3, metalness: 0.8 });
+  // 兩側玻璃牆（機櫃頂 → 管架高度）
+  [-corrZ, corrZ].forEach(zw => {
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(corrL, RK.pipeY - RK.h + 0.55), glassMat);
+    wall.position.set(0, RK.h + (RK.pipeY - RK.h + 0.55) / 2, zw);
+    layer.add(wall);
+  });
+  // 玻璃屋頂
+  const roof = new THREE.Mesh(new THREE.PlaneGeometry(corrL, corrZ * 2), glassMat);
+  roof.rotation.x = -Math.PI / 2;
+  roof.position.set(0, RK.pipeY + 0.55, 0);
+  layer.add(roof);
+  // 走廊頂部邊框
+  [-corrZ, corrZ].forEach(zw => {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(corrL, 0.05, 0.05), frameMatC);
+    beam.position.set(0, RK.pipeY + 0.55, zw);
+    layer.add(beam);
+  });
+  // 紅色發光地板（熱通道）
+  const hotFloor = new THREE.Mesh(
+    new THREE.PlaneGeometry(corrL, corrZ * 2 - 0.1),
+    new THREE.MeshStandardMaterial({
+      color: 0x551018, emissive: 0xff3344, emissiveIntensity: 0.85,
+      transparent: true, opacity: 0.55, roughness: 0.4,
+    })
+  );
+  hotFloor.rotation.x = -Math.PI / 2;
+  hotFloor.position.y = 0.012;
+  layer.add(hotFloor);
+
   // 跨排聯絡主管（場景端部）
   const endX = (Math.max(rows[0], rows[1]) - 1) * RK.pitch / 2 + 1.1;
   [['#3aa0ff', 0.085, -0.16, true], ['#ff5a64', 0.085, 0.16, false]].forEach(([hex, r, dz, isSup]) => {
@@ -642,9 +692,11 @@ function buildRacks(parent, count) {
 }
 
 function pipeMat(hex, isSupply) {
+  // 半透明亮面管壁：管內流動粒子清楚可見（比照實景渲染）
   return new THREE.MeshStandardMaterial({
-    color: new THREE.Color(hex), roughness: 0.35, metalness: 0.6,
-    emissive: new THREE.Color(hex), emissiveIntensity: 0.35,
+    color: new THREE.Color(hex), roughness: 0.12, metalness: 0.55,
+    emissive: new THREE.Color(hex), emissiveIntensity: 0.30,
+    transparent: true, opacity: 0.50,
   });
 }
 
@@ -665,8 +717,8 @@ function buildRowPiping(layer, n, z, x0) {
   ret.position.set(sup.position.x, RK.pipeY + 0.3, z + 0.18);
   layer.add(ret);
 
-  // 支架 + 纜線架
-  const railMat = new THREE.MeshStandardMaterial({ color: PAL.steel, roughness: 0.7, metalness: 0.5 });
+  // 支架 + 纜線架（亮面鋼材）
+  const railMat = new THREE.MeshStandardMaterial({ color: 0x8fa3b8, roughness: 0.22, metalness: 0.90 });
   const tray = new THREE.Mesh(new THREE.BoxGeometry(len, 0.06, 0.5), railMat);
   tray.position.set(sup.position.x, RK.pipeY + 0.62, z);
   layer.add(tray);
@@ -676,8 +728,29 @@ function buildRowPiping(layer, n, z, x0) {
     layer.add(post);
   }
 
-  // 每櫃垂直落管（供 / 回）
+  // 纜線架上方鋼藍色平行管束（×3）＋ 藍/紅端蓋（比照實景）
+  const bundleGeo = new THREE.CylinderGeometry(0.030, 0.030, len, 10);
+  const capGeo    = new THREE.BoxGeometry(0.10, 0.10, 0.12);
+  [-0.15, 0, 0.15].forEach((dz, bi) => {
+    const bp = new THREE.Mesh(bundleGeo, railMat);
+    bp.rotation.z = Math.PI / 2;
+    bp.position.set(sup.position.x, RK.pipeY + 0.72, z + dz);
+    layer.add(bp);
+    const capMat = new THREE.MeshStandardMaterial({
+      color: bi % 2 === 0 ? 0x2a6cff : 0xe03030, roughness: 0.30, metalness: 0.70,
+      emissive: bi % 2 === 0 ? 0x102a66 : 0x551010, emissiveIntensity: 0.6,
+    });
+    [-1, 1].forEach(sd => {
+      const cap = new THREE.Mesh(capGeo, capMat);
+      cap.position.set(sup.position.x + sd * (len / 2 - 0.06), RK.pipeY + 0.72, z + dz);
+      layer.add(cap);
+    });
+  });
+
+  // 每櫃垂直落管（供 / 回）＋ 機櫃頂白色快接底座
   const dropGeo = new THREE.CylinderGeometry(0.034, 0.034, RK.pipeY - RK.h + 0.32, 10);
+  const baseGeo = new THREE.BoxGeometry(0.13, 0.05, 0.13);
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0xe8edf2, roughness: 0.35, metalness: 0.40 });
   for (let i = 0; i < n; i++) {
     const x = x0 + i * RK.pitch;
     const d1 = new THREE.Mesh(dropGeo, supMat);
@@ -686,6 +759,11 @@ function buildRowPiping(layer, n, z, x0) {
     const d2 = new THREE.Mesh(dropGeo, retMat);
     d2.position.set(x + 0.12, RK.h - 0.16 + dropGeo.parameters.height / 2 + 0.15, z + 0.18);
     layer.add(d2);
+    [[-0.12, -0.18], [0.12, 0.18]].forEach(([dx, dz]) => {
+      const b = new THREE.Mesh(baseGeo, baseMat);
+      b.position.set(x + dx, RK.h + 0.025, z + dz);
+      layer.add(b);
+    });
   }
 }
 
