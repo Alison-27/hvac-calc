@@ -714,12 +714,39 @@ function buildRacks(parent, count) {
   paintThermals();
 }
 
+// ── 管內液體流動貼圖（發光亮帶沿管軸捲動，取代粒子）──
+let _flowTexSup = null, _flowTexRet = null;
+function makeFlowTexture() {
+  const c = document.createElement('canvas');
+  c.width = 8; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#262626'; g.fillRect(0, 0, 8, 256);   // 暗底＝管內液體本體
+  // 4 道柔邊亮帶（液體流動段）
+  for (let b = 0; b < 4; b++) {
+    const cy = b * 64 + 24, hw = 30;
+    const grad = g.createLinearGradient(0, cy - hw, 0, cy + hw);
+    grad.addColorStop(0,   'rgba(255,255,255,0)');
+    grad.addColorStop(0.5, 'rgba(255,255,255,1)');
+    grad.addColorStop(1,   'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, cy - hw, 8, hw * 2);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(1, 3);
+  return t;
+}
+
 function pipeMat(hex, isSupply) {
-  // 半透明亮面管壁：管內流動粒子清楚可見（比照實景渲染）
+  if (isSupply && !_flowTexSup) _flowTexSup = makeFlowTexture();
+  if (!isSupply && !_flowTexRet) _flowTexRet = makeFlowTexture();
+  // 半透明亮面管壁 + 沿管軸捲動的發光亮帶 ＝ 管內液體流動
   return new THREE.MeshStandardMaterial({
     color: new THREE.Color(hex), roughness: 0.12, metalness: 0.55,
-    emissive: new THREE.Color(hex), emissiveIntensity: 0.30,
-    transparent: true, opacity: 0.50,
+    emissive: new THREE.Color(hex), emissiveIntensity: 0.9,
+    emissiveMap: isSupply ? _flowTexSup : _flowTexRet,
+    transparent: true, opacity: 0.6,
   });
 }
 
@@ -938,81 +965,16 @@ function paintThermals() {
   });
 }
 
-/* ── 管路流動粒子 ─────────────────────────────────── */
+/* ── 管路流動（改用發光貼圖捲動，不再用粒子）────────── */
 function buildPipeParticles() {
+  // 清除任何舊版粒子層（若存在）
   const old = T.groups.white?.getObjectByName('pipeParticleLayer');
   if (old) {
     old.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
     T.groups.white.remove(old);
   }
   T.pipeParticles = [];
-  if (!T.groups.white) return;
-
-  const pg = new THREE.Group();
-  pg.name = 'pipeParticleLayer';
-  const rows = [Math.ceil(S.racks / 2), Math.floor(S.racks / 2)];
-  const maxN = Math.max(rows[0], rows[1]);
-
-  rows.forEach((n, r) => {
-    if (!n) return;
-    const z = r === 0 ? -RK.rowZ : RK.rowZ;
-    const x0 = -(n - 1) * RK.pitch / 2;
-    const xFar = x0 + (n - 1) * RK.pitch + 1.15;
-    const cduX = x0 - RK.pitch * 0.9;
-    const cnt = Math.max(8, n + 3);
-
-    for (let i = 0; i < cnt; i++) {
-      const jit = (Math.random() - 0.5) * 0.05;
-      const t0 = i / cnt;
-      // 供水粒子（藍）：CDU → 遠端
-      const sg = new THREE.SphereGeometry(0.055, 7, 5);
-      const sm = new THREE.MeshStandardMaterial({ color: 0x55d4ff, emissive: 0x00aaff, emissiveIntensity: 2.4, transparent: true, opacity: 0.92, depthTest: false, depthWrite: false });
-      const smesh = new THREE.Mesh(sg, sm);
-      smesh.renderOrder = 10;
-      const ss = new THREE.Vector3(cduX, RK.pipeY + jit, z - 0.18);
-      const se = new THREE.Vector3(xFar, RK.pipeY + jit, z - 0.18);
-      smesh.position.lerpVectors(ss, se, t0);
-      pg.add(smesh);
-      T.pipeParticles.push({ mesh: smesh, s: ss, e: se, t: t0, spd: 0.082 + Math.random() * 0.03 });
-      // 回水粒子（紅）：遠端 → CDU
-      const rg = new THREE.SphereGeometry(0.055, 7, 5);
-      const rm = new THREE.MeshStandardMaterial({ color: 0xff6060, emissive: 0xff2200, emissiveIntensity: 2.2, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false });
-      const rmesh = new THREE.Mesh(rg, rm);
-      rmesh.renderOrder = 10;
-      const rs = new THREE.Vector3(xFar, RK.pipeY + 0.3 + jit, z + 0.18);
-      const re = new THREE.Vector3(cduX, RK.pipeY + 0.3 + jit, z + 0.18);
-      rmesh.position.lerpVectors(rs, re, t0);
-      pg.add(rmesh);
-      T.pipeParticles.push({ mesh: rmesh, s: rs, e: re, t: t0, spd: 0.068 + Math.random() * 0.025 });
-    }
-  });
-
-  // 跨排端部聯絡管粒子（z 向）
-  const endX = (maxN - 1) * RK.pitch / 2 + 1.1;
-  for (let i = 0; i < 6; i++) {
-    const t0 = i / 6;
-    const sg2 = new THREE.SphereGeometry(0.055, 7, 5);
-    const sm2 = new THREE.MeshStandardMaterial({ color: 0x55d4ff, emissive: 0x00aaff, emissiveIntensity: 2.4, transparent: true, opacity: 0.92, depthTest: false, depthWrite: false });
-    const s2 = new THREE.Mesh(sg2, sm2);
-    s2.renderOrder = 10;
-    const ss2 = new THREE.Vector3(endX - 0.16, RK.pipeY, RK.rowZ + 0.15);
-    const se2 = new THREE.Vector3(endX - 0.16, RK.pipeY, -RK.rowZ - 0.15);
-    s2.position.lerpVectors(ss2, se2, t0);
-    pg.add(s2);
-    T.pipeParticles.push({ mesh: s2, s: ss2, e: se2, t: t0, spd: 0.1 });
-
-    const rg2 = new THREE.SphereGeometry(0.055, 7, 5);
-    const rm2 = new THREE.MeshStandardMaterial({ color: 0xff6060, emissive: 0xff2200, emissiveIntensity: 2.2, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false });
-    const r2 = new THREE.Mesh(rg2, rm2);
-    r2.renderOrder = 10;
-    const rs2 = new THREE.Vector3(endX + 0.16, RK.pipeY + 0.3, -RK.rowZ - 0.15);
-    const re2 = new THREE.Vector3(endX + 0.16, RK.pipeY + 0.3, RK.rowZ + 0.15);
-    r2.position.lerpVectors(rs2, re2, t0);
-    pg.add(r2);
-    T.pipeParticles.push({ mesh: r2, s: rs2, e: re2, t: t0, spd: 0.086 });
-  }
-
-  T.groups.white.add(pg);
+  // 流動效果由 pipeMat 的 emissiveMap 在 animate 中捲動產生，此處不再建立幾何體
 }
 
 /* ── 點擊選取 → 設備詳情 ────────────────────────── */
@@ -1177,18 +1139,14 @@ function animate() {
   // 冷卻液脈動（減少動態偏好時停用）
   if (!T.reduced && T.clock) {
     const t = T.clock.getElapsedTime();
-    const s = 0.35 + Math.sin(t * 2.2) * 0.12;
+    const s = 0.85 + Math.sin(t * 2.2) * 0.18;
     [...T.supplyMats, ...T.plantSup].forEach(m => m.emissiveIntensity = s);
-    [...T.returnMats, ...T.plantRet].forEach(m => m.emissiveIntensity = s + 0.08);
+    [...T.returnMats, ...T.plantRet].forEach(m => m.emissiveIntensity = s + 0.1);
 
-    // 管路流動粒子
-    if (T.pipeParticles.length) {
-      T.pipeParticles.forEach(p => {
-        p.t = (p.t + p.spd * _dt) % 1.0;
-        p.mesh.position.lerpVectors(p.s, p.e, p.t);
-        p.mesh.material.opacity = 0.48 + 0.44 * Math.sin(p.t * Math.PI * 2.5);
-      });
-    }
+    // 管內液體流動：沿管軸捲動發光亮帶（供水、回水反向）
+    const flow = _dt * 0.55;
+    if (_flowTexSup) _flowTexSup.offset.y -= flow;
+    if (_flowTexRet) _flowTexRet.offset.y += flow * 0.85;
 
     // 即時感測器數據平滑插值（~20fps DOM 更新）
     if (T.liveDisplay && T.liveTarget) {
