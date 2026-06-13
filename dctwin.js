@@ -817,33 +817,149 @@ function buildRowPiping(layer, n, z, x0) {
   }
 }
 
+// 圓形風扇/濾網的網孔貼圖（一次建立、共用）
+let _grilleTex = null;
+function grilleTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 96;
+  const g = c.getContext('2d');
+  g.fillStyle = '#0c1118'; g.fillRect(0, 0, 96, 96);
+  g.fillStyle = '#3a4656';
+  for (let yy = 4; yy < 96; yy += 6)
+    for (let xx = 4; xx < 96; xx += 6) { g.beginPath(); g.arc(xx, yy, 1.6, 0, 7); g.fill(); }
+  const t = new THREE.CanvasTexture(c);
+  return t;
+}
+
 function buildCDU(layer, x, z, rowIdx) {
   const cdu = new THREE.Group();
   cdu.position.set(x, RK.h / 2, z);
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(RK.w, RK.h, RK.d),
-    new THREE.MeshStandardMaterial({ color: PAL.cdu, roughness: 0.45, metalness: 0.6 })
-  );
+
+  // 機箱本體（深藍金屬亮面，比照 Vertiv Liebert XDU）
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1b2735, roughness: 0.26, metalness: 0.86 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(RK.w, RK.h, RK.d), bodyMat);
   body.userData = { pick: true, type: 'cdu', id: rowIdx + 1 };
   cdu.add(body);
-  const face = new THREE.Mesh(
-    new THREE.PlaneGeometry(RK.w - 0.12, RK.h - 0.5),
-    new THREE.MeshStandardMaterial({ color: 0x05121e, emissive: PAL.cduFace, emissiveIntensity: 0.5 })
-  );
-  face.position.z = (rowIdx === 0 ? -1 : 1) * (RK.d / 2 + 0.002);
-  if (rowIdx === 0) face.rotation.y = Math.PI;
-  cdu.add(face);
-  for (let p = 0; p < 2; p++) {
-    const pump = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.09, 0.09, 0.3, 12),
-      new THREE.MeshStandardMaterial({ color: 0x2a3a52, metalness: 0.7, roughness: 0.4 })
-    );
-    pump.position.set(-0.12 + p * 0.24, -RK.h / 2 + 0.2, (rowIdx === 0 ? -1 : 1) * (RK.d / 2 + 0.16));
-    pump.rotation.x = Math.PI / 2;
-    cdu.add(pump);
-  }
+
+  // 正面細節群組（依朝向旋轉，前面朝外）
+  const face = rowIdx === 0 ? -1 : 1;
+  const F = new THREE.Group();
+  F.rotation.y = face === -1 ? Math.PI : 0;
+  cdu.add(F);
+  const FZ  = RK.d / 2;            // 正面 z（本地 +z）
+  const HW  = RK.w / 2, HH = RK.h / 2;
+
+  if (!_grilleTex) _grilleTex = grilleTexture();
+  const darkMat  = new THREE.MeshStandardMaterial({ color: 0x10161f, roughness: 0.55, metalness: 0.5 });
+  const steelMat = new THREE.MeshStandardMaterial({ color: 0x9fb0c2, roughness: 0.22, metalness: 0.92 });
+  const whiteMat = new THREE.MeshStandardMaterial({ color: 0xe4eaf0, roughness: 0.34, metalness: 0.3 });
+
+  // 1) 頂部控制面板（內凹深色框 + 青色螢幕 + 兩顆指示燈）
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(RK.w - 0.08, 0.24, 0.03), darkMat);
+  panel.position.set(0, HH - 0.17, FZ + 0.005);
+  F.add(panel);
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0x06121c, emissive: 0x35c8ff, emissiveIntensity: 1.3 }));
+  screen.position.set(-0.06, HH - 0.17, FZ + 0.022);
+  F.add(screen);
+  [0.07, 0.13].forEach((px, k) => {
+    const dot = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.012, 12),
+      new THREE.MeshStandardMaterial({ color: 0x0a0a0a, emissive: k ? 0x33dd55 : 0xff5a3c, emissiveIntensity: 1.1 }));
+    dot.rotation.x = Math.PI / 2;
+    dot.position.set(px, HH - 0.17, FZ + 0.022);
+    F.add(dot);
+  });
+  // VERTIV 品牌橫條（白色細條占位）
+  const logo = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.018),
+    new THREE.MeshStandardMaterial({ color: 0xf2f6fa, emissive: 0x6a7686, emissiveIntensity: 0.3 }));
+  logo.position.set(-0.04, HH - 0.36, FZ + 0.006);
+  F.add(logo);
+
+  // 2) 左側散熱百葉（3 組，各 4 道橫向細縫）
+  const slotGeo = new THREE.BoxGeometry(0.2, 0.014, 0.012);
+  [0.52, 0.30, 0.08].forEach(gy => {
+    for (let s = 0; s < 4; s++) {
+      const slot = new THREE.Mesh(slotGeo, darkMat);
+      slot.position.set(-HW + 0.16, gy - s * 0.032, FZ + 0.004);
+      F.add(slot);
+    }
+  });
+
+  // 3) 兩支發光玻璃管柱（核心特徵：透明玻璃 + 內部發光 + 螺旋線圈 + 金屬接頭）
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color: 0xcfe6ff, transparent: true, opacity: 0.24,
+    roughness: 0.04, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05,
+  });
+  const tubeH = 0.5, tubeY = 0.30, tubeZ = FZ + 0.11;
+  const tubeXs = [-0.055, 0.075];
+  tubeXs.forEach(tx => {
+    const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.046, tubeH, 18, 1, true), glassMat);
+    glass.position.set(tx, tubeY, tubeZ);
+    F.add(glass);
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, tubeH - 0.02, 14),
+      new THREE.MeshStandardMaterial({ color: 0xddf2ff, emissive: 0x59c8ff, emissiveIntensity: 2.6 }));
+    core.position.copy(glass.position);
+    F.add(core);
+    // 螺旋線圈（堆疊細環）
+    const coilMat = new THREE.MeshStandardMaterial({ color: 0xafc4d8, roughness: 0.3, metalness: 0.85 });
+    for (let cI = 0; cI < 11; cI++) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.036, 0.004, 6, 16), coilMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(tx, tubeY - tubeH / 2 + 0.05 + cI * 0.04, tubeZ);
+      F.add(ring);
+    }
+    // 上下金屬接頭
+    [tubeY + tubeH / 2, tubeY - tubeH / 2].forEach(fy => {
+      const fit = new THREE.Mesh(new THREE.CylinderGeometry(0.056, 0.056, 0.05, 16), steelMat);
+      fit.position.set(tx, fy, tubeZ);
+      F.add(fit);
+    });
+  });
+  // 底部連接歧管（橫接兩管）
+  const manifold = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 12), steelMat);
+  manifold.rotation.z = Math.PI / 2;
+  manifold.position.set(0.01, tubeY - tubeH / 2 - 0.02, tubeZ);
+  F.add(manifold);
+
+  // 4) 下方兩顆圓形風扇（網孔濾網）
+  [-0.085, 0.085].forEach(fx => {
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.105, 0.05, 24), darkMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.set(fx, -0.03, FZ + 0.02);
+    F.add(ring);
+    const grille = new THREE.Mesh(new THREE.CircleGeometry(0.098, 28),
+      new THREE.MeshStandardMaterial({ map: _grilleTex, roughness: 0.6, metalness: 0.4 }));
+    grille.position.set(fx, -0.03, FZ + 0.046);
+    F.add(grille);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.02, 12), steelMat);
+    hub.rotation.x = Math.PI / 2;
+    hub.position.set(fx, -0.03, FZ + 0.05);
+    F.add(hub);
+  });
+  // 泵浦馬達（風扇右側橫向圓柱）
+  const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.14, 16), steelMat);
+  motor.rotation.x = Math.PI / 2;
+  motor.position.set(0.2, -0.04, FZ + 0.03);
+  F.add(motor);
+
+  // 5) 下方白色維修門板
+  const door = new THREE.Mesh(new THREE.BoxGeometry(RK.w - 0.14, 0.52, 0.03), whiteMat);
+  door.position.set(0, -0.5, FZ + 0.006);
+  F.add(door);
+
+  // 6) 底部藍光燈條 + 四隻腳
+  const glow = new THREE.Mesh(new THREE.BoxGeometry(RK.w - 0.04, 0.03, 0.02),
+    new THREE.MeshStandardMaterial({ color: 0x06121c, emissive: 0x35c8ff, emissiveIntensity: 1.6 }));
+  glow.position.set(0, -HH + 0.06, FZ + 0.006);
+  F.add(glow);
+  [[-HW + 0.06, FZ - 0.06], [HW - 0.06, FZ - 0.06], [-HW + 0.06, -FZ + 0.06], [HW - 0.06, -FZ + 0.06]].forEach(([fx, fz]) => {
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.018, 0.06, 10), steelMat);
+    foot.position.set(fx, -HH - 0.02, fz);
+    cdu.add(foot);
+  });
+
   const lab = makeLabel('CDU-' + (rowIdx + 1), '#35c8ff', 0.7);
-  lab.position.y = RK.h / 2 + 0.45;
+  lab.position.y = HH + 0.45;
   cdu.add(lab);
   layer.add(cdu);
   T.cdus.push(cdu);
