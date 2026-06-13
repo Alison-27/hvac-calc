@@ -7,17 +7,27 @@
    ============================================================ */
 
 let THREE = null, OrbitControls = null, RoomEnvironment = null;
+let EffectComposer = null, RenderPass = null, UnrealBloomPass = null, OutputPass = null;
 
 async function loadThree() {
   try {
     THREE = await import('three');
-    ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
-    ({ RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js'));
+    ({ OrbitControls }    = await import('three/addons/controls/OrbitControls.js'));
+    ({ RoomEnvironment }  = await import('three/addons/environments/RoomEnvironment.js'));
+    ({ EffectComposer }   = await import('three/addons/postprocessing/EffectComposer.js'));
+    ({ RenderPass }       = await import('three/addons/postprocessing/RenderPass.js'));
+    ({ UnrealBloomPass }  = await import('three/addons/postprocessing/UnrealBloomPass.js'));
+    ({ OutputPass }       = await import('three/addons/postprocessing/OutputPass.js'));
   } catch (e) {
     // 後備：頁面缺少 import map 時改走 esm.sh（會自動改寫相依）
-    THREE = await import('https://esm.sh/three@0.163.0');
-    ({ OrbitControls } = await import('https://esm.sh/three@0.163.0/examples/jsm/controls/OrbitControls.js'));
-    ({ RoomEnvironment } = await import('https://esm.sh/three@0.163.0/examples/jsm/environments/RoomEnvironment.js'));
+    const B = 'https://esm.sh/three@0.163.0';
+    THREE = await import(B);
+    ({ OrbitControls }    = await import(B + '/examples/jsm/controls/OrbitControls.js'));
+    ({ RoomEnvironment }  = await import(B + '/examples/jsm/environments/RoomEnvironment.js'));
+    ({ EffectComposer }   = await import(B + '/examples/jsm/postprocessing/EffectComposer.js'));
+    ({ RenderPass }       = await import(B + '/examples/jsm/postprocessing/RenderPass.js'));
+    ({ UnrealBloomPass }  = await import(B + '/examples/jsm/postprocessing/UnrealBloomPass.js'));
+    ({ OutputPass }       = await import(B + '/examples/jsm/postprocessing/OutputPass.js'));
   }
 }
 
@@ -284,7 +294,7 @@ async function initThree() {
   T.renderer = new THREE.WebGLRenderer({ antialias: true });
   T.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   T.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  T.renderer.toneMappingExposure = 1.2;
+  T.renderer.toneMappingExposure = 1.18;
   T.renderer.domElement.classList.add('dt-canvas');
   wrap.appendChild(T.renderer.domElement);
 
@@ -309,6 +319,15 @@ async function initThree() {
   T.controls.maxPolarAngle = Math.PI * 0.495;
   T.controls.minDistance = 1.5;
   T.controls.maxDistance = 40;
+
+  // ── Bloom 輝光後製（電影感特效關鍵）──
+  if (EffectComposer && !T.reduced) {
+    T.composer = new EffectComposer(T.renderer);
+    T.composer.addPass(new RenderPass(T.scene, T.camera));
+    T.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.62, 0.55, 0.72);
+    T.composer.addPass(T.bloom);
+    T.composer.addPass(new OutputPass());
+  }
 
   // 燈光（冷藍主調 + 熱通道紅光，比照實景渲染）
   T.scene.add(new THREE.AmbientLight(0x9fb2cd, 0.45));
@@ -357,6 +376,10 @@ function onResize() {
   T.renderer.setSize(w, h);
   T.camera.aspect = w / h;
   T.camera.updateProjectionMatrix();
+  if (T.composer) {
+    T.composer.setSize(w, h);
+    T.composer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  }
 }
 
 /* 文字標籤（canvas sprite） */
@@ -1184,7 +1207,8 @@ function animate() {
   }
 
   T.controls.update();
-  T.renderer.render(T.scene, T.camera);
+  if (T.composer) T.composer.render();
+  else T.renderer.render(T.scene, T.camera);
 }
 
 /* ── UI 綁定與刷新 ──────────────────────────────── */
