@@ -1193,9 +1193,25 @@ function buildPlant() {
     }
   };
 
-  // ── 冷卻塔（兩格，墊高 + 層疊百葉 + 角柱 + 頂部橘色葉片風扇）──
-  const ctX = 11, ctZ = -6;
-  const ct = new THREE.Group(); ct.position.set(ctX, 0, ctZ); g.add(ct);
+  // ── 頂樓冷卻水塔（架高樓板 + 支柱，與機房分層）──
+  const ROOF = 4.2, ctX = 9, ctZ = -7;
+  // 頂樓樓板
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(10, 0.3, 7.5), M(0x3a4658, 0.6, 0.45));
+  deck.position.set(ctX, ROOF, ctZ); g.add(deck);
+  // 支柱（樓板 → 地面）
+  [[-4.4, -3], [4.4, -3], [-4.4, 3], [4.4, 3], [0, -3], [0, 3]].forEach(([dx, dz]) => {
+    const col = new THREE.Mesh(new THREE.BoxGeometry(0.34, ROOF, 0.34), M(0x29323e, 0.6, 0.5));
+    col.position.set(ctX + dx, ROOF / 2, ctZ + dz); g.add(col);
+  });
+  // 頂樓前緣護欄
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(10, 0.5, 0.06), M(0x4a5666, 0.5, 0.6));
+  rail.position.set(ctX, ROOF + 0.4, ctZ + 3.75); g.add(rail);
+  for (let rp = 0; rp < 6; rp++) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), M(0x4a5666, 0.5, 0.6));
+    post.position.set(ctX - 4.5 + rp * 1.8, ROOF + 0.4, ctZ + 3.75); g.add(post);
+  }
+
+  const ct = new THREE.Group(); ct.position.set(ctX, ROOF + 0.15, ctZ); g.add(ct);
   const ctCell = (ox) => {
     // 支撐墊高
     [[-1.4, -1.3], [1.4, -1.3], [-1.4, 1.3], [1.4, 1.3]].forEach(([lx, lz]) => {
@@ -1235,9 +1251,17 @@ function buildPlant() {
       blade.rotation.y = -a; blade.rotation.x = 0.32; ct.add(blade);
     }
   };
-  ctCell(-1.8); ctCell(1.8);
-  const ctLab = makeLabel('ROOFTOP CT · 冷卻塔', '#35c8ff', 0.95);
-  ctLab.position.set(ctX, 5.4, ctZ); g.add(ctLab);
+  ctCell(-2.2); ctCell(2.2);
+  const ctLab = makeLabel('ROOFTOP 頂樓 · 冷卻水塔', '#35c8ff', 1.0);
+  ctLab.position.set(ctX, ROOF + 5.6, ctZ); g.add(ctLab);
+  // 冷卻水立管（機房 → 頂樓，綠供 / 紅回）
+  [[-0.35, GRN, true], [0.05, RED, false]].forEach(([dx, hex, isS]) => {
+    pipe(hex, isS, ROOF + 0.3, 'y', ctX - 3.5 + dx, (ROOF + 0.3) / 2, ctZ + 3.2, 0.1);
+  });
+  // 頂樓水平接管（立管 → 兩塔）
+  pipe(GRN, true, 6, 'x', ctX, ROOF + 0.5, ctZ + 3.2, 0.09);
+  pipe(RED, false, 6, 'x', ctX, ROOF + 0.85, ctZ + 3.5, 0.09);
+  elbow(GRN, ctX - 3.85, ROOF + 0.4, ctZ + 3.2);
 
   // ── 兩台離心式冰水主機（殼管 + 水室法蘭 + 離心壓縮機 + 控制盤，比照照片）──
   const buildChiller = (cz, idx) => {
@@ -1386,15 +1410,18 @@ function buildPlant() {
   pipe(RED, false, 20, 'x', 0, 2.0, 3.7, 0.11);   // 紅回水母管
   pipe(GRN, true,  9, 'z', -6.5, 1.5, -1, 0.09);  // 往冰機側
   pipe(RED, false, 9, 'z', -6.0, 2.0, -1, 0.09);
-  // 通往冷卻塔的立/橫管
-  pipe(GRN, true, 9.5, 'x', 6.5, 2.6, -6, 0.09);
-  pipe(RED, false, 9.5, 'x', 6.5, 3.0, -5.4, 0.09);
-  pipe(GRN, true, 1.4, 'y', 11, 2.0, -6, 0.09);
-  pipe(RED, false, 1.4, 'y', 11.4, 2.3, -5.4, 0.09);
-  [[-8, 1.75, 3.3], [0, 1.75, 3.5], [6.5, 2.3, -6], [4.2, 1.5, 1.4]].forEach(([ex, ey, ez]) => elbow(GRN, ex, ey, ez));
+  // 通往頂樓冷卻塔的冷卻水母管（機房內橫向，連到立管底部）
+  pipe(GRN, true, 9, 'x', 1, 1.5, -3.8, 0.1);
+  pipe(RED, false, 9, 'x', 1, 2.0, -4.2, 0.1);
+  pipe(GRN, true, 2.6, 'z', 5.15, 1.5, -2.5, 0.1);   // 轉向頂樓立管
+  pipe(RED, false, 2.6, 'z', 5.55, 2.0, -2.5, 0.1);
+  [[-8, 1.75, 3.3], [0, 1.75, 3.5], [4.2, 1.5, 1.4], [5.15, 1.6, -3.8]].forEach(([ex, ey, ez]) => elbow(GRN, ex, ey, ez));
 
+  // 場景分層標示
+  const labRoom = makeLabel('PLANT ROOM 機房', '#9eff2e', 1.0);
+  labRoom.position.set(-2, 0.4, 6.6); g.add(labRoom);
   const lab = makeLabel('CHILLER PLANT · 冰水動力中心', '#35c8ff', 1.0);
-  lab.position.set(0, 5.2, 5); g.add(lab);
+  lab.position.set(-2, 5.2, 5); g.add(lab);
   return g;
 }
 
