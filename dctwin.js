@@ -1165,64 +1165,180 @@ function buildPlant() {
     e.position.set(px, py, pz); g.add(e);
   };
 
-  // ── 冷卻塔（Rooftop CT，右後方，墊高層疊結構 + 頂部風扇）──
+  // 共用材質 / 設備細節輔助
+  const blueShell = M(0x6fb4d6, 0.3, 0.7);    // 淺藍殼管
+  const blueCap   = M(0x4a8fb5, 0.35, 0.7);   // 水室端蓋
+  const motorGrn  = M(0x1f7a4d, 0.4, 0.55);   // 綠色馬達
+  const yellowCp  = M(0xf2c029, 0.4, 0.5);    // 黃色聯軸器
+  const panelMat  = M(0x1b2a3e, 0.4, 0.5);
+  // 螺栓法蘭（軸向沿 X），parent 本地座標
+  const flangeX = (parent, x, y, z, r) => {
+    const d = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.05, 22), steel);
+    d.rotation.z = Math.PI / 2; d.position.set(x, y, z); parent.add(d);
+    for (let b = 0; b < 12; b++) {
+      const a = b / 12 * Math.PI * 2;
+      const bo = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.07, 6), dark);
+      bo.rotation.z = Math.PI / 2;
+      bo.position.set(x, y + Math.cos(a) * r * 0.82, z + Math.sin(a) * r * 0.82); parent.add(bo);
+    }
+  };
+  // 散熱鰭馬達（軸沿 X）
+  const finnedX = (parent, x, y, z, r, len, col) => {
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 16), col);
+    body.rotation.z = Math.PI / 2; body.position.set(x, y, z); parent.add(body);
+    const n = Math.max(4, Math.floor(len / 0.07));
+    for (let f = 0; f < n; f++) {
+      const fin = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.16, r * 1.16, 0.018, 16), col);
+      fin.rotation.z = Math.PI / 2; fin.position.set(x - len / 2 + 0.04 + f * (len - 0.08) / (n - 1), y, z); parent.add(fin);
+    }
+  };
+
+  // ── 冷卻塔（兩格，墊高 + 層疊百葉 + 角柱 + 頂部橘色葉片風扇）──
   const ctX = 11, ctZ = -6;
   const ct = new THREE.Group(); ct.position.set(ctX, 0, ctZ); g.add(ct);
-  // 支撐鋼架
-  [[-2.3, -1.3], [2.3, -1.3], [-2.3, 1.3], [2.3, 1.3]].forEach(([lx, lz]) => {
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 0.18), steel);
-    leg.position.set(lx, 1.3, lz); ct.add(leg);
-  });
-  // 主體（層疊百葉）
-  const ctBody = new THREE.Mesh(new THREE.BoxGeometry(5, 2.2, 3), lite);
-  ctBody.position.y = 3.7; ct.add(ctBody);
-  for (let s = 0; s < 9; s++) {
-    const louver = new THREE.Mesh(new THREE.BoxGeometry(5.06, 0.12, 3.06), dark);
-    louver.position.set(0, 2.8 + s * 0.22, 0); ct.add(louver);
-  }
-  // 頂部 2 顆風扇
-  [-1.2, 1.2].forEach(fx => {
-    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 0.2, 22), dark);
-    ring.position.set(fx, 4.85, 0); ct.add(ring);
-    const grille = new THREE.Mesh(new THREE.CircleGeometry(0.88, 26), new THREE.MeshStandardMaterial({ map: _grilleTex, roughness: 0.6, metalness: 0.4 }));
-    grille.rotation.x = -Math.PI / 2; grille.position.set(fx, 4.96, 0); ct.add(grille);
-  });
+  const ctCell = (ox) => {
+    // 支撐墊高
+    [[-1.4, -1.3], [1.4, -1.3], [-1.4, 1.3], [1.4, 1.3]].forEach(([lx, lz]) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.8, 0.16), steel);
+      leg.position.set(ox + lx, 0.9, lz); ct.add(leg);
+    });
+    // 集水盤
+    const basin = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.3, 2.9), dark);
+    basin.position.set(ox, 1.9, 0); ct.add(basin);
+    // 主體外殼
+    const cell = new THREE.Mesh(new THREE.BoxGeometry(3, 1.9, 2.8), lite);
+    cell.position.set(ox, 3.0, 0); ct.add(cell);
+    // 進風百葉（四面層疊）
+    for (let s = 0; s < 7; s++) {
+      const ly = 2.3 + s * 0.2;
+      const lvF = new THREE.Mesh(new THREE.BoxGeometry(3.04, 0.1, 2.84), dark);
+      lvF.position.set(ox, ly, 0); ct.add(lvF);
+    }
+    // 頂板
+    const top = new THREE.Mesh(new THREE.BoxGeometry(3.05, 0.12, 2.85), steel);
+    top.position.set(ox, 4.0, 0); ct.add(top);
+    // 角柱（延伸至頂部）
+    [[-1.45, -1.35], [1.45, -1.35], [-1.45, 1.35], [1.45, 1.35]].forEach(([lx, lz]) => {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.3, 0.1), steel);
+      post.position.set(ox + lx, 4.6, lz); ct.add(post);
+    });
+    // 風扇蓋（圓筒擴散罩）
+    const shroud = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 0.95, 0.5, 28, 1, true), dark);
+    shroud.position.set(ox, 4.35, 0); ct.add(shroud);
+    // 橘色風扇葉片（6 片繞 hub）+ 中央輪轂
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.18, 14), M(0xd86a1a, 0.4, 0.6));
+    hub.position.set(ox, 4.5, 0); ct.add(hub);
+    for (let b = 0; b < 6; b++) {
+      const a = b / 6 * Math.PI * 2;
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.03, 0.26), M(0xe8801f, 0.45, 0.5));
+      blade.position.set(ox + Math.cos(a) * 0.55, 4.5, Math.sin(a) * 0.55);
+      blade.rotation.y = -a; blade.rotation.x = 0.32; ct.add(blade);
+    }
+  };
+  ctCell(-1.8); ctCell(1.8);
   const ctLab = makeLabel('ROOFTOP CT · 冷卻塔', '#35c8ff', 0.95);
-  ctLab.position.set(ctX, 6.0, ctZ); g.add(ctLab);
+  ctLab.position.set(ctX, 5.4, ctZ); g.add(ctLab);
 
-  // ── 兩台離心式冰機（左側，雙層臥式殼管 + 壓縮機）──
-  for (let i = 0; i < 2; i++) {
-    const cz = -2.4 + i * 4.8;
-    const skid = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.28, 1.7), dark);
-    skid.position.set(-9, 0.14, cz); g.add(skid);
-    const evap = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 4.2, 20), steel);
-    evap.rotation.z = Math.PI / 2; evap.position.set(-9, 0.95, cz);
-    evap.userData = { pick: true, type: 'chiller', id: i + 1 };
-    T.pickables.push(evap); g.add(evap);
-    const cond = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 4.3, 18), M(0x6e7d8e, 0.32, 0.85));
-    cond.rotation.z = Math.PI / 2; cond.position.set(-9, 1.7, cz); g.add(cond);
-    // 壓縮機（蝸殼 + 馬達）
-    const comp = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 12), steel);
-    comp.position.set(-10.4, 1.5, cz); g.add(comp);
-    const cmot = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.9, 14), dark);
-    cmot.rotation.z = Math.PI / 2; cmot.position.set(-11.1, 1.5, cz); g.add(cmot);
-    const lab = makeLabel(`CENTRIFUGAL CHILLER-${i + 1}`, '#35c8ff', 0.8);
-    lab.position.set(-9, 2.9, cz); g.add(lab);
-    // 冰機端管路接頭（綠供 / 紅回）
-    pipe(GRN, true, 1.6, 'y', -7.0, 1.0, cz - 0.4);
-    pipe(RED, false, 1.6, 'y', -7.0, 1.0, cz + 0.4);
-  }
+  // ── 兩台離心式冰水主機（殼管 + 水室法蘭 + 離心壓縮機 + 控制盤，比照照片）──
+  const buildChiller = (cz, idx) => {
+    const c = new THREE.Group(); c.position.set(-9, 0, cz); g.add(c);
+    // 底座 + 兩支鞍座
+    const skid = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.2, 1.7), dark);
+    skid.position.y = 0.1; c.add(skid);
+    [-1.5, 1.5].forEach(sx => {
+      const sad = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.45, 1.4), dark);
+      sad.position.set(sx, 0.42, 0); c.add(sad);
+    });
+    // 蒸發器（下殼管，淺藍）
+    const evap = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 3.7, 26), blueShell);
+    evap.rotation.z = Math.PI / 2; evap.position.set(0, 0.95, 0);
+    evap.userData = { pick: true, type: 'chiller', id: idx }; T.pickables.push(evap); c.add(evap);
+    // 冷凝器（上殼管）
+    const cond = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 3.7, 24), blueShell);
+    cond.rotation.z = Math.PI / 2; cond.position.set(0, 1.66, 0); c.add(cond);
+    // 殼身束帶環
+    [-1.05, 0, 1.05].forEach(bx => {
+      const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.05, 26), blueCap);
+      ring.rotation.z = Math.PI / 2; ring.position.set(bx, 0.95, 0); c.add(ring);
+    });
+    // 兩端水室 + 螺栓法蘭
+    [-1.85, 1.85].forEach(ex => {
+      const wb = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.22, 22), blueCap);
+      wb.rotation.z = Math.PI / 2; wb.position.set(ex, 0.95, 0); c.add(wb);
+      flangeX(c, ex + Math.sign(ex) * 0.13, 0.95, 0, 0.52);
+    });
+    // 水室進出水噴嘴（綠供 / 紅回，接母管）
+    pipe(GRN, true, 1.5, 'y', -1.85, 1.55, 0.42, 0.085);
+    pipe(RED, false, 1.5, 'y', 1.85, 1.55, -0.42, 0.085);
+    // ── 離心壓縮機（冷凝器頂部，近 +x 端）──
+    const comp = new THREE.Group(); comp.position.set(0.9, 2.2, 0); c.add(comp);
+    const vol = new THREE.Mesh(new THREE.SphereGeometry(0.4, 18, 14), M(0x2c3947, 0.45, 0.7));
+    comp.add(vol);
+    finnedX(comp, -0.95, 0.06, 0, 0.28, 0.95, M(0x3a4a60, 0.4, 0.7));   // 馬達
+    const term = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.22), dark);
+    term.position.set(-0.95, 0.34, 0); comp.add(term);                  // 接線盒
+    // 吸入口 + 進口導葉（IGV）
+    const suc = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.28, 20), M(0x2c3947, 0.45, 0.7));
+    suc.rotation.z = Math.PI / 2; suc.position.set(0.5, 0, 0); comp.add(suc);
+    const igv = new THREE.Mesh(new THREE.CircleGeometry(0.28, 20), M(0x2e8f5a, 0.4, 0.5, 0x0a3a22, 0.4));
+    igv.rotation.y = Math.PI / 2; igv.position.set(0.66, 0, 0); comp.add(igv);
+    // 排氣彎管接冷凝器
+    const dis = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.55, 12), steel);
+    dis.position.set(-0.15, -0.42, 0); comp.add(dis);
+    // 油分離器（小立罐）
+    const eco = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.66, 14), blueCap);
+    eco.position.set(1.65, 1.95, 0.32); c.add(eco);
+    const ecoCap = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), blueCap);
+    ecoCap.position.set(1.65, 2.28, 0.32); c.add(ecoCap);
+    // ── 控制盤（前面 -z 側，含螢幕 + 狀態燈）──
+    const pbox = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.82, 0.16), panelMat);
+    pbox.position.set(-0.15, 1.3, -0.92); c.add(pbox);
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 0.4), M(0x06121c, 0.4, 0.3, 0x35c8ff, 1.1));
+    scr.position.set(-0.15, 1.22, -0.835); c.add(scr);
+    [0xff5a3c, 0xf0a430, 0x33dd55, 0x35c8ff, 0xc060ff].forEach((cc, k) => {
+      const led = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.01, 10), M(0x0a0a0a, 0.4, 0.4, cc, 1.2));
+      led.rotation.x = Math.PI / 2; led.position.set(-0.43 + k * 0.14, 1.58, -0.835); c.add(led);
+    });
+    const ped = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.95, 0.1), dark);
+    ped.position.set(-0.15, 0.6, -0.9); c.add(ped);
+    // 銘牌
+    const lab = makeLabel(`CH-0${idx} · 800 RT`, '#35c8ff', 0.85);
+    lab.position.set(0, 3.05, 0); c.add(lab);
+  };
+  buildChiller(-2.6, 1);
+  buildChiller(2.6, 2);
 
-  // ── 板式熱交換器（Free Cooling HX，中央）──
-  const hx = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.6, 1.3), M(0x3a4b5e, 0.4, 0.7));
-  hx.position.set(1.5, 0.9, 2.2);
-  hx.userData = { pick: true, type: 'hx', id: 1 }; T.pickables.push(hx); g.add(hx);
-  for (let f = 0; f < 9; f++) {
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(1.04, 1.5, 0.02), steel);
-    fin.position.set(1.5, 0.9, 1.62 + f * 0.14); g.add(fin);
+  // ── 板式熱交換器（Free Cooling HX，板組 + 端框 + 拉桿 + 角接管）──
+  const hxX = 1.5, hxZ = 2.2, plateN = 26, plateGap = 0.026;
+  const packLen = plateN * plateGap;
+  // 固定端框板（深色厚板）
+  const frA = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.6, 1.3), M(0x141b26, 0.5, 0.5));
+  frA.position.set(hxX - packLen / 2 - 0.06, 0.9, hxZ);
+  frA.userData = { pick: true, type: 'hx', id: 1 }; T.pickables.push(frA); g.add(frA);
+  const frB = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.6, 1.3), M(0x141b26, 0.5, 0.5));
+  frB.position.set(hxX + packLen / 2 + 0.05, 0.9, hxZ); g.add(frB);
+  // 不鏽鋼板組（密疊薄板）
+  for (let f = 0; f < plateN; f++) {
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(plateGap * 0.6, 1.5, 1.24),
+      M(f % 2 ? 0x9fb0c2 : 0x778799, 0.28, 0.9));
+    plate.position.set(hxX - packLen / 2 + 0.02 + f * plateGap, 0.9, hxZ); g.add(plate);
   }
+  // 上下拉桿（兩支）
+  [0.55, -0.55].forEach(dy => {
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, packLen + 0.3, 10), steel);
+    rod.rotation.z = Math.PI / 2; rod.position.set(hxX, 0.9 + dy, hxZ); g.add(rod);
+  });
+  // 四角接管（藍進/藍出、綠/紅）在固定端框上
+  const hxFx = hxX - packLen / 2 - 0.12;
+  [[0.5, 0.42, '#2a8cff', true], [-0.5, 0.42, '#33d98f', true],
+   [0.5, -0.42, '#ff5a64', false], [-0.5, -0.42, '#7fd0ff', true]].forEach(([dy, dz, hex, isS]) => {
+    const noz = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.34, 14), steel);
+    noz.rotation.z = Math.PI / 2; noz.position.set(hxFx - 0.1, 0.9 + dy, hxZ + dz); g.add(noz);
+    flangeX(g, hxFx - 0.26, 0.9 + dy, hxZ + dz, 0.13);
+    pipe(hex, isS, 0.5, 'x', hxFx - 0.45, 0.9 + dy, hxZ + dz, 0.07);
+  });
   const hxLab = makeLabel('FREE COOLING HX', '#9eff2e', 0.8);
-  hxLab.position.set(1.5, 2.1, 2.2); g.add(hxLab);
+  hxLab.position.set(hxX, 2.0, hxZ); g.add(hxLab);
 
   // ── 膨脹水箱（紅色直立罐）──
   const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1.8, 18), M(0xb23030, 0.4, 0.5, 0x3a0808, 0.3));
@@ -1230,32 +1346,37 @@ function buildPlant() {
   const tankTop = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M(0xb23030, 0.4, 0.5));
   tankTop.position.set(4.2, 1.9, -0.5); g.add(tankTop);
 
-  // ── 泵組陣列（中前方，4 台 CHW/CW 泵）──
+  // ── 泵組陣列（4 台端吸離心泵：綠色散熱鰭馬達 + 黃色聯軸器 + 蝸殼，比照照片）──
   for (let p = 0; p < 4; p++) {
-    const px = -4 + p * 2.4;
+    const px = -4.2 + p * 2.5;
     const isG = p % 2 === 0;
-    // 共用底座（泵 + 馬達同底盤）
-    const base = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.12, 0.55), dark);
-    base.position.set(px + 0.1, 0.06, 5.4); g.add(base);
-    // 蝸殼泵體（臥式，軸向進水）
-    const vol = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.26, 20), steel);
-    vol.rotation.x = Math.PI / 2; vol.position.set(px - 0.25, 0.42, 5.4);
+    const pz = 5.4, ay = 0.5;
+    // 共用混凝土底盤
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.14, 0.66), M(0x4a5666, 0.6, 0.4));
+    base.position.set(px + 0.15, 0.07, pz); g.add(base);
+    // 蝸殼泵體（軸沿 X，朝 -x 為吸入端）
+    const vol = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.3, 22), dark);
+    vol.rotation.z = Math.PI / 2; vol.position.set(px - 0.62, ay, pz);
     vol.userData = { pick: true, type: 'pump', id: p + 1 }; T.pickables.push(vol); g.add(vol);
-    // 軸向吸入口法蘭
-    const suction = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.16, 14), steel);
-    suction.rotation.x = Math.PI / 2; suction.position.set(px - 0.25, 0.42, 5.72); g.add(suction);
-    // 頂部出水口法蘭 + 立管
-    const disch = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.18, 12), steel);
-    disch.position.set(px - 0.25, 0.66, 5.4); g.add(disch);
-    pipe(isG ? GRN : RED, isG, 0.7, 'y', px - 0.25, 1.0, 5.4, 0.07);
-    // 聯軸器護罩 + 馬達（臥式，與泵同軸）
-    const coupler = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.16, 0.16), M(0xf0a430, 0.4, 0.5));
-    coupler.position.set(px + 0.02, 0.42, 5.4); g.add(coupler);
-    const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.55, 16), M(0x44546a, 0.4, 0.8));
-    motor.rotation.z = Math.PI / 2; motor.position.set(px + 0.4, 0.42, 5.4); g.add(motor);
-    // 馬達散熱罩（端蓋）
-    const fan = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.1, 12), dark);
-    fan.rotation.z = Math.PI / 2; fan.position.set(px + 0.72, 0.42, 5.4); g.add(fan);
+    // 軸向吸入口法蘭（-x 端）
+    flangeX(g, px - 0.82, ay, pz, 0.26);
+    const sucPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.3, 14), steel);
+    sucPipe.rotation.z = Math.PI / 2; sucPipe.position.set(px - 1.0, ay, pz); g.add(sucPipe);
+    // 頂部出水口 + 立管（綠供 / 紅回）
+    const disch = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.24, 12), steel);
+    disch.position.set(px - 0.62, ay + 0.34, pz); g.add(disch);
+    pipe(isG ? GRN : RED, isG, 0.7, 'y', px - 0.62, ay + 0.75, pz, 0.075);
+    // 黃色聯軸器護罩
+    const coupler = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.26, 14), yellowCp);
+    coupler.rotation.z = Math.PI / 2; coupler.position.set(px - 0.28, ay, pz); g.add(coupler);
+    // 綠色散熱鰭馬達（臥式同軸）
+    finnedX(g, px + 0.22, ay, pz, 0.21, 0.62, motorGrn);
+    // 馬達接線盒
+    const tb = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.13, 0.16), M(0x12604a, 0.45, 0.5));
+    tb.position.set(px + 0.22, ay + 0.26, pz); g.add(tb);
+    // 馬達端散熱罩
+    const cowl = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.12, 14), dark);
+    cowl.rotation.z = -Math.PI / 2; cowl.position.set(px + 0.6, ay, pz); g.add(cowl);
   }
   const labP = makeLabel('CHW / CW PUMPS · N+1', '#9eff2e', 0.85);
   labP.position.set(-1, 1.5, 5.4); g.add(labP);
