@@ -661,8 +661,13 @@ function buildRacks(parent, count) {
         hinge.add(knob);
       }
 
-      // 3) 18 × 金色運算托盤疊（左右黑色接頭塊）
+      // 3) 18 × 金色運算托盤疊（左右黑色接頭塊 + 狀態 LED + 把手）
       const yTrayTop = RK.h / 2 - 0.04 - fanH - shelfH - fan2H;
+      const ledGeo = new THREE.BoxGeometry(0.012, 0.012, 0.006);
+      const handleGeo = new THREE.BoxGeometry(0.05, 0.01, 0.012);
+      const ledOn  = new THREE.MeshStandardMaterial({ color: 0x062012, emissive: 0x33dd66, emissiveIntensity: 1.3 });
+      const ledAmb = new THREE.MeshStandardMaterial({ color: 0x20160a, emissive: 0xffaa22, emissiveIntensity: 1.2 });
+      const hMat   = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.5, metalness: 0.5 });
       for (let m = 0; m < FTRAYS; m++) {
         const yT   = yTrayTop - (m + 0.5) * trayH2;
         const tray = new THREE.Mesh(geoTrayF, m % 2 === 0 ? goldA : goldB);
@@ -673,6 +678,17 @@ function buildRacks(parent, count) {
           conn.position.set(cx + sd * (RK.w / 2 - 0.085), yT, zF + face * 0.006);
           hinge.add(conn);
         });
+        // 雙狀態 LED（綠/琥珀，交錯）
+        const led1 = new THREE.Mesh(ledGeo, (m % 7 === 3) ? ledAmb : ledOn);
+        led1.position.set(cx - RK.w / 2 + 0.05, yT, zF + face * 0.018);
+        hinge.add(led1);
+        const led2 = new THREE.Mesh(ledGeo, ledOn);
+        led2.position.set(cx - RK.w / 2 + 0.075, yT, zF + face * 0.018);
+        hinge.add(led2);
+        // 托盤把手
+        const hdl = new THREE.Mesh(handleGeo, hMat);
+        hdl.position.set(cx + RK.w / 2 - 0.13, yT, zF + face * 0.02);
+        hinge.add(hdl);
       }
 
       rack.add(hinge);
@@ -853,6 +869,21 @@ function buildRowPiping(layer, n, z, x0) {
   const dropGeo = new THREE.CylinderGeometry(0.034, 0.034, RK.pipeY - RK.h + 0.32, 10);
   const baseGeo = new THREE.BoxGeometry(0.13, 0.05, 0.13);
   const baseMat = new THREE.MeshStandardMaterial({ color: 0xe8edf2, roughness: 0.35, metalness: 0.40 });
+
+  // 密集線纜（熱通道側，天花線槽 → 機櫃頂，深灰網路線 + 少量藍/紅）
+  const cableH = RK.pipeY - RK.h + 0.62;
+  const cableGeo = new THREE.CylinderGeometry(0.013, 0.013, cableH, 6);
+  const cableMats = [
+    new THREE.MeshStandardMaterial({ color: 0x3b4350, roughness: 0.6, metalness: 0.4, emissive: 0x10141a, emissiveIntensity: 0.3 }),  // 灰網路線
+    new THREE.MeshStandardMaterial({ color: 0x556070, roughness: 0.55, metalness: 0.5, emissive: 0x141820, emissiveIntensity: 0.3 }), // 亮灰
+    new THREE.MeshStandardMaterial({ color: 0x3a78d8, roughness: 0.45, metalness: 0.4, emissive: 0x123166, emissiveIntensity: 0.7 }), // 藍
+    new THREE.MeshStandardMaterial({ color: 0xd83a3a, roughness: 0.45, metalness: 0.4, emissive: 0x521212, emissiveIntensity: 0.7 }), // 紅
+    new THREE.MeshStandardMaterial({ color: 0x2bb564, roughness: 0.5, metalness: 0.35, emissive: 0x0d3a1f, emissiveIntensity: 0.6 }), // 綠
+    new THREE.MeshStandardMaterial({ color: 0xe8c23a, roughness: 0.45, metalness: 0.5, emissive: 0x4a3a0a, emissiveIntensity: 0.7 }), // 黃光纖
+  ];
+  const cableSeq = [0, 2, 1, 0, 4, 1, 3, 0, 5, 1, 2, 0, 1, 3, 0, 1];   // 16 條，灰底 + 彩色點綴
+  const zHot = z + (z < 0 ? 1 : -1) * 0.30;                // 朝中央熱通道側
+
   for (let i = 0; i < n; i++) {
     const x = x0 + i * RK.pitch;
     const d1 = new THREE.Mesh(dropGeo, supMat);
@@ -866,6 +897,19 @@ function buildRowPiping(layer, n, z, x0) {
       b.position.set(x + dx, RK.h + 0.025, z + dz);
       layer.add(b);
     });
+    // 線纜束（每櫃 12 條，密集落線）
+    for (let cI = 0; cI < cableSeq.length; cI++) {
+      const jx = (cI - (cableSeq.length - 1) / 2) * 0.030;
+      const jz = ((cI * 7) % 5 - 2) * 0.025;
+      const cab = new THREE.Mesh(cableGeo, cableMats[cableSeq[cI]]);
+      cab.position.set(x + jx, RK.h - 0.12 + cableH / 2, zHot + jz);
+      layer.add(cab);
+    }
+    // 機櫃頂理線槽（深色淺盒）
+    const ductTop = new THREE.Mesh(new THREE.BoxGeometry(RK.w - 0.06, 0.05, 0.18),
+      new THREE.MeshStandardMaterial({ color: 0x0e1218, roughness: 0.7, metalness: 0.3 }));
+    ductTop.position.set(x, RK.h + 0.03, zHot);
+    layer.add(ductTop);
   }
 }
 
