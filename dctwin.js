@@ -417,12 +417,53 @@ function floorAndGrid(g, w = 34, d = 22) {
   g.add(grid);
 }
 
+/* 機房空間外殼（高架地板 + 牆面 + 天花線槽燈帶），讓白區像真實機房 */
+function buildRoomShell(g) {
+  const W = 22, D = 16, H = 5.2;
+  // 內向房間外殼（BackSide：從外可看入、從內可見牆與天花）
+  const shell = new THREE.Mesh(
+    new THREE.BoxGeometry(W, H, D),
+    new THREE.MeshStandardMaterial({ color: 0x10151d, roughness: 0.72, metalness: 0.2, side: THREE.BackSide })
+  );
+  shell.position.y = H / 2 - 0.05;
+  g.add(shell);
+
+  // 天花線槽燈帶（沿 x，數排）
+  const stripMat = new THREE.MeshStandardMaterial({ color: 0x0a0f16, emissive: 0xdfeaff, emissiveIntensity: 1.3 });
+  const trayMat  = new THREE.MeshStandardMaterial({ color: 0x2a3446, roughness: 0.5, metalness: 0.6 });
+  for (let zi = -2; zi <= 2; zi++) {
+    const z = zi * 3.2;
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(W - 3, 0.06, 0.18), stripMat);
+    strip.position.set(0, H - 0.12, z); g.add(strip);
+    const tray = new THREE.Mesh(new THREE.BoxGeometry(W - 2, 0.1, 0.4), trayMat);
+    tray.position.set(0, H - 0.42, z + 1.4); g.add(tray);
+  }
+  // 縱向線槽（沿 z）
+  [-7, 7].forEach(x => {
+    const tray = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, D - 2), trayMat);
+    tray.position.set(x, H - 0.42, 0); g.add(tray);
+  });
+
+  // 高架地板：冷通道穿孔出風地磚（外側兩冷通道）
+  if (!_grilleTex) _grilleTex = grilleTexture();
+  [-RK.rowZ - RK.d / 2 - 0.35, RK.rowZ + RK.d / 2 + 0.35].forEach(cz => {
+    const tile = new THREE.Mesh(new THREE.PlaneGeometry(8, 0.9),
+      new THREE.MeshStandardMaterial({ map: _grilleTex, color: 0x6a7da0, roughness: 0.6, metalness: 0.4, emissive: 0x12325a, emissiveIntensity: 0.35 }));
+    tile.rotation.x = -Math.PI / 2; tile.position.set(0, 0.02, cz); g.add(tile);
+  });
+
+  // 機房環境補光（柔和天花散光）
+  const roomAmb = new THREE.HemisphereLight(0xbcd2f5, 0x0a0e16, 0.35);
+  g.add(roomAmb);
+}
+
 /* ── 場景 1：GB200 液冷機房（White Space） ───────── */
 const RK = { w: 0.62, h: 2.24, d: 1.22, pitch: 0.86, rowZ: 1.9, pipeY: 3.05 };
 
 function buildWhiteSpace() {
   const g = new THREE.Group();
   floorAndGrid(g);
+  buildRoomShell(g);
   buildRacks(g, S.racks);
   return g;
 }
