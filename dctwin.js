@@ -715,6 +715,15 @@ function buildRacks(parent, count) {
           qFit.position.set(xOff, qy, backFace * (RK.d / 2 - 0.012));
           rack.add(qFit);
         }
+        // 機櫃背後立管：自歧管頂端往上接到天花管架（升管）
+        const riserH = RK.pipeY - RK.h + 0.2;
+        const riser = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, riserH, 10), mMat);
+        riser.position.set(xOff, RK.h / 2 + riserH / 2, backFace * (RK.d / 2 - 0.055));
+        rack.add(riser);
+        // 升管頂端橫向接頭
+        const elb = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 7), mMat);
+        elb.position.set(xOff, RK.h / 2 + riserH, backFace * (RK.d / 2 - 0.055));
+        rack.add(elb);
       });
 
       layer.add(rack);
@@ -734,15 +743,29 @@ function buildRacks(parent, count) {
   const corrL = (maxN - 1) * RK.pitch + 1.6;                  // 走廊長（x 向）
   const corrZ = RK.rowZ - RK.d / 2 - 0.02;                    // 內牆 z 位置
   const glassMat = new THREE.MeshPhysicalMaterial({
-    color: 0xcfe0ee, transparent: true, opacity: 0.10,
-    roughness: 0.06, metalness: 0.0, side: THREE.DoubleSide, depthWrite: false,
+    color: 0xbcd6ea, transparent: true, opacity: 0.2,
+    roughness: 0.05, metalness: 0.0, side: THREE.DoubleSide, depthWrite: false,
   });
-  const frameMatC = new THREE.MeshStandardMaterial({ color: 0xb9c4d0, roughness: 0.3, metalness: 0.8 });
-  // 兩側玻璃牆（機櫃頂 → 管架高度）
+  const frameMatC = new THREE.MeshStandardMaterial({ color: 0xc2cdd8, roughness: 0.28, metalness: 0.85 });
+  const wallH = RK.pipeY - RK.h + 0.55;
+  const wallYc = RK.h + wallH / 2;
+  // 兩側半透明隔板（機櫃頂 → 管架高度）+ 鋁框分隔
   [-corrZ, corrZ].forEach(zw => {
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(corrL, RK.pipeY - RK.h + 0.55), glassMat);
-    wall.position.set(0, RK.h + (RK.pipeY - RK.h + 0.55) / 2, zw);
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(corrL, wallH), glassMat);
+    wall.position.set(0, wallYc, zw);
     layer.add(wall);
+    // 上下橫框
+    [RK.h + 0.01, RK.h + wallH - 0.01].forEach(yy => {
+      const railH = new THREE.Mesh(new THREE.BoxGeometry(corrL, 0.04, 0.05), frameMatC);
+      railH.position.set(0, yy, zw); layer.add(railH);
+    });
+    // 垂直框條（每櫃一道，把隔板分成片）
+    const panels = Math.round(corrL / RK.pitch);
+    for (let p = 0; p <= panels; p++) {
+      const mx = -corrL / 2 + p * (corrL / panels);
+      const mull = new THREE.Mesh(new THREE.BoxGeometry(0.04, wallH, 0.05), frameMatC);
+      mull.position.set(mx, wallYc, zw); layer.add(mull);
+    }
   });
   // 玻璃屋頂
   const roof = new THREE.Mesh(new THREE.PlaneGeometry(corrL, corrZ * 2), glassMat);
