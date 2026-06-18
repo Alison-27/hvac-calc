@@ -1164,6 +1164,19 @@ function buildGreySpace() {
         led.rotation.x = Math.PI / 2; led.position.set(w * 0.22, h * 0.68 - k * 0.06, fz + 0.02); grp.add(led);
       });
     }
+    // UPS 功率模組指示條（紅色發光直條，比照 V2.0）
+    if (opt.upsBars) {
+      [-w * 0.2, w * 0.04].forEach(bx => {
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.09, h * 0.46, 0.02),
+          M(0x3a0808, 0.4, 0.4, 0xff3434, 1.4));
+        bar.position.set(bx, h * 0.46, fz + 0.02); grp.add(bar);
+      });
+      // 模組分隔線
+      for (let mr = 0; mr < 6; mr++) {
+        const seg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.01, 0.022), M(0x05080c, 0.6, 0.3));
+        seg.position.set(-w * 0.08, h * 0.25 + mr * (h * 0.42 / 6), fz + 0.022); grp.add(seg);
+      }
+    }
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.16, 0.03), steel);
     handle.position.set(w * 0.34, h * 0.42, fz + 0.025); grp.add(handle);
     const plinth = new THREE.Mesh(new THREE.BoxGeometry(w, 0.07, d), M(0x0b0f16, 0.7, 0.3));
@@ -1227,16 +1240,48 @@ function buildGreySpace() {
     if (label) { const l = makeLabel(label, accent, 0.8); l.position.set(x, 2.2, z); g.add(l); }
   };
 
+  // 黃黑警示地貼（設備前緣）
+  const hazard = (cx, cz, w) => {
+    for (let s = 0; s < Math.round(w / 0.16); s++) {
+      const stripe = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 0.4),
+        M(s % 2 ? 0x101010 : 0xe8b21a, 0.7, 0.2, s % 2 ? 0x000000 : 0x3a2c06, s % 2 ? 0 : 0.3));
+      stripe.rotation.x = -Math.PI / 2; stripe.rotation.z = Math.PI / 4;
+      stripe.position.set(cx - w / 2 + s * 0.16, 0.02, cz); g.add(stripe);
+    }
+  };
+  // 頂部橋架（梯型電纜橋架：兩側邊軌 + 橫檔）
+  const cableBridge = (z) => {
+    const by = 3.35;
+    [-0.22, 0.22].forEach(dz => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(15, 0.06, 0.05), steel);
+      rail.position.set(-0.5, by, z + dz); g.add(rail);
+    });
+    for (let r = 0; r <= 26; r++) {
+      const rung = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.5), steel);
+      rung.position.set(-8 + r * 0.58, by, z); g.add(rung);
+    }
+    // 橋架上線纜束（彩色）
+    [[-0.1, 0x2150a0], [0, 0x9c2424], [0.1, 0x1a8a4a]].forEach(([dz, c]) => {
+      const cab = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 15, 8), M(c, 0.6, 0.3, c, 0.25));
+      cab.rotation.z = Math.PI / 2; cab.position.set(-0.5, by + 0.06, z + dz); g.add(cab);
+    });
+  };
+
   // A / B 兩路（2N 配置）
   [[-4.8, '#f0a430', 'A'], [4.8, '#35c8ff', 'B']].forEach(([z, col, path]) => {
     transformer(-8.2, z, col, { type: 'tx', path }, `TX-${path} · 2000kVA`);
     for (let i = 0; i < 4; i++)
       cabinet(-5.8 + i * 1.3, z, 1.15, 2.1, 0.9, 0x232f44, col, { type: 'ups', path, idx: i + 1 },
-        i === 0 ? `UPS ${path} 路 · 2N` : '');
+        i === 0 ? `UPS ${path} 路 · 2N` : '', { upsBars: true });
     // 電池櫃 ×2（多百葉、無顯示器）
     cabinet(0.4, z, 1.15, 2.0, 0.9, 0x1b2433, col, { type: 'batt', path }, `BATTERY-${path}`, { screen: false, louvers: 8 });
     cabinet(1.7, z, 1.15, 2.0, 0.9, 0x1b2433, col, { type: 'batt', path }, '', { screen: false, louvers: 8 });
     switchgear(5.2, z, 3, col, { type: 'msb', path }, `MSB-${path}`);
+    // 設備前緣警示地貼（朝中央走道側）
+    const hz = z + (z < 0 ? 1 : -1) * 0.85;
+    hazard(-3.5, hz, 8);
+    // 頂部橋架
+    cableBridge(z);
     // 架空匯流排 + 吊架
     const bus = new THREE.Mesh(new THREE.BoxGeometry(15, 0.18, 0.3),
       M(0x10161f, 0.4, 0.6, new THREE.Color(col).getHex(), 0.5));
@@ -1245,6 +1290,23 @@ function buildGreySpace() {
       const hang = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), steel);
       hang.position.set(-7 + hgr * 2.6, 3.25, z); g.add(hang);
     }
+  });
+  // 發電機（場景一端，引擎 + 散熱器 + 排氣管，柴油發電機）
+  const genMat = M(0x2d3a2e, 0.5, 0.6);
+  [[-4.8, 'A'], [4.8, 'B']].forEach(([z, path]) => {
+    const gen = new THREE.Group(); gen.position.set(10, 0, z); g.add(gen);
+    const skid = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.2, 1.3), darkP);
+    skid.position.y = 0.1; gen.add(skid);
+    const engine = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.0, 1.0), genMat);
+    engine.position.set(-0.3, 0.75, 0); gen.add(engine);
+    const alt = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1.2, 18), M(0x4a5666, 0.4, 0.7));
+    alt.rotation.z = Math.PI / 2; alt.position.set(1.0, 0.8, 0); gen.add(alt);
+    const rad = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.0, 1.1), M(0x55606e, 0.4, 0.8));
+    rad.position.set(-1.3, 0.75, 0); gen.add(rad);
+    const exh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.4, 10), steel);
+    exh.position.set(-0.6, 1.6, -0.4); gen.add(exh);
+    const gl = makeLabel(`GEN-${path} · 2500kVA`, '#9eff2e', 0.8);
+    gl.position.set(10, 1.9, z); g.add(gl);
   });
   const lab = makeLabel('2N GRID SECURED · GREY SPACE', '#9eff2e');
   lab.position.set(0, 4.4, 0);
