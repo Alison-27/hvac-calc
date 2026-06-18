@@ -521,9 +521,9 @@ function buildRacks(parent, count) {
   // 內部元件共用材質（一次建立、全機櫃共用）
   const gpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x0c0e0c, roughness: 0.55, metalness: 0.50, emissive: 0x0a0a00, emissiveIntensity: 0.10 });
   const cpuBlkMat  = new THREE.MeshStandardMaterial({ color: 0x0c0c14, roughness: 0.50, metalness: 0.55, emissive: 0x000410, emissiveIntensity: 0.12 });
-  const plateMat   = new THREE.MeshStandardMaterial({ color: 0xc89840, roughness: 0.08, metalness: 0.92, emissive: 0x6b5326, emissiveIntensity: 0.50 });
-  const sledMatA   = new THREE.MeshStandardMaterial({ color: 0xb07828, roughness: 0.12, metalness: 0.88, emissive: 0x593c14, emissiveIntensity: 0.50 });
-  const sledMatB   = new THREE.MeshStandardMaterial({ color: 0xa87020, roughness: 0.14, metalness: 0.88, emissive: 0x523810, emissiveIntensity: 0.50 });
+  const plateMat   = new THREE.MeshStandardMaterial({ color: 0x2bbf6a, roughness: 0.2, metalness: 0.55, emissive: 0x0f6b38, emissiveIntensity: 0.85 });  // V2.0 綠色液冷冷板
+  const sledMatA   = new THREE.MeshStandardMaterial({ color: 0x9aa7b5, roughness: 0.28, metalness: 0.82 });  // 銀色計算板底座
+  const sledMatB   = new THREE.MeshStandardMaterial({ color: 0x8593a2, roughness: 0.30, metalness: 0.82 });
   const railIntMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1c, roughness: 0.60, metalness: 0.72 });
   const busIntMat  = new THREE.MeshStandardMaterial({ color: 0xa05818, roughness: 0.28, metalness: 0.88, emissive: 0x3a1800, emissiveIntensity: 0.28 });
   const nvswMat    = new THREE.MeshStandardMaterial({ color: 0xb08030, emissive: 0x402800, emissiveIntensity: 0.30, roughness: 0.10, metalness: 0.90 });
@@ -603,10 +603,16 @@ function buildRacks(parent, count) {
         cpu.position.set(0, 0, -0.11);
         sled.add(cpu);
 
-        // 液冷冷板（銀色金屬，平鋪蓋在晶片上方）
+        // 液冷冷板（V2.0 綠色，平鋪蓋在晶片上方）
         const plate = new THREE.Mesh(geoPlate, plateMat);
         plate.position.y = sledH / 2 - 0.008;
         sled.add(plate);
+
+        // 左側狀態 LED（綠色，比照 V2.0 計算板）
+        const sLed = new THREE.Mesh(new THREE.BoxGeometry(0.01, sledH - 0.05, 0.006),
+          new THREE.MeshStandardMaterial({ color: 0x062012, emissive: 0x3be070, emissiveIntensity: 1.2 }));
+        sLed.position.set(-(RK.w - 0.082) / 2 + 0.012, 0, RK.d / 2 - 0.1);
+        sled.add(sLed);
 
         trays.add(sled);
       }
