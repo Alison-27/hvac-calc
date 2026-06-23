@@ -1378,6 +1378,8 @@ footer {
 /* ── Dashboard Nav Hide/Show ── */
 #main-nav.dashboard-mode .nav-btn { display: none; }
 #main-nav.dashboard-mode .nav-back { display: none !important; }
+/* 計算內容頁：只留返回鍵，隱藏其他分頁按鈕 */
+#main-nav.calc-mode .nav-btn { display: none; }
 
 /* ── Dashboard ── */
 .nav-back {

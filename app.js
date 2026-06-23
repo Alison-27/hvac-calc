@@ -6,9 +6,9 @@ function showDashboard() {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const navBack = document.getElementById('nav-back');
   if (navBack) navBack.style.display = 'none';
-  // Hide nav tab buttons on dashboard
+  // 首頁：隱藏所有分頁按鈕與返回鍵
   const nav = document.getElementById('main-nav');
-  if (nav) nav.classList.add('dashboard-mode');
+  if (nav) { nav.classList.add('dashboard-mode'); nav.classList.remove('calc-mode'); }
 }
 
 function showTab(tabId) {
@@ -20,9 +20,9 @@ function showTab(tabId) {
   if (activeBtn) activeBtn.classList.add('active');
   const navBack = document.getElementById('nav-back');
   if (navBack) navBack.style.display = '';
-  // Show nav tab buttons when in a section
+  // 計算內容頁：最上方只留返回鍵，其他分頁按鈕不顯示
   const nav = document.getElementById('main-nav');
-  if (nav) nav.classList.remove('dashboard-mode');
+  if (nav) { nav.classList.remove('dashboard-mode'); nav.classList.add('calc-mode'); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1884,24 +1884,32 @@ document.addEventListener('DOMContentLoaded', () => {
 // ════════════════════════════════════════════════════════════
 // 放射狀工程計算平台 Hub — 分類導覽視窗
 // ════════════════════════════════════════════════════════════
+// 細項格式：[中文, 英文, 分頁, 圖示]
 const HUB = {
   air:   { name: '空調風系統', en: 'Air System',     color: '#1d9e75', ico: '💨',
-           items: [['風量計算', 'airflow', '💨'], ['風管尺寸計算', 'ductsize', '🌀'], ['風管鐵皮計算', 'ductbom', '🔩']] },
+           items: [['風量計算', 'Airflow', 'airflow', '💨'], ['風管尺寸計算', 'Duct Sizing', 'ductsize', '🌀'], ['風管鐵皮計算', 'Duct BOM', 'ductbom', '🔩']] },
   water: { name: '空調水系統', en: 'Water System',   color: '#378add', ico: '💧',
-           items: [['水量計算', 'waterflow', '💧']] },
+           items: [['水量計算', 'Water Flow', 'waterflow', '💧'], ['冰水管路計算', 'Chilled Water Piping', 'chwpipe', '🧊']] },
   clean: { name: '潔淨室空調', en: 'Cleanroom HVAC', color: '#7f77dd', ico: '🏭',
-           items: [['潔淨室空調', 'cleanroom', '🏭']] },
+           items: [['潔淨室空調', 'Cleanroom', 'cleanroom', '🏭']] },
   equip: { name: '空調設備',   en: 'HVAC Equipment', color: '#ba7517', ico: '❄️',
-           items: [['乾式盤管 DCC', 'dcc', '❄️'], ['空調箱 AHU / MAU', 'mau', '🌡️']] },
+           items: [['乾式盤管 DCC', 'Dry Coil DCC', 'dcc', '❄️'], ['空調箱 AHU / MAU', 'AHU / MAU', 'mau', '🌡️']] },
   ai:    { name: 'AI Data Center', en: 'AI Data Center', color: '#639922', ico: '🤖',
-           items: [['AI DC 計算書', 'datacenter', '🤖'], ['數位孿生', 'dctwin', '🟩']] },
+           items: [['AI DC 計算書', 'AI DC Report', 'datacenter', '🤖'], ['數位孿生', 'Digital Twin', 'dctwin', '🟩']] },
   conv:  { name: '公式換算',   en: 'Unit Converter',  color: '#4a8aa0', ico: '⚖️',
-           items: [['公式換算', 'reference', '⚖️']] },
+           items: [['公式換算', 'Unit Converter', 'reference', '⚖️']] },
 };
 let hubActive = 'air';
+const _lang = () => document.documentElement.getAttribute('data-lang') === 'en' ? 'en' : 'zh';
+const _bi = (zh, en) => `<span class="txt-zh">${zh}</span><span class="txt-en">${en}</span>`;
 
 function openHub(cat) {
-  hubActive = cat || 'air';
+  const c = HUB[cat];
+  if (!c) return;
+  // 細項只有一項 → 直接進入，不開視窗
+  if (c.items.length === 1) { showTab(c.items[0][2]); return; }
+  // 第一個多細項分類為起始
+  hubActive = cat;
   renderHub();
   const m = document.getElementById('hub-modal');
   if (m) { m.hidden = false; document.body.style.overflow = 'hidden'; }
@@ -1917,18 +1925,21 @@ function renderHub() {
   const catCol = document.getElementById('hub-cat-col');
   const itemCol = document.getElementById('hub-item-col');
   if (!catCol || !itemCol) return;
-  catCol.innerHTML = Object.keys(HUB).map(k => {
+  // 左欄只列出「多細項」分類（單細項直接進入，不出現在清單）
+  const multiCats = Object.keys(HUB).filter(k => HUB[k].items.length > 1);
+  if (!multiCats.includes(hubActive)) hubActive = multiCats[0];
+  catCol.innerHTML = multiCats.map(k => {
     const c = HUB[k], on = k === hubActive;
     return `<button class="hub-cat${on ? ' on' : ''}" style="--acc:${c.color}" onclick="selectHubCat('${k}')">
-      <span class="hub-cat-ico">${c.ico}</span><span>${c.name}</span></button>`;
+      <span class="hub-cat-ico">${c.ico}</span><span>${_bi(c.name, c.en)}</span></button>`;
   }).join('');
   const c = HUB[hubActive];
   itemCol.style.setProperty('--acc', c.color);
   itemCol.innerHTML =
-    `<div class="hub-item-head"><span class="hub-item-h-ico">${c.ico}</span><span>${c.name}</span><small>${c.en}</small></div>` +
-    c.items.map(([nm, tab, ico]) =>
+    `<div class="hub-item-head"><span class="hub-item-h-ico">${c.ico}</span><span>${_bi(c.name, c.en)}</span><small>${c.en}</small></div>` +
+    c.items.map(([zh, en, tab, ico]) =>
       `<button class="hub-item" onclick="hubGo('${tab}')">
-        <span class="hub-item-ico">${ico}</span><span class="hub-item-name">${nm}</span><span class="hub-item-arr">→</span></button>`).join('');
+        <span class="hub-item-ico">${ico}</span><span class="hub-item-name">${_bi(zh, en)}</span><span class="hub-item-arr">→</span></button>`).join('');
 }
 
 // Esc 關閉視窗
@@ -1960,3 +1971,56 @@ function hubStripScroll(dir) {
   // 滑鼠滾輪 → 橫向捲動
   s.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { s.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
 })();
+
+// ════════════════════════════════════════════════════════════
+// 冰水管路計算 (Chilled Water Piping · Hazen-Williams)
+// ════════════════════════════════════════════════════════════
+const CHW = {
+  // 標準管 DN(mm) → 內徑(mm)（Sch40 鋼管近似）
+  sizes: [[15,15.8],[20,21.0],[25,26.6],[32,35.1],[40,40.9],[50,52.5],[65,62.7],[80,77.9],[100,102.3],[125,128.2],[150,154.1],[200,202.7],[250,254.5],[300,304.8],[350,336.6],[400,387.4],[450,438.2],[500,489.0],[600,590.6]],
+  velMax: { main: 2.4, branch: 1.5, riser: 3.0 },
+};
+function chwCalc() {
+  const raw  = parseFloat(document.getElementById('chw-flow')?.value) || 0;
+  const unit = document.getElementById('chw-flow-unit')?.value || 'm3h';
+  const app  = document.getElementById('chw-app')?.value || 'main';
+  const C    = parseFloat(document.getElementById('chw-mat')?.value) || 140;
+  const dt   = parseFloat(document.getElementById('chw-dt')?.value) || 5;
+  const Qm3h = unit === 'ls' ? raw * 3.6 : unit === 'gpm' ? raw * 0.2271 : raw;
+  const Q    = Qm3h / 3600;   // m³/s
+  const set  = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const chk  = document.getElementById('chw-check');
+  if (Q <= 0) { ['chw-dn','chw-id','chw-vel','chw-fric','chw-load'].forEach(i => set(i,'—')); if (chk) chk.className = 'ds-check'; return; }
+
+  const vLim = CHW.velMax[app];
+  let chosen = CHW.sizes[CHW.sizes.length - 1];
+  for (const [dn, idmm] of CHW.sizes) {
+    const D = idmm / 1000, v = Q / (Math.PI * D * D / 4);
+    if (v <= vLim) { chosen = [dn, idmm]; break; }
+  }
+  const [dn, idmm] = chosen;
+  const D = idmm / 1000;
+  const v = Q / (Math.PI * D * D / 4);
+  // Hazen-Williams 摩擦坡降 (m/m) → Pa/m（×9806）
+  const S = 10.67 * Math.pow(Q, 1.852) / (Math.pow(C, 1.852) * Math.pow(D, 4.87));
+  const paPerM = S * 9806;
+  // 對應冷負荷 kW = Q(L/s) × 4.186 × ΔT
+  const kw = (Qm3h * 1000 / 3600) * 4.186 * dt;
+
+  set('chw-dn', 'DN' + dn);
+  set('chw-id', idmm.toFixed(1) + ' mm');
+  set('chw-vel', v.toFixed(2) + ' m/s');
+  set('chw-fric', paPerM.toFixed(0) + ' Pa/m');
+  set('chw-load', kw.toFixed(0) + ' kW (' + (kw / 3.517).toFixed(0) + ' RT)');
+
+  const ok = v <= vLim * 1.02 && paPerM <= 450;
+  if (chk) {
+    chk.className = 'ds-check ' + (ok ? 'pass' : 'fail');
+    chk.innerHTML = ok
+      ? `✅ <b>校核通過</b>：DN${dn} 流速 ${v.toFixed(2)} m/s（上限 ${vLim}）、摩擦損失 ${paPerM.toFixed(0)} Pa/m，配置合理。`
+      : `⚠️ <b>校核注意</b>：流速 ${v.toFixed(2)} m/s 或摩擦損失 ${paPerM.toFixed(0)} Pa/m 偏高，建議放大管徑。`;
+  }
+}
+['chw-flow','chw-dt'].forEach(id => document.getElementById(id)?.addEventListener('input', chwCalc));
+['chw-flow-unit','chw-app','chw-mat'].forEach(id => document.getElementById(id)?.addEventListener('change', chwCalc));
+document.addEventListener('DOMContentLoaded', () => { if (document.getElementById('chw-flow')) chwCalc(); });

@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=21" />
+  <link rel="stylesheet" href="style.css?v=22" />
   <script type="importmap">
   {
     "imports": {
@@ -65,7 +65,7 @@
           <span class="hub2-corner bl"></span><span class="hub2-corner br"></span>
           <div class="hub2-core-in">
             <span class="hub2-eyebrow">ENGINEERING · PLATFORM</span>
-            <span class="hub2-title">工程計算平台</span>
+            <span class="hub2-title" data-zh="工程計算平台" data-en="Calc Platform">工程計算平台</span>
             <span class="hub2-status"><i></i>6 SYSTEMS ONLINE</span>
           </div>
         </div>
@@ -73,12 +73,12 @@
         <div class="hub2-strip-wrap">
           <button class="hub2-arrow prev" onclick="hubStripScroll(-1)" aria-label="上一個">‹</button>
           <div class="hub2-strip" id="hub2-strip">
-            <button class="hub2-card c-air"   onclick="openHub('air')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">💨</span></span><span class="hub2-name">空調風系統</span><span class="hub2-sub">AIR SYSTEM</span><span class="hub2-enter">進入 →</span></button>
-            <button class="hub2-card c-water" onclick="openHub('water')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">💧</span></span><span class="hub2-name">空調水系統</span><span class="hub2-sub">WATER SYSTEM</span><span class="hub2-enter">進入 →</span></button>
-            <button class="hub2-card c-clean" onclick="openHub('clean')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">🏭</span></span><span class="hub2-name">潔淨室空調</span><span class="hub2-sub">CLEANROOM</span><span class="hub2-enter">進入 →</span></button>
-            <button class="hub2-card c-equip" onclick="openHub('equip')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">❄️</span></span><span class="hub2-name">空調設備</span><span class="hub2-sub">EQUIPMENT</span><span class="hub2-enter">進入 →</span></button>
-            <button class="hub2-card c-ai"    onclick="openHub('ai')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">🤖</span></span><span class="hub2-name">AI Data Center</span><span class="hub2-sub">AI DATA CENTER</span><span class="hub2-enter">進入 →</span></button>
-            <button class="hub2-card c-conv"  onclick="openHub('conv')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">⚖️</span></span><span class="hub2-name">公式換算</span><span class="hub2-sub">CONVERTER</span><span class="hub2-enter">進入 →</span></button>
+            <button class="hub2-card c-air"   onclick="openHub('air')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">💨</span></span><span class="hub2-name" data-zh="空調風系統" data-en="Air System">空調風系統</span><span class="hub2-sub">AIR SYSTEM</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
+            <button class="hub2-card c-water" onclick="openHub('water')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">💧</span></span><span class="hub2-name" data-zh="空調水系統" data-en="Water System">空調水系統</span><span class="hub2-sub">WATER SYSTEM</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
+            <button class="hub2-card c-clean" onclick="openHub('clean')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">🏭</span></span><span class="hub2-name" data-zh="潔淨室空調" data-en="Cleanroom">潔淨室空調</span><span class="hub2-sub">CLEANROOM</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
+            <button class="hub2-card c-equip" onclick="openHub('equip')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">❄️</span></span><span class="hub2-name" data-zh="空調設備" data-en="Equipment">空調設備</span><span class="hub2-sub">EQUIPMENT</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
+            <button class="hub2-card c-ai"    onclick="openHub('ai')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">🤖</span></span><span class="hub2-name" data-zh="AI Data Center" data-en="AI Data Center">AI Data Center</span><span class="hub2-sub">AI DATA CENTER</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
+            <button class="hub2-card c-conv"  onclick="openHub('conv')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">⚖️</span></span><span class="hub2-name" data-zh="公式換算" data-en="Converter">公式換算</span><span class="hub2-sub">CONVERTER</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
           </div>
           <button class="hub2-arrow next" onclick="hubStripScroll(1)" aria-label="下一個">›</button>
         </div>
@@ -936,6 +936,77 @@
             </div>
             <p class="hint" style="margin:0.4rem 0 0.8rem">板厚分級統計（板數為無條件進位，括號內為實際需求值）</p>
             <div id="bom-gauges"><!-- JS 產生 18#~26# 分級卡 --></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 冰水管路計算 ── -->
+    <section id="tab-chwpipe" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">WF</span> 冰水管路計算</h2>
+        <p class="section-desc">Chilled Water Piping · Hazen-Williams · DN 自動選定</p>
+      </div>
+      <div class="calc-grid">
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">CHW-01</span>
+            <h3>冰水管徑選定</h3>
+            <span class="formula-badge">v = Q / A</span>
+          </div>
+          <div class="card-body">
+            <div class="input-group">
+              <label>設計流量 Q</label>
+              <div class="input-row">
+                <input type="number" id="chw-flow" value="50" min="0" step="1" />
+                <select id="chw-flow-unit" class="inline-select"><option value="m3h">m³/h</option><option value="ls">L/s</option><option value="gpm">GPM</option></select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>用途 / 流速上限</label>
+              <div class="input-row">
+                <select id="chw-app" class="inline-select" style="flex:1">
+                  <option value="main">供回水主管 (≤2.4 m/s)</option>
+                  <option value="branch">分支管 (≤1.5 m/s)</option>
+                  <option value="riser">立管 (≤3.0 m/s)</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>管材 (Hazen-Williams C)</label>
+              <div class="input-row">
+                <select id="chw-mat" class="inline-select" style="flex:1">
+                  <option value="140">鋼管 / 鍍鋅 (C=140)</option>
+                  <option value="150">銅管 / 不鏽鋼 (C=150)</option>
+                  <option value="150b">PVC / PE (C=150)</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>供回水溫差 ΔT（估冷負荷用）</label>
+              <div class="input-row">
+                <input type="number" id="chw-dt" value="5" min="1" step="0.5" />
+                <span class="unit">°C</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-num">CHW-02</span>
+            <h3>選定結果</h3>
+          </div>
+          <div class="card-body">
+            <div class="result-block">
+              <div class="result-row"><span class="result-label">建議管徑 DN</span><span class="result-value" id="chw-dn">—</span></div>
+              <div class="result-row"><span class="result-label">內徑 ID</span><span class="result-value" id="chw-id">—</span></div>
+              <div class="result-row"><span class="result-label">實際流速</span><span class="result-value" id="chw-vel">—</span></div>
+              <div class="result-row"><span class="result-label">摩擦損失</span><span class="result-value" id="chw-fric">—</span></div>
+              <div class="result-row"><span class="result-label">對應冷負荷</span><span class="result-value" id="chw-load">—</span></div>
+            </div>
+            <div class="ds-check" id="chw-check" style="margin-top:1rem"></div>
+            <p class="hint" style="margin-top:.8rem">流速建議：主管 1.2–2.4 m/s、分支 ≤1.5 m/s；摩擦損失一般控制在 100–400 Pa/m。</p>
           </div>
         </div>
       </div>
@@ -2074,7 +2145,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=20"></script>
+  <script src="app.js?v=21"></script>
   <script type="module" src="mau3d.js?v=6"></script>
   <link rel="stylesheet" href="dctwin.css?v=23">
   <script type="module" src="dctwin.js?v=23"></script>
