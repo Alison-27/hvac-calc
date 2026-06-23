@@ -1935,3 +1935,28 @@ function renderHub() {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { const m = document.getElementById('hub-modal'); if (m && !m.hidden) closeHub(); }
 });
+
+// 分類列：箭頭捲動 + 拖曳滑動
+function hubStripScroll(dir) {
+  const s = document.getElementById('hub2-strip');
+  if (s) s.scrollBy({ left: dir * 360, behavior: 'smooth' });
+}
+(function () {
+  const s = document.getElementById('hub2-strip');
+  if (!s) return;
+  let down = false, sx = 0, sl = 0, moved = false;
+  s.addEventListener('pointerdown', e => { down = true; moved = false; sx = e.clientX; sl = s.scrollLeft; s.classList.add('drag'); });
+  s.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - sx;
+    if (Math.abs(dx) > 4) moved = true;
+    s.scrollLeft = sl - dx;
+  });
+  const end = () => { down = false; s.classList.remove('drag'); };
+  s.addEventListener('pointerup', end);
+  s.addEventListener('pointerleave', end);
+  // 拖曳後的點擊不觸發進入視窗
+  s.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); } }, true);
+  // 滑鼠滾輪 → 橫向捲動
+  s.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { s.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+})();

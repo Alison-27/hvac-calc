@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=20" />
+  <link rel="stylesheet" href="style.css?v=21" />
   <script type="importmap">
   {
     "imports": {
@@ -55,23 +55,32 @@
   <main>
     <!-- ── 儀表板首頁 ── -->
     <section id="tab-dashboard" class="tab-section active">
-      <!-- ── 放射狀工程計算平台 ── -->
-      <div class="hub-wrap">
-        <div class="hub" id="calc-hub">
-          <span class="hub-orbit"></span>
-          <span class="hub-orbit hub-orbit-2"></span>
-          <span class="hub-orbit hub-orbit-3"></span>
-          <div class="hub-center">
-            <span class="hub-c-eyebrow">ENGINEERING</span>
-            <span class="hub-c-title">工程計算平台</span>
-            <span class="hub-c-eyebrow">CALC · PLATFORM</span>
+      <!-- ── 工程計算平台（中央核心 + 底部可滑動分類列）── -->
+      <div class="hub2">
+        <div class="hub2-core">
+          <span class="hub2-ring r1"></span>
+          <span class="hub2-ring r2"></span>
+          <span class="hub2-scan"></span>
+          <span class="hub2-corner tl"></span><span class="hub2-corner tr"></span>
+          <span class="hub2-corner bl"></span><span class="hub2-corner br"></span>
+          <div class="hub2-core-in">
+            <span class="hub2-eyebrow">ENGINEERING · PLATFORM</span>
+            <span class="hub2-title">工程計算平台</span>
+            <span class="hub2-status"><i></i>6 SYSTEMS ONLINE</span>
           </div>
-          <button class="hub-sat c-air"   style="--a:0deg"   onclick="openHub('air')"><span class="hub-ico">💨</span><span class="hub-lbl">空調風系統</span></button>
-          <button class="hub-sat c-water" style="--a:60deg"  onclick="openHub('water')"><span class="hub-ico">💧</span><span class="hub-lbl">空調水系統</span></button>
-          <button class="hub-sat c-clean" style="--a:120deg" onclick="openHub('clean')"><span class="hub-ico">🏭</span><span class="hub-lbl">潔淨室空調</span></button>
-          <button class="hub-sat c-equip" style="--a:180deg" onclick="openHub('equip')"><span class="hub-ico">❄️</span><span class="hub-lbl">空調設備</span></button>
-          <button class="hub-sat c-ai"    style="--a:240deg" onclick="openHub('ai')"><span class="hub-ico">🤖</span><span class="hub-lbl">AI Data Center</span></button>
-          <button class="hub-sat c-conv"  style="--a:300deg" onclick="openHub('conv')"><span class="hub-ico">⚖️</span><span class="hub-lbl">公式換算</span></button>
+        </div>
+
+        <div class="hub2-strip-wrap">
+          <button class="hub2-arrow prev" onclick="hubStripScroll(-1)" aria-label="上一個">‹</button>
+          <div class="hub2-strip" id="hub2-strip">
+            <button class="hub2-card c-air"   onclick="openHub('air')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">💨</span></span><span class="hub2-name">空調風系統</span><span class="hub2-sub">AIR SYSTEM</span><span class="hub2-enter">進入 →</span></button>
+            <button class="hub2-card c-water" onclick="openHub('water')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">💧</span></span><span class="hub2-name">空調水系統</span><span class="hub2-sub">WATER SYSTEM</span><span class="hub2-enter">進入 →</span></button>
+            <button class="hub2-card c-clean" onclick="openHub('clean')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">🏭</span></span><span class="hub2-name">潔淨室空調</span><span class="hub2-sub">CLEANROOM</span><span class="hub2-enter">進入 →</span></button>
+            <button class="hub2-card c-equip" onclick="openHub('equip')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">❄️</span></span><span class="hub2-name">空調設備</span><span class="hub2-sub">EQUIPMENT</span><span class="hub2-enter">進入 →</span></button>
+            <button class="hub2-card c-ai"    onclick="openHub('ai')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">🤖</span></span><span class="hub2-name">AI Data Center</span><span class="hub2-sub">AI DATA CENTER</span><span class="hub2-enter">進入 →</span></button>
+            <button class="hub2-card c-conv"  onclick="openHub('conv')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">⚖️</span></span><span class="hub2-name">公式換算</span><span class="hub2-sub">CONVERTER</span><span class="hub2-enter">進入 →</span></button>
+          </div>
+          <button class="hub2-arrow next" onclick="hubStripScroll(1)" aria-label="下一個">›</button>
         </div>
       </div>
 
@@ -2065,7 +2074,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=19"></script>
+  <script src="app.js?v=20"></script>
   <script type="module" src="mau3d.js?v=6"></script>
   <link rel="stylesheet" href="dctwin.css?v=23">
   <script type="module" src="dctwin.js?v=23"></script>
