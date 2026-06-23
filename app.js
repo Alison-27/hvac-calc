@@ -1880,3 +1880,58 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id)?.addEventListener('input', bomRender));
   document.getElementById('bom-flange-chk')?.addEventListener('change', bomRender);
 });
+
+// ════════════════════════════════════════════════════════════
+// 放射狀工程計算平台 Hub — 分類導覽視窗
+// ════════════════════════════════════════════════════════════
+const HUB = {
+  air:   { name: '空調風系統', en: 'Air System',     color: '#1d9e75', ico: '💨',
+           items: [['風量計算', 'airflow', '💨'], ['風管尺寸計算', 'ductsize', '🌀'], ['風管鐵皮計算', 'ductbom', '🔩']] },
+  water: { name: '空調水系統', en: 'Water System',   color: '#378add', ico: '💧',
+           items: [['水量計算', 'waterflow', '💧']] },
+  clean: { name: '潔淨室空調', en: 'Cleanroom HVAC', color: '#7f77dd', ico: '🏭',
+           items: [['潔淨室空調', 'cleanroom', '🏭']] },
+  equip: { name: '空調設備',   en: 'HVAC Equipment', color: '#ba7517', ico: '❄️',
+           items: [['乾式盤管 DCC', 'dcc', '❄️'], ['空調箱 AHU / MAU', 'mau', '🌡️']] },
+  ai:    { name: 'AI Data Center', en: 'AI Data Center', color: '#639922', ico: '🤖',
+           items: [['AI DC 計算書', 'datacenter', '🤖'], ['數位孿生', 'dctwin', '🟩']] },
+  conv:  { name: '公式換算',   en: 'Unit Converter',  color: '#4a8aa0', ico: '⚖️',
+           items: [['公式換算', 'reference', '⚖️']] },
+};
+let hubActive = 'air';
+
+function openHub(cat) {
+  hubActive = cat || 'air';
+  renderHub();
+  const m = document.getElementById('hub-modal');
+  if (m) { m.hidden = false; document.body.style.overflow = 'hidden'; }
+}
+function closeHub() {
+  const m = document.getElementById('hub-modal');
+  if (m) { m.hidden = true; document.body.style.overflow = ''; }
+}
+function selectHubCat(cat) { hubActive = cat; renderHub(); }
+function hubGo(tab) { closeHub(); showTab(tab); }
+
+function renderHub() {
+  const catCol = document.getElementById('hub-cat-col');
+  const itemCol = document.getElementById('hub-item-col');
+  if (!catCol || !itemCol) return;
+  catCol.innerHTML = Object.keys(HUB).map(k => {
+    const c = HUB[k], on = k === hubActive;
+    return `<button class="hub-cat${on ? ' on' : ''}" style="--acc:${c.color}" onclick="selectHubCat('${k}')">
+      <span class="hub-cat-ico">${c.ico}</span><span>${c.name}</span></button>`;
+  }).join('');
+  const c = HUB[hubActive];
+  itemCol.style.setProperty('--acc', c.color);
+  itemCol.innerHTML =
+    `<div class="hub-item-head"><span class="hub-item-h-ico">${c.ico}</span><span>${c.name}</span><small>${c.en}</small></div>` +
+    c.items.map(([nm, tab, ico]) =>
+      `<button class="hub-item" onclick="hubGo('${tab}')">
+        <span class="hub-item-ico">${ico}</span><span class="hub-item-name">${nm}</span><span class="hub-item-arr">→</span></button>`).join('');
+}
+
+// Esc 關閉視窗
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { const m = document.getElementById('hub-modal'); if (m && !m.hidden) closeHub(); }
+});
