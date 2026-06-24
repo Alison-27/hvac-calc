@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=23" />
+  <link rel="stylesheet" href="style.css?v=24" />
   <script type="importmap">
   {
     "imports": {
@@ -941,72 +941,77 @@
       </div>
     </section>
 
-    <!-- ── 冰水管路計算 ── -->
+    <!-- ── 冰水管路計算（HydroPuzzle 製圖工具）── -->
     <section id="tab-chwpipe" class="tab-section">
-      <div class="section-header">
-        <h2><span class="tag">WF</span> 冰水管路計算</h2>
-        <p class="section-desc">Chilled Water Piping · Hazen-Williams · DN 自動選定</p>
-      </div>
-      <div class="calc-grid">
-        <div class="calc-card">
-          <div class="card-header">
-            <span class="card-num">CHW-01</span>
-            <h3>冰水管徑選定</h3>
-            <span class="formula-badge">v = Q / A</span>
-          </div>
-          <div class="card-body">
-            <div class="input-group">
-              <label>設計流量 Q</label>
-              <div class="input-row">
-                <input type="number" id="chw-flow" value="50" min="0" step="1" />
-                <select id="chw-flow-unit" class="inline-select"><option value="m3h">m³/h</option><option value="ls">L/s</option><option value="gpm">GPM</option></select>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>用途 / 流速上限</label>
-              <div class="input-row">
-                <select id="chw-app" class="inline-select" style="flex:1">
-                  <option value="main">供回水主管 (≤2.4 m/s)</option>
-                  <option value="branch">分支管 (≤1.5 m/s)</option>
-                  <option value="riser">立管 (≤3.0 m/s)</option>
-                </select>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>管材 (Hazen-Williams C)</label>
-              <div class="input-row">
-                <select id="chw-mat" class="inline-select" style="flex:1">
-                  <option value="140">鋼管 / 鍍鋅 (C=140)</option>
-                  <option value="150">銅管 / 不鏽鋼 (C=150)</option>
-                  <option value="150b">PVC / PE (C=150)</option>
-                </select>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>供回水溫差 ΔT（估冷負荷用）</label>
-              <div class="input-row">
-                <input type="number" id="chw-dt" value="5" min="1" step="0.5" />
-                <span class="unit">°C</span>
-              </div>
-            </div>
+      <div class="hp">
+        <div class="hp-top">
+          <div class="hp-brand">HYDROPUZZLE<small>PRO·V5</small></div>
+          <div class="hp-titlebar"><span>冰水管路計算</span><small>CORE LOGIC ACTIVE</small></div>
+          <div class="hp-tools">
+            <select id="hp-fluid-sel" class="inline-select" onchange="hpSetFluid(this.value)"></select>
+            <button class="hp-tbtn" onclick="hpUndo()" title="復原">↩ 復原</button>
+            <button class="hp-tbtn" onclick="hpRedo()" title="重做">↪ Redo</button>
+            <button class="hp-tbtn hp-imp" onclick="hpImport()">⬆ 匯入</button>
+            <button class="hp-tbtn hp-exp" onclick="hpExportJSON()">匯出 JSON</button>
+            <button class="hp-tbtn hp-exp" onclick="hpExportHTML()">匯出 HTML</button>
+            <button class="hp-tbtn hp-exp" onclick="hpExportCSV()">Excel</button>
+            <input type="file" id="hp-file" accept="application/json" hidden onchange="hpImportFile(event)">
           </div>
         </div>
-
-        <div class="calc-card">
-          <div class="card-header">
-            <span class="card-num">CHW-02</span>
-            <h3>選定結果</h3>
+        <div class="hp-body">
+          <div class="hp-nav">
+            <button class="hp-navbtn active" data-view="spec" onclick="hpView('spec')">規格</button>
+            <button class="hp-navbtn" data-view="draw" onclick="hpView('draw')">製圖</button>
           </div>
-          <div class="card-body">
-            <div class="result-block">
-              <div class="result-row"><span class="result-label">建議管徑 DN</span><span class="result-value" id="chw-dn">—</span></div>
-              <div class="result-row"><span class="result-label">內徑 ID</span><span class="result-value" id="chw-id">—</span></div>
-              <div class="result-row"><span class="result-label">實際流速</span><span class="result-value" id="chw-vel">—</span></div>
-              <div class="result-row"><span class="result-label">摩擦損失</span><span class="result-value" id="chw-fric">—</span></div>
-              <div class="result-row"><span class="result-label">對應冷負荷</span><span class="result-value" id="chw-load">—</span></div>
+          <div class="hp-content">
+            <!-- 規格 -->
+            <div class="hp-spec" id="hp-spec">
+              <div class="hp-card hp-fluid-card">
+                <div class="hp-fluid-head">冷媒水介質</div>
+                <div class="hp-fluid-row">
+                  <div class="hp-fluid-btns" id="hp-fluid-btns"></div>
+                  <div class="hp-fluid-props">
+                    <div class="hp-prop"><span class="hp-prop-lbl">Cp (kJ/kg·K)</span><span class="hp-prop-val" id="hp-cp">—</span></div>
+                    <div class="hp-prop"><span class="hp-prop-lbl">密度 ρ (kg/m³)</span><span class="hp-prop-val" id="hp-rho">—</span></div>
+                    <div class="hp-prop"><span class="hp-prop-lbl">黏度 μ (mPa·s)</span><span class="hp-prop-val" id="hp-mu">—</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="hp-lib-head"><h3>標準參數庫</h3><button class="hp-add-tpl" onclick="hpAddTemplate()">＋ 新增模板</button></div>
+              <div class="hp-card hp-tpl-card">
+                <table class="hp-tpl-table">
+                  <thead><tr><th>名稱</th><th>配色</th><th>KW</th><th>DT (K)</th><th id="hp-lpm-col">LPM (純水)</th><th>管理</th></tr></thead>
+                  <tbody id="hp-tpl-body"></tbody>
+                </table>
+              </div>
             </div>
-            <div class="ds-check" id="chw-check" style="margin-top:1rem"></div>
-            <p class="hint" style="margin-top:.8rem">流速建議：主管 1.2–2.4 m/s、分支 ≤1.5 m/s；摩擦損失一般控制在 100–400 Pa/m。</p>
+            <!-- 製圖 -->
+            <div class="hp-draw" id="hp-draw" hidden>
+              <div class="hp-library">
+                <div class="hp-lib-top"><span>LIBRARY</span></div>
+                <button class="hp-copy-mode" id="hp-copy-mode" onclick="hpToggleCopy()">COPY MODE <i class="hp-copy-ico">⧉</i></button>
+                <button class="hp-add-node hp-add-header" onclick="hpAddNode('header')">HEADER <span>＋</span></button>
+                <button class="hp-add-node hp-add-pivot" onclick="hpAddNode('zone')">PIVOT <span>＋</span></button>
+                <div class="hp-lib-tpls" id="hp-lib-tpls"></div>
+              </div>
+              <div class="hp-canvas-wrap" id="hp-canvas-wrap">
+                <svg class="hp-conn-svg" id="hp-conn-svg"></svg>
+                <div class="hp-canvas" id="hp-canvas"></div>
+                <div class="hp-zoom-panel">
+                  <div class="hp-zoom-row"><span>ZOOM</span><span id="hp-zoom-val">100%</span></div>
+                  <button class="hp-fit-btn" onclick="hpFit()">⛶ 全景對焦</button>
+                  <div class="hp-zoom-save" id="hp-zoom-save">最後儲存路徑 —</div>
+                </div>
+                <div class="hp-dash">
+                  <div class="hp-dash-head">系統總覽 DASHBOARD</div>
+                  <div class="hp-dash-row"><span>介質</span><b id="hp-d-fluid">純水</b></div>
+                  <div class="hp-dash-row"><span>系統總流量</span><b id="hp-d-flow">0 <small>LPM</small></b></div>
+                  <div class="hp-dash-row"><span>最大管徑</span><b id="hp-d-dn">—</b></div>
+                  <div class="hp-dash-row"><span>總計節點</span><b id="hp-d-count">0 <small>個</small></b></div>
+                  <div class="hp-dash-legend"><span class="hp-lg g1">●紙</span><span class="hp-lg g2">●正常</span><span class="hp-lg g3">●偏高</span><span class="hp-lg g4">●超標</span></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2242,6 +2247,7 @@
   </div>
 
   <script src="app.js?v=22"></script>
+  <script src="hydro.js?v=2"></script>
   <script type="module" src="mau3d.js?v=6"></script>
   <link rel="stylesheet" href="dctwin.css?v=23">
   <script type="module" src="dctwin.js?v=23"></script>
