@@ -1541,38 +1541,43 @@ function printADCReport() {
 // 公式換算器 (Unit Converter) — 卡片 06
 // ════════════════════════════════════════════════════════════
 const CONV = [
-  { icon: '🧊', name: '負荷/流量換算', special: 'loadflow',
-    units: [['kW', 1], ['RT (冷凍噸)', 3.517], ['m³/h (CHW ΔT5°C)', 5.8139], ['L/min (CHW ΔT5°C)', 0.096898], ['GPM (CHW ΔT5°C)', 0.36673]],
-    rot: ['1 RT ≈ 2.4 GPM (ΔT 5.56°C)', '1 kW ≈ 0.172 m³/h CHW (ΔT5°C)'] },
+  // 負荷/流量換算：冷負荷(RT/kW/BTU) ↔ 風量(Air, ΔT10°C) ↔ 水流量(Water, ΔT 可調)
+  { icon: '🧊', name: '負荷/流量換算', special: 'loadflow', dtDefault: 5,
+    units: [['美制冷凍噸 (US RT)', 3.5169], ['千瓦 (kW)', 1], ['BTU/hr', 0.00029307],
+            ['風量 CMH (Air)', 0.00334972], ['風量 CFM (Air)', 0.00569117],
+            ['流量 LPM (Water)', 'w_lpm'], ['流量 GPM (Water)', 'w_gpm']],
+    rot: ['1 RT ≈ 2.4 GPM (ΔT 5.56°C)', '1 kW ≈ 0.172 m³/h CHW (ΔT5°C)', '風量以 Δt 10°C、標準空氣計'] },
   { icon: '❄️', name: '冷凍噸/功率',
-    units: [['kW', 1], ['RT (冷凍噸)', 3.517], ['kcal/h', 0.001163], ['BTU/h', 0.00029307], ['HP (馬力)', 0.7457]],
+    units: [['千瓦 (kW)', 1], ['美制冷凍噸 (RT)', 3.517], ['仟卡/時 (kcal/h)', 0.001163], ['英熱單位/時 (BTU/h)', 0.00029307], ['馬力 (HP)', 0.7457]],
     rot: ['1 RT = 3.517 kW = 12,000 BTU/h', '1 RT = 3,024 kcal/h'] },
   { icon: '💨', name: '風量/流量',
-    units: [['m³/h (CMH)', 1], ['m³/min (CMM)', 60], ['m³/s', 3600], ['L/s', 3.6], ['CFM', 1.699]],
-    rot: ['1 CMH = 0.589 CFM', '1 CFM = 1.699 CMH', '1 m³/s = 3600 CMH'] },
+    units: [['每時立方公尺 (CMH · m³/h)', 1], ['每分立方公尺 (CMM · m³/min)', 60], ['立方英呎/分 (CFM · ft³/min)', 1.69901],
+            ['公升/秒 (l/s)', 3.6], ['公升/分 (LPM)', 0.06], ['美制加侖/分 (GPM)', 0.227125], ['英制加侖/分 (UK GPM)', 0.272765]],
+    rot: ['1 CMM ≈ 1.7 CMH', '1 GPM ≈ 3.785 LPM', '1 CFM = 1.699 CMH'] },
   { icon: '⬛', name: '面積',
-    units: [['m²', 1], ['cm²', 0.0001], ['mm²', 0.000001], ['ft²', 0.092903], ['in²', 0.00064516], ['坪', 3.30579]],
+    units: [['平方公尺 (m²)', 1], ['平方公分 (cm²)', 0.0001], ['平方公釐 (mm²)', 0.000001], ['平方英呎 (ft²)', 0.092903], ['平方英吋 (in²)', 0.00064516], ['坪', 3.30579]],
     rot: ['1 坪 = 3.306 m²', '1 m² = 10.764 ft²'] },
   { icon: '🌡️', name: '溫度', special: 'temp',
-    units: [['°C', 0], ['°F', 1], ['K', 2]],
+    units: [['攝氏 (°C)', 0], ['華氏 (°F)', 1], ['凱氏 (K)', 2]],
     rot: ['°F = °C × 9/5 + 32', 'K = °C + 273.15'] },
   { icon: '⏲️', name: '壓力',
-    units: [['Pa', 1], ['kPa', 1000], ['bar', 100000], ['psi', 6894.76], ['mmH₂O (mmAq)', 9.80665], ['mH₂O', 9806.65], ['mmHg', 133.322], ['atm', 101325]],
+    units: [['帕 (Pa)', 1], ['千帕 (kPa)', 1000], ['巴 (bar)', 100000], ['磅力/平方吋 (psi)', 6894.76], ['毫米水柱 (mmAq)', 9.80665], ['公尺水柱 (mH₂O)', 9806.65], ['毫米汞柱 (mmHg)', 133.322], ['標準大氣壓 (atm)', 101325]],
     rot: ['1 bar = 100 kPa ≈ 10.2 mH₂O ≈ 14.5 psi', '1 mmAq = 9.807 Pa'] },
   { icon: '🚀', name: '速度',
-    units: [['m/s', 1], ['m/min', 1/60], ['km/h', 1/3.6], ['ft/min (FPM)', 0.00508], ['ft/s', 0.3048]],
+    units: [['公尺/秒 (m/s)', 1], ['公尺/分 (m/min)', 1/60], ['公里/時 (km/h)', 1/3.6], ['英呎/分 (FPM · ft/min)', 0.00508], ['英呎/秒 (ft/s)', 0.3048]],
     rot: ['1 m/s = 196.85 FPM', '1 m/s = 3.6 km/h'] },
   { icon: '📏', name: '長度',
-    units: [['m', 1], ['mm', 0.001], ['cm', 0.01], ['km', 1000], ['in (吋)', 0.0254], ['ft (呎)', 0.3048]],
+    units: [['公尺 (m)', 1], ['公釐 (mm)', 0.001], ['公分 (cm)', 0.01], ['公里 (km)', 1000], ['英吋 (in)', 0.0254], ['英呎 (ft)', 0.3048]],
     rot: ['1 in = 25.4 mm', '1 ft = 304.8 mm'] },
   { icon: '🧱', name: '熱傳透率(U值)',
-    units: [['W/(m²·K)', 1], ['kcal/(h·m²·°C)', 1.163], ['BTU/(h·ft²·°F)', 5.67826]],
+    units: [['瓦/平方公尺·度 (W/m²·K)', 1], ['仟卡/時·平方公尺·度 (kcal/h·m²·°C)', 1.163], ['英熱單位/時·平方英呎·度 (BTU/h·ft²·°F)', 5.67826]],
     rot: ['1 kcal/(h·m²·°C) = 1.163 W/(m²·K)', '1 BTU/(h·ft²·°F) = 5.678 W/(m²·K)'] },
   { icon: '⚖️', name: '質量流量',
-    units: [['kg/s', 1], ['kg/h', 1/3600], ['kg/min', 1/60], ['lb/h', 0.000125998], ['lb/s', 0.453592], ['t/h', 1000/3600]],
+    units: [['公斤/秒 (kg/s)', 1], ['公斤/時 (kg/h)', 1/3600], ['公斤/分 (kg/min)', 1/60], ['磅/時 (lb/h)', 0.000125998], ['磅/秒 (lb/s)', 0.453592], ['公噸/時 (t/h)', 1000/3600]],
     rot: ['1 kg/s = 3600 kg/h', '1 lb ≈ 0.454 kg'] },
 ];
 let convCat = 0;
+let convDt = 5;   // 負荷/流量換算的冰水溫差 ΔT
 
 function convInit() {
   const cats = document.getElementById('conv-cats');
@@ -1599,10 +1604,17 @@ function convSelect(i) {
   document.getElementById('conv-from-unit').innerHTML = opts;
   document.getElementById('conv-to-unit').innerHTML = opts;
   document.getElementById('conv-to-unit').value = Math.min(1, c.units.length - 1);
+  let dtHtml = '';
+  if (c.special === 'loadflow') {
+    dtHtml = `<div class="conv-dt"><span class="conv-dt-lbl">冰水溫差 ΔT Water<small>用於 LPM/GPM 換算</small></span>` +
+      `<span class="conv-dt-in"><input type="number" id="conv-dt-input" value="${convDt}" min="1" step="0.5" oninput="convSetDt(this.value)"><span class="unit">°C</span></span></div>`;
+  }
   document.getElementById('conv-rot-chips').innerHTML =
-    c.rot.map(r => `<span class="conv-rot-chip">${r}</span>`).join('');
+    dtHtml + c.rot.map(r => `<span class="conv-rot-chip">${r}</span>`).join('');
   convCalc();
 }
+
+function convSetDt(v) { convDt = parseFloat(v) || 5; convCalc(); }
 
 function convCalc() {
   const c = CONV[convCat];
@@ -1615,6 +1627,9 @@ function convCalc() {
   if (c.special === 'temp') {
     let cdeg = fi === 0 ? v : fi === 1 ? (v - 32) * 5 / 9 : v - 273.15;
     res = ti === 0 ? cdeg : ti === 1 ? cdeg * 9 / 5 + 32 : cdeg + 273.15;
+  } else if (c.special === 'loadflow') {
+    const f = c.units.map(u => u[1] === 'w_lpm' ? 0.0697667 * convDt : u[1] === 'w_gpm' ? 0.264085 * convDt : u[1]);
+    res = v * f[fi] / f[ti];
   } else {
     res = v * c.units[fi][1] / c.units[ti][1];
   }
@@ -1889,7 +1904,8 @@ const HUB = {
   air:   { name: '空調風系統', en: 'Air System',     color: '#1d9e75', ico: '💨',
            items: [['風量計算', 'Airflow', 'airflow', '💨'], ['風管尺寸計算', 'Duct Sizing', 'ductsize', '🌀'], ['風管鐵皮計算', 'Duct BOM', 'ductbom', '🔩']] },
   water: { name: '空調水系統', en: 'Water System',   color: '#378add', ico: '💧',
-           items: [['水量計算', 'Water Flow', 'waterflow', '💧'], ['冰水管路計算', 'Chilled Water Piping', 'chwpipe', '🧊']] },
+           items: [['水量計算', 'Water Flow', 'waterflow', '💧'], ['冰水管路計算', 'Chilled Water Piping', 'chwpipe', '🧊'],
+                   ['冰水泵計算', 'CHW Pump', 'chwpump', '🌀'], ['冷卻水塔補水量', 'CT Makeup Water', 'ctmakeup', '🗼'], ['膨脹水箱選型', 'Expansion Tank', 'exptank', '🛢️']] },
   clean: { name: '潔淨室空調', en: 'Cleanroom HVAC', color: '#7f77dd', ico: '🏭',
            items: [['潔淨室空調', 'Cleanroom', 'cleanroom', '🏭']] },
   equip: { name: '空調設備',   en: 'HVAC Equipment', color: '#ba7517', ico: '❄️',
@@ -2024,3 +2040,76 @@ function chwCalc() {
 ['chw-flow','chw-dt'].forEach(id => document.getElementById(id)?.addEventListener('input', chwCalc));
 ['chw-flow-unit','chw-app','chw-mat'].forEach(id => document.getElementById(id)?.addEventListener('change', chwCalc));
 document.addEventListener('DOMContentLoaded', () => { if (document.getElementById('chw-flow')) chwCalc(); });
+
+// ════════════════════════════════════════════════════════════
+// 空調水系統新增計算：冰水泵 / 冷卻水塔補水 / 膨脹水箱
+// ════════════════════════════════════════════════════════════
+const IEC_KW = [0.37,0.55,0.75,1.1,1.5,2.2,3,3.7,4,5.5,7.5,11,15,18.5,22,30,37,45,55,75,90,110,132,160,200,250,315];
+const _g = id => parseFloat(document.getElementById(id)?.value);
+const _setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+// 冰水泵
+function chwpumpCalc() {
+  const Q = _g('pmp-q'), Hr = _g('pmp-h'), hu = document.getElementById('pmp-h-unit')?.value;
+  const ep = (_g('pmp-effp') || 70) / 100, em = (_g('pmp-effm') || 90) / 100, mg = (_g('pmp-margin') || 0) / 100;
+  if (!Q || !Hr) { ['pmp-hyd','pmp-shaft','pmp-input','pmp-motor'].forEach(i => _setT(i,'—')); return; }
+  const H = hu === 'kpa' ? Hr / 9.80665 : Hr;       // kPa → m 水柱
+  const hyd = 1000 * 9.81 * (Q / 3600) * H / 1000;  // kW
+  const shaft = hyd / ep;
+  const input = shaft / em;
+  const need = input * (1 + mg);
+  const motor = IEC_KW.find(k => k >= need) || Math.ceil(need);
+  _setT('pmp-hyd', hyd.toFixed(2) + ' kW');
+  _setT('pmp-shaft', shaft.toFixed(2) + ' kW');
+  _setT('pmp-input', input.toFixed(2) + ' kW');
+  _setT('pmp-motor', motor + ' kW (' + (motor / 0.7457).toFixed(1) + ' HP)');
+}
+
+// 冷卻水塔補水量
+function ctmakeupCalc() {
+  const Q = _g('ct-q'), dt = _g('ct-dt'), coc = _g('ct-coc') || 4, drift = (_g('ct-drift') || 0) / 100;
+  if (!Q || !dt) { ['ct-e','ct-d','ct-b','ct-m','ct-pct'].forEach(i => _setT(i,'—')); return; }
+  const E = Q * dt * 0.0015;          // 蒸發量 m³/h
+  const D = Q * drift;                // 飛濺損失
+  const B = Math.max(E / (coc - 1) - D, 0); // 排放量
+  const M = E + D + B;                // 總補水量
+  _setT('ct-e', E.toFixed(2) + ' m³/h');
+  _setT('ct-d', D.toFixed(3) + ' m³/h');
+  _setT('ct-b', B.toFixed(2) + ' m³/h');
+  _setT('ct-m', M.toFixed(2) + ' m³/h (' + (M * 1000 / 60).toFixed(0) + ' LPM)');
+  _setT('ct-pct', (M / Q * 100).toFixed(2) + ' % 循環量');
+}
+
+// 膨脹水箱（隔膜式）
+const _waterRho = T => {  // 水密度 kg/m³（近似多項式，0–100°C）
+  return 999.85 + 6.33e-2 * T - 8.52e-3 * T * T + 6.94e-5 * T * T * T - 3.6e-7 * T * T * T * T;
+};
+function exptankCalc() {
+  const V = _g('exp-v'), tmin = _g('exp-tmin'), tmax = _g('exp-tmax');
+  const Pi = _g('exp-pi'), Pf = _g('exp-pf');
+  if (!V || tmax <= tmin || Pf <= Pi) { ['exp-rate','exp-ve','exp-af','exp-vt'].forEach(i => _setT(i,'—')); return; }
+  const rate = _waterRho(tmin) / _waterRho(tmax) - 1;   // 體積膨脹率
+  const Ve = V * rate;                                  // 膨脹水量 L
+  const PiA = Pi + 101.3, PfA = Pf + 101.3;             // 絕對壓力
+  const af = 1 - PiA / PfA;                             // 接收係數
+  const Vt = Ve / af;                                   // 水箱容積 L
+  _setT('exp-rate', (rate * 100).toFixed(2) + ' %');
+  _setT('exp-ve', Ve.toFixed(1) + ' L');
+  _setT('exp-af', af.toFixed(3));
+  _setT('exp-vt', Vt.toFixed(0) + ' L (≈' + Math.ceil(Vt / 50) * 50 + ' L 級)');
+}
+
+(function bindWaterCalcs() {
+  const bind = (ids, fn) => ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.addEventListener('input', fn); el.addEventListener('change', fn); }
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    bind(['pmp-q','pmp-h','pmp-h-unit','pmp-effp','pmp-effm','pmp-margin'], chwpumpCalc);
+    bind(['ct-q','ct-dt','ct-coc','ct-drift'], ctmakeupCalc);
+    bind(['exp-v','exp-tmin','exp-tmax','exp-pi','exp-pf'], exptankCalc);
+    if (document.getElementById('pmp-q')) chwpumpCalc();
+    if (document.getElementById('ct-q')) ctmakeupCalc();
+    if (document.getElementById('exp-v')) exptankCalc();
+  });
+})();

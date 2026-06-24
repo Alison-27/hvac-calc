@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=22" />
+  <link rel="stylesheet" href="style.css?v=23" />
   <script type="importmap">
   {
     "imports": {
@@ -1007,6 +1007,102 @@
             </div>
             <div class="ds-check" id="chw-check" style="margin-top:1rem"></div>
             <p class="hint" style="margin-top:.8rem">流速建議：主管 1.2–2.4 m/s、分支 ≤1.5 m/s；摩擦損失一般控制在 100–400 Pa/m。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 冰水泵計算 ── -->
+    <section id="tab-chwpump" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">WF</span> 冰水泵計算</h2>
+        <p class="section-desc">Chilled Water Pump · 軸功率 / 馬達選型</p>
+      </div>
+      <div class="calc-grid">
+        <div class="calc-card">
+          <div class="card-header"><span class="card-num">PMP-01</span><h3>泵浦參數</h3><span class="formula-badge">P = ρgQH / η</span></div>
+          <div class="card-body">
+            <div class="input-group"><label>系統流量 Q</label><div class="input-row"><input type="number" id="pmp-q" value="50" min="0" step="1" /><span class="unit">m³/h</span></div></div>
+            <div class="input-group"><label>總揚程 H</label><div class="input-row"><input type="number" id="pmp-h" value="25" min="0" step="0.5" /><select id="pmp-h-unit" class="inline-select"><option value="m">m 水柱</option><option value="kpa">kPa</option></select></div></div>
+            <div class="input-group"><label>泵浦效率 η<sub>p</sub></label><div class="input-row"><input type="number" id="pmp-effp" value="70" min="30" max="90" step="1" /><span class="unit">%</span></div></div>
+            <div class="input-group"><label>馬達效率 η<sub>m</sub></label><div class="input-row"><input type="number" id="pmp-effm" value="90" min="60" max="98" step="1" /><span class="unit">%</span></div></div>
+            <div class="input-group"><label>選用餘裕</label><div class="input-row"><input type="number" id="pmp-margin" value="15" min="0" max="50" step="5" /><span class="unit">%</span></div></div>
+          </div>
+        </div>
+        <div class="calc-card">
+          <div class="card-header"><span class="card-num">PMP-02</span><h3>選型結果</h3></div>
+          <div class="card-body">
+            <div class="result-block">
+              <div class="result-row"><span class="result-label">水力功率</span><span class="result-value" id="pmp-hyd">—</span></div>
+              <div class="result-row"><span class="result-label">泵軸功率</span><span class="result-value" id="pmp-shaft">—</span></div>
+              <div class="result-row"><span class="result-label">馬達輸入功率</span><span class="result-value" id="pmp-input">—</span></div>
+              <div class="result-row"><span class="result-label">建議馬達 (含餘裕)</span><span class="result-value" id="pmp-motor">—</span></div>
+            </div>
+            <p class="hint" style="margin-top:.8rem">選用馬達依 IEC 標準功率級距向上取整；變頻泵建議再保留 10–15% 調速範圍。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 冷卻水塔補水量 ── -->
+    <section id="tab-ctmakeup" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">WF</span> 冷卻水塔補水量</h2>
+        <p class="section-desc">Cooling Tower Makeup · 蒸發 + 飛濺 + 排放</p>
+      </div>
+      <div class="calc-grid">
+        <div class="calc-card">
+          <div class="card-header"><span class="card-num">CT-01</span><h3>水塔參數</h3><span class="formula-badge">M = E + D + B</span></div>
+          <div class="card-body">
+            <div class="input-group"><label>循環水量 Q</label><div class="input-row"><input type="number" id="ct-q" value="200" min="0" step="5" /><span class="unit">m³/h</span></div></div>
+            <div class="input-group"><label>冷卻水溫差 ΔT (Range)</label><div class="input-row"><input type="number" id="ct-dt" value="5" min="1" step="0.5" /><span class="unit">°C</span></div></div>
+            <div class="input-group"><label>濃縮倍數 COC</label><div class="input-row"><input type="number" id="ct-coc" value="4" min="1.5" step="0.5" /><span class="unit">cycles</span></div></div>
+            <div class="input-group"><label>飛濺損失 (Drift)</label><div class="input-row"><input type="number" id="ct-drift" value="0.05" min="0" step="0.01" /><span class="unit">%</span></div></div>
+          </div>
+        </div>
+        <div class="calc-card">
+          <div class="card-header"><span class="card-num">CT-02</span><h3>補水量結果</h3></div>
+          <div class="card-body">
+            <div class="result-block">
+              <div class="result-row"><span class="result-label">蒸發量 E</span><span class="result-value" id="ct-e">—</span></div>
+              <div class="result-row"><span class="result-label">飛濺損失 D</span><span class="result-value" id="ct-d">—</span></div>
+              <div class="result-row"><span class="result-label">排放量 B</span><span class="result-value" id="ct-b">—</span></div>
+              <div class="result-row"><span class="result-label">總補水量 M</span><span class="result-value" id="ct-m">—</span></div>
+              <div class="result-row"><span class="result-label">補水率</span><span class="result-value" id="ct-pct">—</span></div>
+            </div>
+            <p class="hint" style="margin-top:.8rem">蒸發量 ≈ 循環水量 × ΔT × 0.0015；提高濃縮倍數可降排放，但需注意水質結垢。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 膨脹水箱選型 ── -->
+    <section id="tab-exptank" class="tab-section">
+      <div class="section-header">
+        <h2><span class="tag">WF</span> 膨脹水箱選型</h2>
+        <p class="section-desc">Expansion Tank · 隔膜式容積選定</p>
+      </div>
+      <div class="calc-grid">
+        <div class="calc-card">
+          <div class="card-header"><span class="card-num">EXP-01</span><h3>系統參數</h3><span class="formula-badge">Vt = Ve / (1 − Pi/Pf)</span></div>
+          <div class="card-body">
+            <div class="input-group"><label>系統總水量 V</label><div class="input-row"><input type="number" id="exp-v" value="3000" min="0" step="50" /><span class="unit">L</span></div></div>
+            <div class="input-group"><label>系統最低溫度</label><div class="input-row"><input type="number" id="exp-tmin" value="7" min="0" step="1" /><span class="unit">°C</span></div></div>
+            <div class="input-group"><label>系統最高溫度</label><div class="input-row"><input type="number" id="exp-tmax" value="60" min="5" step="1" /><span class="unit">°C</span></div></div>
+            <div class="input-group"><label>充氣 / 補水壓力 Pi</label><div class="input-row"><input type="number" id="exp-pi" value="150" min="0" step="10" /><span class="unit">kPa(g)</span></div></div>
+            <div class="input-group"><label>最高工作壓力 Pf</label><div class="input-row"><input type="number" id="exp-pf" value="400" min="0" step="10" /><span class="unit">kPa(g)</span></div></div>
+          </div>
+        </div>
+        <div class="calc-card">
+          <div class="card-header"><span class="card-num">EXP-02</span><h3>選型結果</h3></div>
+          <div class="card-body">
+            <div class="result-block">
+              <div class="result-row"><span class="result-label">水體膨脹率</span><span class="result-value" id="exp-rate">—</span></div>
+              <div class="result-row"><span class="result-label">膨脹水量 Ve</span><span class="result-value" id="exp-ve">—</span></div>
+              <div class="result-row"><span class="result-label">接收係數</span><span class="result-value" id="exp-af">—</span></div>
+              <div class="result-row"><span class="result-label">建議水箱容積 Vt</span><span class="result-value" id="exp-vt">—</span></div>
+            </div>
+            <p class="hint" style="margin-top:.8rem">隔膜式膨脹水箱；Pi 一般取系統靜水壓 + 安全裕度，Pf 取低於洩壓閥設定。</p>
           </div>
         </div>
       </div>
@@ -2145,7 +2241,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=22"></script>
   <script type="module" src="mau3d.js?v=6"></script>
   <link rel="stylesheet" href="dctwin.css?v=23">
   <script type="module" src="dctwin.js?v=23"></script>

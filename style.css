@@ -1960,3 +1960,12 @@ footer {
 .hub-item:hover .hub-item-ico { filter: none; }
 .hub-item:hover .hub-item-arr { color: var(--acc); transform: translateX(4px); }
 @media (max-width: 620px) { .hub-modal-card { grid-template-columns: 1fr; height: min(620px, 86vh); } .hub-cat-col { flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); } }
+
+/* 負荷/流量換算的 ΔT 輸入 */
+.conv-dt { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: .6rem .9rem; margin-bottom: .6rem; }
+.conv-dt-lbl { display: flex; flex-direction: column; font-size: .85rem; color: var(--text); }
+.conv-dt-lbl small { color: var(--text-muted); font-size: .68rem; }
+.conv-dt-in { display: flex; align-items: center; gap: .3rem; }
+.conv-dt-in input { width: 64px; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius);
+  color: var(--text); font-family: var(--mono); font-size: 1rem; padding: .4rem .5rem; outline: none; text-align: right; }
