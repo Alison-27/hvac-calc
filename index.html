@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=24" />
+  <link rel="stylesheet" href="style.css?v=25" />
   <script type="importmap">
   {
     "imports": {
@@ -66,7 +66,7 @@
           <div class="hub2-core-in">
             <span class="hub2-eyebrow">ENGINEERING · PLATFORM</span>
             <span class="hub2-title" data-zh="工程計算平台" data-en="Calc Platform">工程計算平台</span>
-            <span class="hub2-status"><i></i>6 SYSTEMS ONLINE</span>
+            <span class="hub2-status"><i></i>7 SYSTEMS ONLINE</span>
           </div>
         </div>
 
@@ -75,6 +75,7 @@
           <div class="hub2-strip" id="hub2-strip">
             <button class="hub2-card c-air"   onclick="openHub('air')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">💨</span></span><span class="hub2-name" data-zh="空調風系統" data-en="Air System">空調風系統</span><span class="hub2-sub">AIR SYSTEM</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
             <button class="hub2-card c-water" onclick="openHub('water')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">💧</span></span><span class="hub2-name" data-zh="空調水系統" data-en="Water System">空調水系統</span><span class="hub2-sub">WATER SYSTEM</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
+            <button class="hub2-card c-chilled" onclick="openHub('chilled')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">❄️</span></span><span class="hub2-name" data-zh="空調冰水系統" data-en="Chilled Water">空調冰水系統</span><span class="hub2-sub">CHILLED WATER</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
             <button class="hub2-card c-clean" onclick="openHub('clean')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">🏭</span></span><span class="hub2-name" data-zh="潔淨室空調" data-en="Cleanroom">潔淨室空調</span><span class="hub2-sub">CLEANROOM</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
             <button class="hub2-card c-equip" onclick="openHub('equip')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">❄️</span></span><span class="hub2-name" data-zh="空調設備" data-en="Equipment">空調設備</span><span class="hub2-sub">EQUIPMENT</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
             <button class="hub2-card c-ai"    onclick="openHub('ai')"><span class="hub2-bar"></span><span class="hub2-disc"><span class="hub2-ico">🤖</span></span><span class="hub2-name" data-zh="AI Data Center" data-en="AI Data Center">AI Data Center</span><span class="hub2-sub">AI DATA CENTER</span><span class="hub2-enter" data-zh="進入 →" data-en="Enter →">進入 →</span></button>
@@ -945,16 +946,13 @@
     <section id="tab-chwpipe" class="tab-section">
       <div class="hp">
         <div class="hp-top">
-          <div class="hp-brand">HYDROPUZZLE<small>PRO·V5</small></div>
-          <div class="hp-titlebar"><span>冰水管路計算</span><small>CORE LOGIC ACTIVE</small></div>
+          <div class="hp-titlebar"><span>冰水管路計算</span><small>Chilled Water Piping Designer</small></div>
           <div class="hp-tools">
             <select id="hp-fluid-sel" class="inline-select" onchange="hpSetFluid(this.value)"></select>
             <button class="hp-tbtn" onclick="hpUndo()" title="復原">↩ 復原</button>
-            <button class="hp-tbtn" onclick="hpRedo()" title="重做">↪ Redo</button>
+            <button class="hp-tbtn" onclick="hpRedo()" title="重做">↪ 重做</button>
             <button class="hp-tbtn hp-imp" onclick="hpImport()">⬆ 匯入</button>
-            <button class="hp-tbtn hp-exp" onclick="hpExportJSON()">匯出 JSON</button>
-            <button class="hp-tbtn hp-exp" onclick="hpExportHTML()">匯出 HTML</button>
-            <button class="hp-tbtn hp-exp" onclick="hpExportCSV()">Excel</button>
+            <button class="hp-tbtn hp-exp" onclick="hpExportCSV()">⬇ Excel 匯出</button>
             <input type="file" id="hp-file" accept="application/json" hidden onchange="hpImportFile(event)">
           </div>
         </div>
