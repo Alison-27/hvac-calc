@@ -2076,3 +2076,66 @@ footer {
 .hp-dash-legend { display: flex; gap: .5rem; margin-top: .6rem; font-size: .58rem; }
 .hp-lg.g1 { color: var(--text-muted); } .hp-lg.g2 { color: #1d9e75; } .hp-lg.g3 { color: var(--amber); } .hp-lg.g4 { color: #e24b4a; }
 @media (max-width: 820px) { .hp-fluid-row { flex-direction: column; align-items: flex-start; } .hp-library { width: 150px; } }
+
+/* ════════ 冷卻水塔補水量（多案例質量平衡）════════ */
+.ctm { display: flex; flex-direction: column; gap: 1rem; }
+.ctm-bar { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: .7rem 1rem; }
+.ctm-mode { display: flex; align-items: center; gap: .4rem; color: var(--teal); font-weight: 700; font-size: .82rem; }
+.ctm-mode i { width: 8px; height: 8px; border-radius: 50%; background: #1d9e75; box-shadow: 0 0 8px #1d9e75; }
+.ctm-badge { background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim); font-family: var(--mono); font-size: .7rem; padding: .3rem .7rem; border-radius: 999px; }
+.ctm-spacer { flex: 1; }
+.ctm-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim); font-size: .76rem; padding: .45rem .8rem; border-radius: var(--radius); cursor: pointer; }
+.ctm-btn:hover { border-color: var(--border2); color: var(--text); }
+.ctm-manual-btn { background: var(--teal); border-color: var(--teal); color: #fff; }
+.ctm-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.ctm-table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: .85rem; }
+.ctm-table thead th { background: var(--bg3); color: var(--text); font-weight: 700; padding: .8rem .9rem; text-align: center; border-bottom: 1px solid var(--border2); white-space: nowrap; }
+.ctm-table thead th.ctm-rowlbl { text-align: left; }
+.ctm-rowlbl { text-align: left; color: var(--text); font-weight: 600; padding: .55rem .9rem; white-space: nowrap; position: sticky; left: 0; background: var(--bg2); }
+.ctm-rowlbl small { display: block; color: var(--text-muted); font-size: .64rem; font-weight: 400; }
+.ctm-table td { padding: .45rem .6rem; text-align: center; border-bottom: 1px solid var(--border); }
+.ctm-sec td { font-weight: 700; font-size: .78rem; letter-spacing: .04em; padding: .5rem .9rem; text-align: left; color: #fff; }
+.ctm-sec-in td { background: linear-gradient(90deg, #8a6d1e, #5f4a12); }
+.ctm-sec-a  td { background: linear-gradient(90deg, #1e5fa5, #123e6e); }
+.ctm-sec-b  td { background: linear-gradient(90deg, #15806a, #0d5044); }
+.ctm-sec-out td { background: linear-gradient(90deg, #5b3fb5, #3a2784); }
+.ctm-cell-in { width: 78px; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius); color: var(--amber); font-family: var(--mono); font-weight: 700; text-align: center; padding: .4rem .3rem; outline: none; }
+.ctm-cell-in:focus { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-glow); }
+.ctm-cell-out { font-family: var(--mono); color: var(--text-dim); font-size: .9rem; }
+.ctm-out-row .ctm-rowlbl { background: var(--bg); }
+.ctm-out-row td { background: var(--bg); }
+.ctm-emph .ctm-cell-out { color: var(--text); font-weight: 700; font-size: 1rem; }
+.ctm-emph .ctm-rowlbl, .ctm-emph td { background: var(--bg2); }
+.ctm-design td, .ctm-design .ctm-rowlbl { background: rgba(91,63,181,0.18); }
+.ctm-design .ctm-cell-out { color: #1d9e75; font-weight: 800; font-size: 1.3rem; }
+.ctm-basis { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; }
+.ctm-basis-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.2rem; }
+.ctm-basis-card h4 { color: var(--text); font-size: .85rem; margin-bottom: .7rem; border-left: 3px solid var(--teal); padding-left: .5rem; }
+.ctm-basis-check h4 { border-left-color: var(--amber); }
+.ctm-basis-card ul { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+.ctm-basis-card li { color: var(--text-dim); font-size: .8rem; line-height: 1.6; }
+.ctm-basis-card b { color: var(--text); }
+@media (max-width: 760px) { .ctm-basis { grid-template-columns: 1fr; } }
+
+/* 使用手冊 */
+.ctm-modal { position: fixed; inset: 0; z-index: 200; background: rgba(4,7,14,0.72); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+.ctm-modal[hidden] { display: none; }
+.ctm-modal-card { position: relative; width: min(720px, 94vw); max-height: 86vh; overflow-y: auto; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-lg); padding: 1.6rem 1.8rem; }
+.ctm-modal-x { position: absolute; top: 1rem; right: 1.1rem; width: 32px; height: 32px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; }
+.ctm-modal-title { color: var(--text); font-size: 1.3rem; margin-bottom: 1.2rem; }
+.ctm-modal-title small { display: block; color: var(--text-muted); font-size: .7rem; font-weight: 400; letter-spacing: .08em; }
+.ctm-man-sec { margin-bottom: 1.4rem; }
+.ctm-man-sec h4 { color: var(--teal); font-size: .95rem; margin-bottom: .7rem; }
+.ctm-man-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.ctm-man-table th { background: var(--bg3); color: var(--text-dim); text-align: left; padding: .5rem .7rem; }
+.ctm-man-table td { border-bottom: 1px solid var(--border); padding: .5rem .7rem; color: var(--text-dim); }
+.ctm-man-table td:first-child { color: var(--text); font-weight: 600; }
+.ctm-man-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .8rem; }
+.ctm-man-box { border-radius: var(--radius); padding: .9rem 1rem; border: 1px solid var(--border); }
+.ctm-man-box b { display: block; margin-bottom: .4rem; }
+.ctm-man-box p { color: var(--text-dim); font-size: .78rem; line-height: 1.6; }
+.ctm-man-a { background: rgba(30,95,165,0.12); } .ctm-man-a b { color: #5fa3e0; }
+.ctm-man-b { background: rgba(21,128,106,0.12); } .ctm-man-b b { color: #2bb88a; }
+.ctm-man-c { background: rgba(91,63,181,0.12); } .ctm-man-c b { color: #9d8ce0; }
+.ctm-man-trouble p { color: var(--text-dim); font-size: .82rem; line-height: 1.7; margin-bottom: .4rem; }
+.ctm-man-trouble b { color: var(--amber); }

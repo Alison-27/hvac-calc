@@ -6,7 +6,7 @@
   <title>HVAC 空調計算資料庫</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=25" />
+  <link rel="stylesheet" href="style.css?v=26" />
   <script type="importmap">
   {
     "imports": {
@@ -1050,30 +1050,80 @@
     <!-- ── 冷卻水塔補水量 ── -->
     <section id="tab-ctmakeup" class="tab-section">
       <div class="section-header">
-        <h2><span class="tag">WF</span> 冷卻水塔補水量</h2>
-        <p class="section-desc">Cooling Tower Makeup · 蒸發 + 飛濺 + 排放</p>
+        <h2><span class="tag">CT</span> 冷卻水塔補水量</h2>
+        <p class="section-desc">Cooling Tower Makeup · 多案例質量平衡 · ASHRAE Standard Based</p>
       </div>
-      <div class="calc-grid">
-        <div class="calc-card">
-          <div class="card-header"><span class="card-num">CT-01</span><h3>水塔參數</h3><span class="formula-badge">M = E + D + B</span></div>
-          <div class="card-body">
-            <div class="input-group"><label>循環水量 Q</label><div class="input-row"><input type="number" id="ct-q" value="200" min="0" step="5" /><span class="unit">m³/h</span></div></div>
-            <div class="input-group"><label>冷卻水溫差 ΔT (Range)</label><div class="input-row"><input type="number" id="ct-dt" value="5" min="1" step="0.5" /><span class="unit">°C</span></div></div>
-            <div class="input-group"><label>濃縮倍數 COC</label><div class="input-row"><input type="number" id="ct-coc" value="4" min="1.5" step="0.5" /><span class="unit">cycles</span></div></div>
-            <div class="input-group"><label>飛濺損失 (Drift)</label><div class="input-row"><input type="number" id="ct-drift" value="0.05" min="0" step="0.01" /><span class="unit">%</span></div></div>
+      <div class="ctm">
+        <div class="ctm-bar">
+          <span class="ctm-mode"><i></i>即時運算 (AUTO-CALC)</span>
+          <span class="ctm-badge">排熱係數 HRF × 1.25　冷卻 ΔT 5℃</span>
+          <span class="ctm-spacer"></span>
+          <button class="ctm-btn" onclick="ctmAddCase()">＋ 新增案例</button>
+          <button class="ctm-btn" onclick="ctmDelCase()">－ 移除案例</button>
+          <button class="ctm-btn ctm-manual-btn" onclick="ctmManual(true)">📖 使用手冊</button>
+        </div>
+        <div class="ctm-table-wrap">
+          <table class="ctm-table" id="ctm-table"></table>
+        </div>
+        <div class="ctm-basis">
+          <div class="ctm-basis-card">
+            <h4>工程基準 (ENGINEERING BASIS)</h4>
+            <ul>
+              <li><b>排熱平衡：</b>冷凝排熱 = 冷凍噸 × 3.517 kW × HRF（排熱係數，一般 1.25）</li>
+              <li><b>循環水量：</b>Q<sub>循環</sub> = 排熱 ÷ (4.186 × ΔT)（L/s）</li>
+              <li><b>蒸發損失：</b>E ≈ Q<sub>循環</sub> × (ΔT×1.8) × 0.00085</li>
+              <li><b>排放損失：</b>B = E ÷ (COC − 1) − 飛濺損失</li>
+              <li><b>補給總量 A：</b>Makeup-A = 蒸發 + 飛濺 + 排放</li>
+            </ul>
+          </div>
+          <div class="ctm-basis-card ctm-basis-check">
+            <h4>工程後驗校核 (CHECK)</h4>
+            <ul>
+              <li><b>排放校核：</b>提高濃縮倍數 (COC) 可降低排放，但須注意水質結垢與腐蝕風險</li>
+              <li><b>設計裕度：</b>建議補給總水量採循環水量 2% 作為保守設計值（含水質定期排換餘裕）</li>
+            </ul>
           </div>
         </div>
-        <div class="calc-card">
-          <div class="card-header"><span class="card-num">CT-02</span><h3>補水量結果</h3></div>
-          <div class="card-body">
-            <div class="result-block">
-              <div class="result-row"><span class="result-label">蒸發量 E</span><span class="result-value" id="ct-e">—</span></div>
-              <div class="result-row"><span class="result-label">飛濺損失 D</span><span class="result-value" id="ct-d">—</span></div>
-              <div class="result-row"><span class="result-label">排放量 B</span><span class="result-value" id="ct-b">—</span></div>
-              <div class="result-row"><span class="result-label">總補水量 M</span><span class="result-value" id="ct-m">—</span></div>
-              <div class="result-row"><span class="result-label">補水率</span><span class="result-value" id="ct-pct">—</span></div>
+      </div>
+      <!-- 使用手冊 -->
+      <div class="ctm-modal" id="ctm-modal" hidden onclick="if(event.target===this)ctmManual(false)">
+        <div class="ctm-modal-card">
+          <button class="ctm-modal-x" onclick="ctmManual(false)">✕</button>
+          <h3 class="ctm-modal-title">系統使用手冊 (User Manual)<small>冷卻水塔補水量 · ASHRAE Standard Based</small></h3>
+          <div class="ctm-man-sec">
+            <h4>① 輸入參數說明 (INPUTS)</h4>
+            <table class="ctm-man-table">
+              <thead><tr><th>參數名稱</th><th>單位</th><th>工程意義與建議值</th></tr></thead>
+              <tbody>
+                <tr><td>冷凍主機噸數 (RT)</td><td>RT</td><td>冷凝器須排除的總熱量來源</td></tr>
+                <tr><td>排熱係數 (HRF)</td><td>—</td><td>冷凝排熱 ÷ 蒸發冷量，一般 1.2 ~ 1.3</td></tr>
+                <tr><td>冷卻水溫差 ΔT</td><td>℃</td><td>冷卻水塔進出水溫差 (Range)，常見 5 ℃</td></tr>
+                <tr><td>濃縮倍數 (COC)</td><td>cycles</td><td>循環水濃縮倍率，3 ~ 6 視水質而定</td></tr>
+                <tr><td>飛濺損失率 (Windage)</td><td>%</td><td>機械通風塔約 0.005% ~ 0.05%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="ctm-man-sec">
+            <h4>② 計算邏輯 (LOGIC)</h4>
+            <div class="ctm-man-grid">
+              <div class="ctm-man-box ctm-man-a">
+                <b>A 區：質量平衡 (Mass Balance)</b>
+                <p>蒸發 → 飛濺 → 排放 = E/(COC−1) − 飛濺 → 補給 Makeup-A = 蒸發 + 飛濺 + 排放</p>
+              </div>
+              <div class="ctm-man-box ctm-man-b">
+                <b>B 區：簡便決策</b>
+                <p>等效濃縮倍率 COC eq = 蒸發 ÷ 飛濺 + 1；簡式補給 Makeup-B = 蒸發 + 飛濺（忽略排放的理論最小值）</p>
+              </div>
+              <div class="ctm-man-box ctm-man-c">
+                <b>C 區：設計輸出</b>
+                <p>建議補給總水量 = 循環水量 × 2%（保守設計值，含定期排換餘裕）</p>
+              </div>
             </div>
-            <p class="hint" style="margin-top:.8rem">蒸發量 ≈ 循環水量 × ΔT × 0.0015；提高濃縮倍數可降排放，但需注意水質結垢。</p>
+          </div>
+          <div class="ctm-man-sec ctm-man-trouble">
+            <h4>③ 疑難排解 (TROUBLESHOOTING)</h4>
+            <p><b>Q：為何排放為 0？</b>　A：當 COC ≤ 1 或飛濺損失已大於 E/(COC−1)，排放即為負值取 0。</p>
+            <p><b>Q：補給水量過大？</b>　A：檢查 ΔT 與飛濺損失率設定；ΔT 越大蒸發越多，飛濺率設太高也會拉高補給。</p>
           </div>
         </div>
       </div>
@@ -2244,7 +2294,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=22"></script>
+  <script src="app.js?v=23"></script>
   <script src="hydro.js?v=2"></script>
   <script type="module" src="mau3d.js?v=6"></script>
   <link rel="stylesheet" href="dctwin.css?v=23">

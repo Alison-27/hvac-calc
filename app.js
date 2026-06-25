@@ -2067,18 +2067,69 @@ function chwpumpCalc() {
 }
 
 // 冷卻水塔補水量
-function ctmakeupCalc() {
-  const Q = _g('ct-q'), dt = _g('ct-dt'), coc = _g('ct-coc') || 4, drift = (_g('ct-drift') || 0) / 100;
-  if (!Q || !dt) { ['ct-e','ct-d','ct-b','ct-m','ct-pct'].forEach(i => _setT(i,'—')); return; }
-  const E = Q * dt * 0.0015;          // 蒸發量 m³/h
-  const D = Q * drift;                // 飛濺損失
-  const B = Math.max(E / (coc - 1) - D, 0); // 排放量
-  const M = E + D + B;                // 總補水量
-  _setT('ct-e', E.toFixed(2) + ' m³/h');
-  _setT('ct-d', D.toFixed(3) + ' m³/h');
-  _setT('ct-b', B.toFixed(2) + ' m³/h');
-  _setT('ct-m', M.toFixed(2) + ' m³/h (' + (M * 1000 / 60).toFixed(0) + ' LPM)');
-  _setT('ct-pct', (M / Q * 100).toFixed(2) + ' % 循環量');
+// 冷卻水塔補水量（多案例質量平衡）
+const CTM = {
+  cases: [
+    { rt: 1000, hrf: 1.25, dt: 5, coc: 4, wind: 0.05 },
+    { rt: 800,  hrf: 1.3,  dt: 5, coc: 6, wind: 0.02 },
+    { rt: 500,  hrf: 1.2,  dt: 5, coc: 3, wind: 0.1 },
+    { rt: 1200, hrf: 1.25, dt: 6, coc: 4, wind: 0.05 },
+    { rt: 600,  hrf: 1.25, dt: 5, coc: 4, wind: 0.05 },
+    { rt: 2000, hrf: 1.25, dt: 5, coc: 8, wind: 0.01 },
+  ],
+};
+function ctmCompute(c) {
+  const circ = c.rt * 3.517 * c.hrf / (4.186 * c.dt);   // 循環水量 L/s
+  const evap = circ * (c.dt * 1.8) * 0.00085;           // 蒸發損失
+  const wind = circ * (c.wind / 100);                   // 飛濺損失
+  const blow = Math.max(evap / (c.coc - 1) - wind, 0);  // 排放損失
+  const makeupA = evap + wind + blow;                   // 補給水總量 A
+  const cocEq = wind > 0 ? evap / wind + 1 : 0;         // 等效濃縮倍率
+  const makeupB = evap + wind;                          // 簡式補給水量 B
+  const design = circ * 0.02;                           // 建議補給總水量（2% 設計）
+  return { circ, evap, wind, blow, makeupA, cocEq, makeupB, design };
+}
+window.ctmSet = (i, f, v) => { const c = CTM.cases[i]; if (!c) return; c[f] = parseFloat(v) || 0; ctmRenderResults(); };
+window.ctmAddCase = () => { if (CTM.cases.length >= 8) return; CTM.cases.push({ ...CTM.cases[CTM.cases.length - 1] }); ctmRender(); };
+window.ctmDelCase = () => { if (CTM.cases.length <= 1) return; CTM.cases.pop(); ctmRender(); };
+window.ctmManual = (open) => { const m = document.getElementById('ctm-modal'); if (m) { m.hidden = !open; document.body.style.overflow = open ? 'hidden' : ''; } };
+function ctmRender() {
+  const t = document.getElementById('ctm-table'); if (!t) return;
+  const n = CTM.cases.length;
+  const head = `<tr><th class="ctm-rowlbl">計算項目 / 案例</th>${CTM.cases.map((_, i) => `<th>CASE-${i + 1}</th>`).join('')}</tr>`;
+  const sec = (cls, lbl) => `<tr class="ctm-sec ${cls}"><td colspan="${n + 1}">${lbl}</td></tr>`;
+  const inRow = (lbl, sub, f, step) => `<tr class="ctm-in-row"><td class="ctm-rowlbl">${lbl}<small>${sub}</small></td>${CTM.cases.map((c, i) => `<td><input type="number" class="ctm-cell-in" value="${c[f]}" step="${step}" oninput="ctmSet(${i},'${f}',this.value)"></td>`).join('')}</tr>`;
+  const outRow = (lbl, sub, key, cls = '') => `<tr class="ctm-out-row ${cls}"><td class="ctm-rowlbl">${lbl}<small>${sub}</small></td>${CTM.cases.map((_, i) => `<td><span id="ctm-r-${key}-${i}" class="ctm-cell-out">—</span></td>`).join('')}</tr>`;
+  t.innerHTML = `<thead>${head}</thead><tbody>`
+    + sec('ctm-sec-in', '輸入參數 (INPUTS)')
+    + inRow('1. 冷凍主機噸數 (RT)', '冷凍噸', 'rt', '10')
+    + inRow('2. 排熱係數 (HRF)', 'factor', 'hrf', '0.05')
+    + inRow('3. 冷卻水溫差 ΔT', '℃', 'dt', '0.5')
+    + inRow('4. 濃縮倍數 (COC)', 'cycles', 'coc', '0.5')
+    + inRow('5. 飛濺水損失率 (Windage)', '%', 'wind', '0.01')
+    + sec('ctm-sec-a', '計算結果 A：質量平衡 (Mass Balance)')
+    + outRow('循環水量 (Circulation)', 'L/s', 'circ')
+    + outRow('蒸發損失 (Evaporation)', 'L/s', 'evap')
+    + outRow('飛濺損失 (Windage)', 'L/s', 'wind')
+    + outRow('排放損失 (Blowdown)', 'L/s', 'blow')
+    + outRow('補給水總量 (Makeup-A)', 'L/s', 'makeupA', 'ctm-emph')
+    + sec('ctm-sec-b', '計算結果 B：簡便決策係數')
+    + outRow('等效濃縮倍率 (COC eq)', 'Cycles', 'cocEq')
+    + outRow('簡式補給水量 (Makeup-B)', 'L/s', 'makeupB')
+    + sec('ctm-sec-out', '設計輸出 (DESIGN OUTPUT)')
+    + outRow('建議補給總水量', 'L/s · 含 2% 設計裕度', 'design', 'ctm-design')
+    + '</tbody>';
+  ctmRenderResults();
+}
+function ctmRenderResults() {
+  CTM.cases.forEach((c, i) => {
+    const r = ctmCompute(c);
+    const set = (k, v) => { const e = document.getElementById('ctm-r-' + k + '-' + i); if (e) e.textContent = v; };
+    set('circ', r.circ.toFixed(2)); set('evap', r.evap.toFixed(3)); set('wind', r.wind.toFixed(3));
+    set('blow', r.blow.toFixed(3)); set('makeupA', r.makeupA.toFixed(2));
+    set('cocEq', r.cocEq.toFixed(1) + ' ×'); set('makeupB', r.makeupB.toFixed(2));
+    set('design', r.design.toFixed(2));
+  });
 }
 
 // 膨脹水箱（隔膜式）
@@ -2107,10 +2158,10 @@ function exptankCalc() {
   });
   document.addEventListener('DOMContentLoaded', () => {
     bind(['pmp-q','pmp-h','pmp-h-unit','pmp-effp','pmp-effm','pmp-margin'], chwpumpCalc);
-    bind(['ct-q','ct-dt','ct-coc','ct-drift'], ctmakeupCalc);
     bind(['exp-v','exp-tmin','exp-tmax','exp-pi','exp-pf'], exptankCalc);
     if (document.getElementById('pmp-q')) chwpumpCalc();
-    if (document.getElementById('ct-q')) ctmakeupCalc();
     if (document.getElementById('exp-v')) exptankCalc();
+    if (document.getElementById('ctm-table')) ctmRender();
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') ctmManual(false); });
   });
 })();
